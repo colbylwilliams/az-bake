@@ -106,7 +106,7 @@ for dirpath, dirnames, files in os.walk(path_templates):
         templates[Path(dirpath).name] = {}
         for f in files:
             templates[Path(dirpath).name][f] = {
-                'downloadUrl': f'{download_url}/{f}',
+                'downloadUrl': f'{download_url}/{f.replace(".bicep", ".json")}',
             }
 
 # print(json.dumps(templates, indent=4))
