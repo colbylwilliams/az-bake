@@ -1,30 +1,18 @@
-import argparse
 import json
 import os
+import subprocess
 from pathlib import Path
 from re import search
-
-# parser = argparse.ArgumentParser()
-# parser.add_argument('version', help='version number string')
-
-# args = parser.parse_args()
-
-# version = args.version.lower()
-
-# if version[:1].isdigit():
-#     version = 'v' + version
 
 ci = os.environ.get('CI', False)
 
 path_root = Path(__file__).resolve().parent.parent
-path_bake = path_root / 'bake'
 path_assets = path_root / 'release_assets' if ci else '.local/release_assets'
 
+path_bake = path_root / 'bake'
+path_templates = path_root / 'templates'
 
 assets = []
-
-# assets_dir = '{}/{}'.format(Path.cwd(), 'release_assets' if ci else '.local/release_assets')
-
 
 # Get CLI version
 with open(path_bake / 'setup.py', 'r') as f:
@@ -95,6 +83,38 @@ index['extensions'] = {
 with open(f'{path_assets}/index.json', 'w') as f:
     json.dump(index, f, ensure_ascii=False, indent=4, sort_keys=True)
 
+
+bicep_templates = []
+
+templates = {}
+
+# walk the templates directory and find all the bicep files
+for dirpath, dirnames, files in os.walk(path_templates):
+    # os.walk includes the root directory (i.e. repo/templates) so we need to skip it
+    if not path_templates.samefile(dirpath) and Path(dirpath).parent.samefile(path_templates):
+        bicep_templates.extend([Path(dirpath) / f for f in files if f.lower().endswith('.bicep')])
+
+for bicep_template in bicep_templates:
+    print('Compiling template: {}'.format(bicep_template))
+    subprocess.run(['az', 'bicep', 'build', '-f', bicep_template, '--outdir', path_assets])
+
+
+# walk the templates directory and find all the bicep files
+for dirpath, dirnames, files in os.walk(path_templates):
+    # os.walk includes the root directory (i.e. repo/templates) so we need to skip it
+    if not path_templates.samefile(dirpath) and Path(dirpath).parent.samefile(path_templates):
+        templates[Path(dirpath).name] = {}
+        for f in files:
+            templates[Path(dirpath).name][f] = {
+                'downloadUrl': f'{download_url}/{f}',
+            }
+
+# print(json.dumps(templates, indent=4))
+
+with open(f'{path_assets}/templates.json', 'w') as f:
+    json.dump(templates, f, ensure_ascii=False, indent=4, sort_keys=True)
+
+
 with os.scandir(path_assets) as s:
     for f in s:
         if f.is_file():
@@ -102,7 +122,8 @@ with os.scandir(path_assets) as s:
             name = f.name.rsplit('.', 1)[0]
             assets.append({'name': f.name, 'path': f.path})
 
-if not ci:
+
+if not ci:  # if working locally, print the assets.json to a file
     with open(f'{path_assets}/assets.json', 'w') as f:
         json.dump(assets, f, ensure_ascii=False, indent=4, sort_keys=True)
 

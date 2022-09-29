@@ -14,8 +14,7 @@ from .commands import load_command_table
 class BakeCommandsLoader(AzCommandsLoader):
 
     def __init__(self, cli_ctx=None):
-        bake_custom = CliCommandType(
-            operations_tmpl='azext_bake.custom#{}')
+        bake_custom = CliCommandType(operations_tmpl='azext_bake.custom#{}')
         super().__init__(cli_ctx=cli_ctx, custom_command_type=bake_custom)
 
     def load_command_table(self, args):
