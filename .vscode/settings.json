@@ -1,0 +1,22 @@
+{
+    "spellright.language": [
+        "en"
+    ],
+    "files.exclude": {
+        "**/.vs": true,
+        "**/bin": true,
+        "**/obj": true,
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/**.egg-info": true,
+        "**/__pycache__": true,
+        "**/**.dist-info": true,
+        "dist": true,
+        "bake/build": true,
+        ".venv/include": true,
+        ".venv/pyvenv.cfg": true,
+    },
+    "restructuredtext.languageServer.disabled": true,
+    "restructuredtext.confPath": "",
+    "restructuredtext.linter.disabled": true
+}

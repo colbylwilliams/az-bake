@@ -1,0 +1,59 @@
+name: Create Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Create new Release
+    # if: "!contains(join(github.event.commits.*.message), '+norelease')"
+    if: "contains(join(github.event.commits.*.message), '+release')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Everything added to release_assets will be published as an asset on the release
+      - name: Create Assets Directory
+        uses: actions/github-script@v6
+        with:
+          script: await io.mkdirP('release_assets')
+
+      - name: Get CLI Version
+        id: cli_version
+        run: python ./tools/cli-version.py
+
+      - name: Build CLI
+        run: bash ./tools/build-cli.sh
+
+      # This must be run LAST - AFTER everything is added to release_assets
+      - name: Prepare Release Assets
+        id: prepare_assets
+        run: python ./tools/prepare-assets.py
+
+      - name: Create Pre-release
+        id: publish_assets
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+
+            const assets = JSON.parse('${{steps.prepare_assets.outputs.assets}}');
+
+            const releaseResult = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: 'v${{ steps.cli_version.outputs.version }}',
+              name: 'v${{ steps.cli_version.outputs.version }}',
+            });
+
+            const release = releaseResult.data;
+
+            assets.forEach(async a => await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              name: a.name,
+              data: fs.readFileSync(a.path)
+            }));

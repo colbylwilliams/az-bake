@@ -1,0 +1,89 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "azdev linter",
+            "type": "shell",
+            "command": "source .venv/bin/activate; azdev linter bake",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "showReuseMessage": false,
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "azdev style",
+            "type": "shell",
+            "command": "source .venv/bin/activate; azdev style bake",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "showReuseMessage": false,
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "azdev setup",
+            "type": "shell",
+            "command": "source .venv/bin/activate; azdev setup -r ${workspaceFolder} -e bake",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "showReuseMessage": false,
+            },
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                ".venv create",
+                "azdev install"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "azdev install",
+            "type": "shell",
+            "command": "source .venv/bin/activate; pip3 install azdev",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "showReuseMessage": false,
+            }
+        },
+        {
+            "label": ".venv create",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m",
+                "venv",
+                ".venv"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "showReuseMessage": false,
+            }
+        },
+        {
+            "label": ".venv delete",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-r",
+                ".venv"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "showReuseMessage": false,
+            },
+            "problemMatcher": []
+        }
+    ]
+}
