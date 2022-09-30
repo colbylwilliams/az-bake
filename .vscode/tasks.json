@@ -1,89 +1,177 @@
 {
     "version": "2.0.0",
+    "type": "shell",
+    "options": {
+        "cwd": "${workspaceFolder}"
+    },
+    "problemMatcher": [],
+    "presentation": {
+        "showReuseMessage": false,
+    },
     "tasks": [
         {
-            "label": "azdev linter",
-            "type": "shell",
+            "label": "azdev: linter",
             "command": "source .venv/bin/activate; azdev linter bake",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "presentation": {
-                "showReuseMessage": false,
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "azdev style",
-            "type": "shell",
-            "command": "source .venv/bin/activate; azdev style bake",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "presentation": {
-                "showReuseMessage": false,
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "azdev setup",
-            "type": "shell",
-            "command": "source .venv/bin/activate; azdev setup -r ${workspaceFolder} -e bake",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "presentation": {
-                "showReuseMessage": false,
-            },
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                ".venv create",
-                "azdev install"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "azdev install",
-            "type": "shell",
-            "command": "source .venv/bin/activate; pip3 install azdev",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "presentation": {
-                "showReuseMessage": false,
+            "icon": {
+                "id": "azure",
+                "color": "terminal.ansiCyan"
             }
         },
         {
-            "label": ".venv create",
+            "label": "azdev: style",
+            "command": "source .venv/bin/activate; azdev style bake",
+            "icon": {
+                "id": "azure",
+                "color": "terminal.ansiCyan"
+            }
+        },
+        {
+            "label": "azdev: setup",
+            "detail": "Setup the cli extension development environment",
+            "command": "source .venv/bin/activate; azdev setup -r ${workspaceFolder} -e bake",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "venv: create",
+                "azdev: install"
+            ],
+            "icon": {
+                "id": "azure",
+                "color": "terminal.ansiCyan"
+            }
+        },
+        {
+            "label": "azdev: install",
+            "command": "source .venv/bin/activate; pip3 install azdev",
+            "icon": {
+                "id": "azure",
+                "color": "terminal.ansiCyan"
+            }
+        },
+        {
+            "label": "packer: fmt",
+            "detail": "Format all packer .hcl files",
+            "command": "packer fmt -recursive .",
+            "presentation": {
+                "close": true
+            },
+            "icon": {
+                "id": "package",
+                "color": "terminal.ansiGreen"
+            }
+        },
+        {
+            "label": "packer: validate",
+            "detail": "Validate all packer templates",
+            "command": "packer validate -syntax-only templates/images/build.pkr.hcl",
+            "icon": {
+                "id": "package",
+                "color": "terminal.ansiGreen"
+            }
+        },
+        {
+            "label": "docker: build push (latest)",
+            "detail": "Build and push the latest docker image",
             "type": "shell",
+            "command": "echo done.",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "docker: build",
+                "docker: push (latest)"
+            ],
+            "icon": {
+                "id": "rocket",
+                "color": "terminal.ansiBlue"
+            },
+        },
+        {
+            "label": "docker: push (latest)",
+            "command": "docker",
+            "args": [
+                "push",
+                "ghcr.io/${input:imageRepository}/builder:latest"
+            ],
+            "dependsOn": [
+                "docker: push"
+            ],
+            "icon": {
+                "id": "rocket",
+                "color": "terminal.ansiBlue"
+            },
+        },
+        {
+            "label": "docker: push",
+            "command": "docker",
+            "args": [
+                "push",
+                "ghcr.io/${input:imageRepository}/builder:${input:imageTagVersion}"
+            ],
+            "icon": {
+                "id": "rocket",
+                "color": "terminal.ansiBlue"
+            },
+        },
+        {
+            "label": "docker: build",
+            "type": "docker-build",
+            "dockerBuild": {
+                "context": "${workspaceFolder}/builder",
+                "dockerfile": "${workspaceFolder}/builder/Dockerfile",
+                "tag": "ghcr.io/${input:imageRepository}/builder:${input:imageTagVersion}",
+                "customOptions": "-t \"ghcr.io/${input:imageRepository}/builder:latest\"",
+                "buildArgs": {
+                    "IMAGE_VERSION": "${input:imageTagVersion}"
+                },
+                "labels": {
+                    "includeDefaults": false
+                }
+            },
+            "icon": {
+                "id": "rocket",
+                "color": "terminal.ansiBlue"
+            }
+        },
+        {
+            "label": "venv: create",
             "command": "python3",
             "args": [
                 "-m",
                 "venv",
                 ".venv"
             ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "presentation": {
-                "showReuseMessage": false,
+            "icon": {
+                "id": "terminal",
+                "color": "terminal.ansiMagenta"
             }
         },
         {
-            "label": ".venv delete",
-            "type": "shell",
+            "label": "venv: delete",
             "command": "rm",
             "args": [
                 "-r",
                 ".venv"
             ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "presentation": {
-                "showReuseMessage": false,
-            },
-            "problemMatcher": []
+            "icon": {
+                "id": "terminal",
+                "color": "terminal.ansiMagenta"
+            }
         }
+    ],
+    "inputs": [
+        {
+            "id": "imageRepository",
+            "type": "pickString",
+            "description": "Repository name to push the image.",
+            "default": "colbylwilliams/az-bake",
+            "options": [
+                "colbylwilliams/az-bake",
+                // "azure/dev-box-images"
+            ]
+        },
+        {
+            "id": "imageTagVersion",
+            "type": "promptString",
+            "description": "Version for this tag ex. 1.0.0 (also builds a latest version).",
+            // "default": "0.0.0"
+        },
     ]
 }
