@@ -1,0 +1,15 @@
+.dockerignore
+
+templates
+templates/
+
+builder.bicep
+builder_sandbox.bicep
+
+aci.py
+repos.py
+
+secure
+secure/
+
+README.md
