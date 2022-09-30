@@ -21,6 +21,15 @@ TRIES = 3
 logger = get_logger(__name__)
 
 
+def get_github_releases(org='colbylwilliams', repo='az-bake', prerelease=False):
+    url = f'https://api.github.com/repos/{org}/{repo}/releases'
+
+    version_res = requests.get(url, verify=not should_disable_connection_verify())
+    version_json = version_res.json()
+
+    return [v for v in version_json if v['prerelease'] == prerelease]
+
+
 def get_github_release(org='colbylwilliams', repo='az-bake', version=None, prerelease=False):
 
     if version and prerelease:
@@ -30,14 +39,9 @@ def get_github_release(org='colbylwilliams', repo='az-bake', version=None, prere
     url = f'https://api.github.com/repos/{org}/{repo}/releases'
 
     if prerelease:
-        version_res = requests.get(url, verify=not should_disable_connection_verify())
-        version_json = version_res.json()
-
-        version_prerelease = next((v for v in version_json if v['prerelease']), None)
-        if not version_prerelease:
-            raise ClientRequestError(f'--pre no prerelease versions found for {org}/{repo}')
-
-        return version_prerelease
+        if (prereleases := get_github_releases(org, repo, prerelease=True)):
+            return prereleases[0]
+        raise ClientRequestError(f'--pre no prerelease versions found for {org}/{repo}')
 
     url += (f'/tags/{version}' if version else '/latest')
 
@@ -101,14 +105,18 @@ def get_release_templates(version=None, prerelease=False, templates_url=None):
 
 
 def get_template_url(templates, name):
-    template = templates.get(name)
-    if template is None:
+    # template = templates.get(name)
+    logger.warning(templates)
+    if not (template := templates.get(name)):
         raise ResourceNotFoundError(f'Unable to get template {name} from templates.json.')
-    template_url = template.get('url')
-    if template_url is None:
-        raise ResourceNotFoundError(f'Unable to get template {name} url from templates.json.')
-
+    if not (template_url := template.get('url')):
+        raise ResourceNotFoundError(f'Unable to get template {name} downloadUrl from templates.json.')
     return template_url
+    # if template is None:
+    # template_url = template.get('downloadUrl')
+    # if template_url is None:
+
+    # return template_url
 
 
 # def get_artifact(artifacts, name):

@@ -14,7 +14,7 @@ def load_command_table(self, _):  # pylint: disable=too-many-statements
 
     with self.command_group('bake') as g:
         g.custom_command('upgrade', 'bake_upgrade')
-        # g.custom_command('test', 'bake_test')
+        g.custom_command('test', 'bake_test')
 
     with self.command_group('bake sandbox') as g:
         g.custom_command('create', 'bake_sandbox_create', validator=process_sandbox_create_namespace)

@@ -9,11 +9,11 @@ from re import match
 from azure.cli.core.azclierror import (InvalidArgumentValueError,
                                        MutuallyExclusiveArgumentError,
                                        RequiredArgumentMissingError)
-from azure.cli.core.commands.validators import (
-    get_default_location_from_resource_group, validate_tags)
+from azure.cli.core.commands.validators import validate_tags
 from azure.cli.core.extension import get_extension
 from knack.log import get_logger
 
+from ._completers import get_default_location_from_sandbox_resource_group
 from ._constants import tag_key
 from ._github_utils import (get_github_latest_release_version,
                             github_release_version_exists)
@@ -123,7 +123,7 @@ def validate_sandbox_tags(ns):
 
 def process_sandbox_create_namespace(cmd, ns):
     # validate_resource_prefix(cmd, ns)
-    get_default_location_from_resource_group(cmd, ns)
+    get_default_location_from_sandbox_resource_group(cmd, ns)
     templates_version_validator(cmd, ns)
     if none_or_empty(ns.vnet_address_prefix):
         raise InvalidArgumentValueError(f'--vnet-address-prefix/--vnet-prefix must be a valid CIDR prefix')
@@ -154,25 +154,26 @@ def process_sandbox_create_namespace(cmd, ns):
     #     except ResourceNotFoundError:
     #         return None
 
-    def validate_subnet(cmd, ns, subnet, vnet_prefixes):
-        subnet_name_option = f'--{subnet}-subnet-name/--{subnet}-subnet'
-        subnet_prefix_option = f'--{subnet}-subnet-address-prefix/--{subnet}-subnet-prefix/--{subnet}-prefix'
 
-        subnet_name_arg = f'{subnet}_subnet_name'
-        subnet_prefix_arg = f'{subnet}_subnet_address_prefix'
+def validate_subnet(cmd, ns, subnet, vnet_prefixes):
+    subnet_name_option = f'--{subnet}-subnet-name/--{subnet}-subnet'
+    subnet_prefix_option = f'--{subnet}-subnet-prefix/--{subnet}-prefix'
 
-        subnet_name_val = getattr(ns, subnet_name_arg, None)
-        if none_or_empty(subnet_name_val):
-            raise InvalidArgumentValueError(f'{subnet_name_option} must have a value')
+    subnet_name_arg = f'{subnet}_subnet_name'
+    subnet_prefix_arg = f'{subnet}_subnet_address_prefix'
 
-        subnet_prefix_val = getattr(ns, subnet_prefix_arg, None)
-        if none_or_empty(subnet_prefix_val):
-            raise InvalidArgumentValueError(f'{subnet_prefix_option} must be a valid CIDR prefix')
+    subnet_name_val = getattr(ns, subnet_name_arg, None)
+    if none_or_empty(subnet_name_val):
+        raise InvalidArgumentValueError(f'{subnet_name_option} must have a value')
 
-        # subnet_prefix_is_default = hasattr(getattr(ns, subnet_prefix_arg), 'is_default')
+    subnet_prefix_val = getattr(ns, subnet_prefix_arg, None)
+    if none_or_empty(subnet_prefix_val):
+        raise InvalidArgumentValueError(f'{subnet_prefix_option} must be a valid CIDR prefix')
 
-        vnet_networks = [ipaddress.ip_network(p) for p in vnet_prefixes]
-        if not all(any(h in n for n in vnet_networks) for h in ipaddress.ip_network(subnet_prefix_val).hosts()):
-            raise InvalidArgumentValueError(
-                '{} {} is not within the vnet address space (prefixed: {})'.format(
-                    subnet_prefix_option, subnet_prefix_val, ', '.join(vnet_prefixes)))
+    # subnet_prefix_is_default = hasattr(getattr(ns, subnet_prefix_arg), 'is_default')
+
+    vnet_networks = [ipaddress.ip_network(p) for p in vnet_prefixes]
+    if not all(any(h in n for n in vnet_networks) for h in ipaddress.ip_network(subnet_prefix_val).hosts()):
+        raise InvalidArgumentValueError(
+            '{} {} is not within the vnet address space (prefixed: {})'.format(
+                subnet_prefix_option, subnet_prefix_val, ', '.join(vnet_prefixes)))

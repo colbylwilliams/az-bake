@@ -21,8 +21,10 @@ from ._github_utils import get_release_templates, get_template_url
 logger = get_logger(__name__)
 
 
-# def bake_test(cmd, user='me'):
-#     pass
+def bake_test(cmd):
+    from ._github_utils import get_github_release
+    foo = get_github_release(prerelease=True)
+    return foo['tag_name']
 
 
 def bake_upgrade(cmd, version=None, prerelease=False):
@@ -46,7 +48,7 @@ def bake_upgrade(cmd, version=None, prerelease=False):
     update_extension(cmd, extension_name='bake', index_url=index_url)
 
 
-def bake_sandbox_create(cmd, location, resource_group_name, name_prefix,
+def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
                         tags=None, principal_id=None, vnet_address_prefix='10.0.0.0/24',
                         default_subnet_name='default', default_subnet_address_prefix='10.0.0.0/25',
                         builders_subnet_name='builders', builders_subnet_address_prefix='10.0.0.128/25',
@@ -76,7 +78,7 @@ def bake_sandbox_create(cmd, location, resource_group_name, name_prefix,
     params.append(f'tags={json.dumps(tags)}')
 
     hook.add(message='Creating keyvault and storage account')
-    _, outputs = deploy_arm_template_at_resource_group(cmd, resource_group_name, template_uri=template_uri,
+    _, outputs = deploy_arm_template_at_resource_group(cmd, sandbox_resource_group_name, template_uri=template_uri,
                                                        parameters=[params])
 
     build_resource_group = get_arm_output(outputs, 'buildResourceGroup')
@@ -124,3 +126,7 @@ def bake_sandbox_create(cmd, location, resource_group_name, name_prefix,
     }
 
     return foo
+
+
+def bake_sandbox_validate(cmd, sandbox_resource_group_name):
+    pass

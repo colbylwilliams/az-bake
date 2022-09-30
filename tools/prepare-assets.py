@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 from re import search
@@ -7,15 +8,10 @@ from re import search
 ci = os.environ.get('CI', False)
 
 path_root = Path(__file__).resolve().parent.parent
-path_assets = path_root / 'release_assets' if ci else '.local/release_assets'
-
-path_bake = path_root / 'bake'
-path_templates = path_root / 'templates'
-
-assets = []
+path_assets = path_root / 'release_assets' if ci else path_root / '.local/release_assets'
 
 # Get CLI version
-with open(path_bake / 'setup.py', 'r') as f:
+with open(path_root / 'bake' / 'setup.py', 'r') as f:
     for line in f:
         if line.startswith('VERSION'):
             txt = str(line).rstrip()
@@ -25,11 +21,9 @@ with open(path_bake / 'setup.py', 'r') as f:
                 cli_name = 'bake-{}-py3-none-any.whl'.format(cli_version)
 
 version = f'v{cli_version}'
-
 download_url = f'https://github.com/colbylwilliams/az-bake/releases/download/{version}' if ci else path_assets
 
 index = {}
-
 index['extensions'] = {
     'bake': [
         {
@@ -80,41 +74,56 @@ index['extensions'] = {
     ]
 }
 
+# save index.json to assets folder
 with open(f'{path_assets}/index.json', 'w') as f:
     json.dump(index, f, ensure_ascii=False, indent=4, sort_keys=True)
 
 
-bicep_templates = []
+path_templates = path_assets / 'templates'
 
+# copy the templates folder to assets folder
+shutil.copytree(path_root / 'templates', path_templates, dirs_exist_ok=not ci)
+
+bicep_templates = []
 templates = {}
+
 
 # walk the templates directory and find all the bicep files
 for dirpath, dirnames, files in os.walk(path_templates):
-    # os.walk includes the root directory (i.e. repo/templates) so we need to skip it
+    # os.walk includes the root directory (i.e. assets/templates) so we need to skip it
     if not path_templates.samefile(dirpath) and Path(dirpath).parent.samefile(path_templates):
         bicep_templates.extend([Path(dirpath) / f for f in files if f.lower().endswith('.bicep')])
 
+# for each bicep file, compile it to json
 for bicep_template in bicep_templates:
     print('Compiling template: {}'.format(bicep_template))
-    subprocess.run(['az', 'bicep', 'build', '-f', bicep_template, '--outdir', path_assets])
+    subprocess.run(['az', 'bicep', 'build', '-f', bicep_template])
 
 
-# walk the templates directory and find all the bicep files
+# walk the templates directory find all directories and files and add them to the templates index
 for dirpath, dirnames, files in os.walk(path_templates):
     # os.walk includes the root directory (i.e. repo/templates) so we need to skip it
     if not path_templates.samefile(dirpath) and Path(dirpath).parent.samefile(path_templates):
         templates[Path(dirpath).name] = {}
         for f in files:
             templates[Path(dirpath).name][f] = {
-                'downloadUrl': f'{download_url}/{f.replace(".bicep", ".json")}',
+                'downloadUrl': f'{download_url}/{f}',
             }
 
-# print(json.dumps(templates, indent=4))
+# finally add all the files to the root of the assets folder
+for dirpath, dirnames, files in os.walk(path_templates):
+    # os.walk includes the root directory (i.e. repo/templates) so we need to skip it
+    if not path_templates.samefile(dirpath) and Path(dirpath).parent.samefile(path_templates):
+        for f in files:
+            shutil.copy2(Path(dirpath) / f, path_assets)
 
+# save templates.json to assets folder
 with open(f'{path_assets}/templates.json', 'w') as f:
     json.dump(templates, f, ensure_ascii=False, indent=4, sort_keys=True)
 
+assets = []
 
+# add all the files in the root of hte assets folder to the assets list
 with os.scandir(path_assets) as s:
     for f in s:
         if f.is_file():
