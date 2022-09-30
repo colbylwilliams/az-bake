@@ -31,7 +31,6 @@ def get_github_releases(org='colbylwilliams', repo='az-bake', prerelease=False):
 
 
 def get_github_release(org='colbylwilliams', repo='az-bake', version=None, prerelease=False):
-
     if version and prerelease:
         raise MutuallyExclusiveArgumentError(
             'Only use one of --version/-v | --pre')
@@ -92,31 +91,21 @@ def get_release_templates(version=None, prerelease=False, templates_url=None):
         version = version or get_github_latest_release_version(prerelease=prerelease)
         templates_url = f'https://github.com/colbylwilliams/az-bake/releases/download/{version}/templates.json'
     templates = get_release_asset(asset_url=templates_url)
-    sandbox = templates.get('sandbox')
-    if sandbox is None:
+    if not (sandbox := templates.get('sandbox')):
         raise ClientRequestError('Unable to get sandbox node from templates.json. Improper json format.')
-    builder = templates.get('builder')
-    if builder is None:
+    if not (builder := templates.get('builder')):
         raise ClientRequestError('Unable to get builder node from templates.json. Improper json format.')
-    # artifacts = index.get('artifacts')
-    # if artifacts is None:
-    #     raise ResourceNotFoundError('Unable to get artifacts node from templates.json. Improper json format.')
-    return version, sandbox, builder
+    if not (images := templates.get('images')):
+        raise ClientRequestError('Unable to get images node from templates.json. Improper json format.')
+    return version, sandbox, builder, images
 
 
 def get_template_url(templates, name):
-    # template = templates.get(name)
-    logger.warning(templates)
     if not (template := templates.get(name)):
         raise ResourceNotFoundError(f'Unable to get template {name} from templates.json.')
-    if not (template_url := template.get('url')):
+    if not (template_url := template.get('downloadUrl')):
         raise ResourceNotFoundError(f'Unable to get template {name} downloadUrl from templates.json.')
     return template_url
-    # if template is None:
-    # template_url = template.get('downloadUrl')
-    # if template_url is None:
-
-    # return template_url
 
 
 # def get_artifact(artifacts, name):

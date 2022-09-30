@@ -23,17 +23,31 @@ logger = get_logger(__name__)
 # pylint: disable=inconsistent-return-statements
 
 
+def is_bicep_file(file_path):
+    return file_path.lower().endswith(".bicep")
+
+
 def deploy_arm_template_at_resource_group(cmd, resource_group_name=None, template_file=None,
                                           template_uri=None, parameters=None, no_wait=False):
 
-    from azure.cli.command_modules.resource.custom import \
-        _prepare_deployment_properties_unmodified  # pylint: disable=import-outside-toplevel
+    from azure.cli.command_modules.resource.custom import (
+        JsonCTemplatePolicy, _prepare_deployment_properties_unmodified)
 
     properties = _prepare_deployment_properties_unmodified(cmd, 'resourceGroup', template_file=template_file,
                                                            template_uri=template_uri, parameters=parameters,
                                                            mode='Incremental')
+    smc = resource_client_factory(cmd.cli_ctx)
+    client = smc.deployments
 
-    client = resource_client_factory(cmd.cli_ctx).deployments
+    if template_file:
+        # Plug this as default HTTP pipeline
+        from azure.core.pipeline import Pipeline
+        smc._client._pipeline._impl_policies.append(JsonCTemplatePolicy())
+        # Because JsonCTemplatePolicy needs to be wrapped as _SansIOHTTPPolicyRunner, so a new Pipeline is built
+        smc._client._pipeline = Pipeline(
+            policies=smc._client._pipeline._impl_policies,
+            transport=smc._client._pipeline._transport
+        )
 
     for try_number in range(TRIES):
         try:

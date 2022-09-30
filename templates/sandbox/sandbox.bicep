@@ -205,26 +205,20 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2022-01-01' = {
   }
 }
 
-@description('The value for the buildResourceGroup property in the images.yml and image.yml file.')
-output buildResourceGroup string = resourceGroup().name
-
-@description('The value for the string property in the images.yml and image.yml file.')
-output keyVault string = keyVault.name
-
-@description('The value for the virtualNetwork property in the images.yml and image.yml file.')
-output virtualNetwork string = vnet.name
-
-@description('The value for the virtualNetworkSubnet property in the images.yml and image.yml file.')
-output virtualNetworkSubnet string = defaultSubnetName
-
-@description('The value for the virtualNetworkResourceGroup property in the images.yml and image.yml file.')
-output virtualNetworkResourceGroup string = resourceGroup().name
-
-@description('The value for the subscription property in the images.yml and image.yml file.')
-output subscription string = az.subscription().subscriptionId
-
-@description('The storage account name to pass as the value for the --storage-account argument when executing aci.py')
-output aciStorageAccount string = storage.name
-
-@description('The subnet id to pass as the value for the --subnet-id argument when executing aci.py')
-output aciSubnetId string = '${vnet.id}/subnets/${builderSubnetName}'
+resource group_tags 'Microsoft.Resources/tags@2021-04-01' = {
+  name: 'default'
+  properties: {
+    tags: union({
+        'hidden-bake:image:buildResourceGroup': resourceGroup().name
+        'hidden-bake:image:keyVault': keyVault.name
+        'hidden-bake:image:virtualNetwork': vnet.name
+        'hidden-bake:image:virtualNetworkSubnet': defaultSubnetName
+        'hidden-bake:image:virtualNetworkResourceGroup': resourceGroup().name
+        'hidden-bake:image:subscription': az.subscription().subscriptionId
+        'hidden-bake:builder:storageAccount': storage.name
+        'hidden-bake:builder:subnetId': '${vnet.id}/subnets/${builderSubnetName}'
+        'hidden-bake:sandbox:baseName': baseName
+        'hidden-bake:sandbox:builderPrincipalId': builderPrincipalId
+      }, tags)
+  }
+}

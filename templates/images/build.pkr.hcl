@@ -55,12 +55,14 @@ source "azure-arm" "vm" {
 build {
   sources = ["source.azure-arm.vm"]
 
+  # Our testing has shown that Windows 10 does not allow packer to run a Windows scheduled task until the admin user (packer) has logged into the system.
+  # So we enable AutoAdminLogon and use packer's windows-restart provisioner to get the system into a good state to allow scheduled tasks to run.
   provisioner "powershell" {
-    environment_vars = [
-      "ADMIN_USERNAME=${build.User}",
-      "ADMIN_PASSWORD=${build.Password}"
+    inline = [
+      "Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name AutoAdminLogon -Value 1 -type String -ErrorAction Stop",
+      "Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name DefaultUsername -Value ${build.User} -type String -ErrorAction Stop",
+      "Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name DefaultPassword -Value ${build.Password} -type String -ErrorAction Stop"
     ]
-    script = "${path.root}/../../scripts/Enable-AutoLogon.ps1"
   }
 
   provisioner "windows-restart" {
@@ -73,51 +75,22 @@ build {
   provisioner "windows-update" {
   }
 
-  // provisioner "powershell" {
-  //   elevated_user     = build.User
-  //   elevated_password = build.Password
-  //   scripts = [
-  //     "${path.root}/../../scripts/Install-PsModules.ps1",
-  //     "${path.root}/../../scripts/Install-AzPsModule.ps1",
-  //     "${path.root}/../../scripts/Install-Chocolatey.ps1"
-  //   ]
-  // }
-
-  // provisioner "powershell" {
-  //   elevated_user     = build.User
-  //   elevated_password = build.Password
-  //   inline = [
-  //     // "choco install postman --yes --no-progress",
-  //     "choco install googlechrome --yes --no-progress",
-  //     "choco install firefox --yes --no-progress"
-  //   ]
-  // }
-
-  // provisioner "powershell" {
-  //   elevated_user     = build.User
-  //   elevated_password = build.Password
-  //   scripts = [
-  //     "${path.root}/../../scripts/Install-Git.ps1",
-  //     "${path.root}/../../scripts/Install-GitHub-CLI.ps1",
-  //     "${path.root}/../../scripts/Install-DotNet.ps1",
-  //     "${path.root}/../../scripts/Install-Python.ps1",
-  //     "${path.root}/../../scripts/Install-GitHubDesktop.ps1",
-  //     "${path.root}/../../scripts/Install-AzureCLI.ps1",
-  //     "${path.root}/../../scripts/Install-VSCode.ps1"
-  //   ]
-  // }
-
-  // this doesn't work yet
-  // provisioner "powershell" {
-  //   elevated_user     = build.User
-  //   elevated_password = build.Password
-  //   scripts           = [for r in var.repos : "${path.root}/../../scripts/Clone-Repo.ps1 -Url '${r.url}' -Secret '${r.secret}'"]
-  // }
+  ###BAKE###
 
   provisioner "powershell" {
-    scripts = [
-      "${path.root}/../../scripts/Disable-AutoLogon.ps1",
-      "${path.root}/../../scripts/Generalize-VM.ps1"
+    inline = [
+      # Disable Auto-Logon that was enabled above
+      "Remove-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name AutoAdminLogon -ErrorAction Stop",
+      "Remove-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name DefaultUserName -ErrorAction Stop",
+      "Remove-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Name DefaultPassword -ErrorAction Stop",
+      # Generalize the image
+      "while ((Get-Service RdAgent -ErrorAction SilentlyContinue) -and ((Get-Service RdAgent).Status -ne 'Running')) { Start-Sleep -s 5 }",
+      "while ((Get-Service WindowsAzureTelemetryService -ErrorAction SilentlyContinue) -and ((Get-Service WindowsAzureTelemetryService).Status -ne 'Running')) { Start-Sleep -s 5 }",
+      "while ((Get-Service WindowsAzureGuestAgent -ErrorAction SilentlyContinue) -and ((Get-Service WindowsAzureGuestAgent).Status -ne 'Running')) { Start-Sleep -s 5 }",
+      "Remove-Item $Env:SystemRoot\system32\Sysprep\unattend.xml -Force -ErrorAction SilentlyContinue",
+      # https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep-command-line-options?view=windows-11
+      "& $Env:SystemRoot\System32\Sysprep\Sysprep.exe /oobe /mode:vm /generalize /quiet /quit",
+      "while ($true) { $imageState = (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State).ImageState; Write-Output $imageState; if ($imageState -eq 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { break }; Start-Sleep -s 5 }"
     ]
   }
 }

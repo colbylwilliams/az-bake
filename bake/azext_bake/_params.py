@@ -83,6 +83,7 @@ def load_arguments(self, _):
         c.argument('prerelease', options_list=['--pre'], action='store_true', arg_group='Advanced',
                    help='Deploy latest template prerelease version.')
         c.argument('templates_url', arg_group='Advanced', help='URL to custom templates.json file.')
+        c.argument('template_file', arg_group='Advanced', type=file_type, help='Path to custom sandbox arm/bicep template.')
 
     # with self.argument_context('bake user check') as c:
     #     c.argument('user', options_list=['--user', '-u'],
