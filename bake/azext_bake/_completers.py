@@ -9,7 +9,7 @@ from azure.cli.core.commands.parameters import (
 from azure.cli.core.decorators import Completer
 from knack.log import get_logger
 
-from ._client_factory import network_client_factory, resource_client_factory
+from ._client_factory import cf_network, cf_resources
 from ._github_utils import get_github_releases
 
 logger = get_logger(__name__)
@@ -47,7 +47,7 @@ def get_default_location_from_sandbox_resource_group(cmd, ns):
     if not ns.location:
         # We don't use try catch here to let azure.cli.core.parser.AzCliCommandParser.validation_error
         # handle exceptions, such as azure.core.exceptions.ResourceNotFoundError
-        resource_client = resource_client_factory(cmd.cli_ctx)
+        resource_client = cf_resources(cmd.cli_ctx)
         rg = resource_client.resource_groups.get(ns.sandbox_resource_group_name)
         ns.location = rg.location  # pylint: disable=no-member
 

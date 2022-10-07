@@ -5,9 +5,15 @@
 
 import argparse
 from pathlib import Path
-from re import search
 
+import requests
 from packaging.version import parse  # pylint: disable=unresolved-import
+
+# from re import search
+
+
+REPO_ORG = 'colbylwilliams'
+REPO_NAME = 'az-bake'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--major', action='store_true', help='bump major version')
@@ -31,18 +37,24 @@ path_root = Path(__file__).resolve().parent.parent
 path_bake = path_root / 'bake'
 path_builder = path_root / 'builder'
 
-with open(path_bake / 'setup.py', 'r') as f:
-    for line in f:
-        if line.startswith('VERSION'):
-            txt = str(line).rstrip()
-            match = search(r'VERSION = [\'\"](.*)[\'\"]$', txt)
-            if match:
-                version = match.group(1)
+latest_res = requests.get(f'https://api.github.com/repos/{REPO_ORG}/{REPO_NAME}/releases/latest')
+if latest_res.status_code != 200:
+    raise ValueError(f'error fetching latest release: {latest_res.status_code}')
+latest_json = latest_res.json()
+version_old = parse(latest_json['tag_name'])
 
-if not version:
-    raise ValueError('no version found in setup.py')
+# with open(path_bake / 'setup.py', 'r') as f:
+#     for line in f:
+#         if line.startswith('VERSION'):
+#             txt = str(line).rstrip()
+#             match = search(r'VERSION = [\'\"](.*)[\'\"]$', txt)
+#             if match:
+#                 version = match.group(1)
 
-version_old = parse(version)
+# if not version:
+#     raise ValueError('no version found in setup.py')
+
+# version_old = parse(version)
 
 n_major = version_old.major + 1 if major else version_old.major
 n_minor = 0 if major else version_old.minor + 1 if minor else version_old.minor

@@ -11,7 +11,7 @@ from pathlib import Path
 timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
 
 # indicates if the script is running in the docker container
-in_builder = os.environ.get('ACI_IMAGE_BUILDER', False)
+in_builder = os.environ.get('AZ_BAKE_IMAGE_BUILDER', False)
 
 repo = Path('/mnt/repo') if in_builder else Path(__file__).resolve().parent.parent
 storage = Path('/mnt/storage') if in_builder else repo / '.local' / 'storage'

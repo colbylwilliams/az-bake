@@ -17,12 +17,15 @@ param revision string = ''
 @description('The name of the image to build. This should match the name of a folder inside the /images folder in your repository.')
 param image string
 
-@description('The client (app) id for the service principal to use for authentication.')
-param clientId string
+@description('The resource ID of a user assigned managed identity')
+param identityId string
 
-@secure()
-@description('The secret for the service principal to use for authentication.')
-param clientSecret string
+// @description('The client (app) id for the service principal to use for authentication.')
+// param clientId string
+
+// @secure()
+// @description('The secret for the service principal to use for authentication.')
+// param clientSecret string
 
 @description('The name of an existing storage account to use with the container instance. If not specified, the container instance will not mount a persistant file share.')
 param storageAccount string = ''
@@ -43,9 +46,9 @@ var validImageNameLower = toLower(validImageName)
 
 var defaultEnvironmentVars = [
   { name: 'BUILD_IMAGE_NAME', value: image }
-  { name: 'AZURE_TENANT_ID', value: tenant().tenantId }
-  { name: 'AZURE_CLIENT_ID', value: clientId }
-  { name: 'AZURE_CLIENT_SECRET', secureValue: clientSecret }
+  // { name: 'AZURE_TENANT_ID', value: tenant().tenantId }
+  // { name: 'AZURE_CLIENT_ID', value: clientId }
+  // { name: 'AZURE_CLIENT_SECRET', secureValue: clientSecret }
 ]
 
 var packerEnvironmentVars = [for kv in items(packerVars): {
@@ -83,6 +86,12 @@ resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' existing = if (!
 resource group 'Microsoft.ContainerInstance/containerGroups@2021-10-01' = {
   name: validImageName
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${identityId}': {}
+    }
+  }
   tags: {
     version: version
     timestamp: timestamp

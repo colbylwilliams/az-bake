@@ -12,6 +12,9 @@
         {
             "label": "azdev: linter",
             "command": "source .venv/bin/activate; azdev linter bake",
+            "windows": {
+                "command": ".venv\\bin\\activate; azdev linter bake"
+            },
             "icon": {
                 "id": "azure",
                 "color": "terminal.ansiCyan"
@@ -20,6 +23,9 @@
         {
             "label": "azdev: style",
             "command": "source .venv/bin/activate; azdev style bake",
+            "windows": {
+                "command": ".venv\\bin\\activate; azdev style bake"
+            },
             "icon": {
                 "id": "azure",
                 "color": "terminal.ansiCyan"
@@ -29,6 +35,9 @@
             "label": "azdev: setup",
             "detail": "Setup the cli extension development environment",
             "command": "source .venv/bin/activate; azdev setup -r ${workspaceFolder} -e bake",
+            "windows": {
+                "command": ".venv\\bin\\activate; azdev setup -r ${workspaceFolder} -e bake"
+            },
             "dependsOrder": "sequence",
             "dependsOn": [
                 "venv: create",
@@ -42,6 +51,9 @@
         {
             "label": "azdev: install",
             "command": "source .venv/bin/activate; pip3 install azdev",
+            "windows": {
+                "command": ".venv\\bin\\activate; pip3 install azdev"
+            },
             "icon": {
                 "id": "azure",
                 "color": "terminal.ansiCyan"
@@ -62,7 +74,7 @@
         {
             "label": "packer: validate",
             "detail": "Validate all packer templates",
-            "command": "packer validate -syntax-only templates/images/build.pkr.hcl",
+            "command": "packer validate -syntax-only templates${pathSeparator}images${pathSeparator}build.pkr.hcl",
             "icon": {
                 "id": "package",
                 "color": "terminal.ansiGreen"
@@ -88,7 +100,8 @@
             "command": "docker",
             "args": [
                 "push",
-                "ghcr.io/${input:imageRepository}/builder:latest"
+                // "ghcr.io/${input:imageRepository}/builder:latest"
+                "ghcr.io/colbylwilliams/az-bake/builder:latest"
             ],
             "dependsOn": [
                 "docker: push"
@@ -103,7 +116,8 @@
             "command": "docker",
             "args": [
                 "push",
-                "ghcr.io/${input:imageRepository}/builder:${input:imageTagVersion}"
+                // "ghcr.io/${input:imageRepository}/builder:${input:imageTagVersion}"
+                "ghcr.io/colbylwilliams/az-bake/builder:${input:imageTagVersion}"
             ],
             "icon": {
                 "id": "rocket",
@@ -114,10 +128,12 @@
             "label": "docker: build",
             "type": "docker-build",
             "dockerBuild": {
-                "context": "${workspaceFolder}/builder",
-                "dockerfile": "${workspaceFolder}/builder/Dockerfile",
-                "tag": "ghcr.io/${input:imageRepository}/builder:${input:imageTagVersion}",
-                "customOptions": "-t \"ghcr.io/${input:imageRepository}/builder:latest\"",
+                "context": "${workspaceFolder}${pathSeparator}builder",
+                "dockerfile": "${workspaceFolder}${pathSeparator}builder${pathSeparator}Dockerfile",
+                // "tag": "ghcr.io/${input:imageRepository}/builder:${input:imageTagVersion}",
+                // "customOptions": "-t \"ghcr.io/${input:imageRepository}/builder:latest\"",
+                "tag": "ghcr.io/colbylwilliams/az-bake/builder:${input:imageTagVersion}",
+                "customOptions": "-t \"ghcr.io/colbylwilliams/az-bake/builder:latest\"",
                 "buildArgs": {
                     "IMAGE_VERSION": "${input:imageTagVersion}"
                 },
@@ -157,16 +173,16 @@
         }
     ],
     "inputs": [
-        {
-            "id": "imageRepository",
-            "type": "pickString",
-            "description": "Repository name to push the image.",
-            "default": "colbylwilliams/az-bake",
-            "options": [
-                "colbylwilliams/az-bake",
-                // "azure/dev-box-images"
-            ]
-        },
+        // {
+        //     "id": "imageRepository",
+        //     "type": "pickString",
+        //     "description": "Repository name to push the image.",
+        //     "default": "colbylwilliams/az-bake",
+        //     "options": [
+        //         "colbylwilliams/az-bake",
+        //         // "azure/dev-box-images"
+        //     ]
+        // },
         {
             "id": "imageTagVersion",
             "type": "promptString",

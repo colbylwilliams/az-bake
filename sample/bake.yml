@@ -1,0 +1,22 @@
+version: 1.0
+sandbox:
+  location: eastus
+  resourceGroup: Contoso-Sandbox
+  subscription: e5f715ae-6c72-4a5c-87c8-495590c34828
+  virtualNetwork: contoso-sandbox-vnet
+  # this should default to resourceGroup if not provided
+  virtualNetworkResourceGroup: Contoso-Sandbox
+  defaultSubnet: default
+  builderSubnet: builders
+  storageAccount: contososandboxstore
+  identityId: /subscriptions/e5f715ae-6c72-4a5c-87c8-495590c34828/resourceGroups/Contoso-Sandbox/providers/Microsoft.ManagedIdentity/userAssignedIdentities/contoso-sandbox-id
+gallery:
+  name: Contoso.Sandbox
+  resourceGroup: Contoso-Sandbox-Gallery
+  subscription: e5f715ae-6c72-4a5c-87c8-495590c34828
+images:
+  publisher: ContosoSandbox
+  offer: DevBox
+  replicaLocations:
+    - eastus
+    - westeurope

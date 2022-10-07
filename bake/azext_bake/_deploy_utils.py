@@ -14,7 +14,7 @@ from knack.log import get_logger
 from knack.util import CLIError
 from msrestazure.tools import parse_resource_id, resource_id
 
-from ._client_factory import network_client_factory, resource_client_factory
+from ._client_factory import cf_network, cf_resources
 
 TRIES = 3
 
@@ -36,7 +36,7 @@ def deploy_arm_template_at_resource_group(cmd, resource_group_name=None, templat
     properties = _prepare_deployment_properties_unmodified(cmd, 'resourceGroup', template_file=template_file,
                                                            template_uri=template_uri, parameters=parameters,
                                                            mode='Incremental')
-    smc = resource_client_factory(cmd.cli_ctx)
+    smc = cf_resources(cmd.cli_ctx)
     client = smc.deployments
 
     if template_file:
@@ -102,7 +102,7 @@ def create_subnet(cmd, vnet, subnet_name, address_prefix):
     subnet.private_endpoint_network_policies = "Disabled"
     subnet.private_link_service_network_policies = "Enabled"
 
-    client = network_client_factory(cmd.cli_ctx).subnets
+    client = cf_network(cmd.cli_ctx).subnets
 
     create_poller = client.begin_create_or_update(resource_group_name, vnet_name, subnet_name, subnet)
 
@@ -124,19 +124,17 @@ def tag_resource_group(cmd, resource_group_name, tags):
     properties = Tags(tags=tags)
     paramaters = TagsPatchResource(operation='Merge', properties=properties)
 
-    client = resource_client_factory(cmd.cli_ctx).tags
-
+    client = cf_resources(cmd.cli_ctx).tags
     result = client.update_at_scope(scope, paramaters)
-
     return result
 
 
 def get_resource_group_tags(cmd, resource_group_name):
     sub = get_subscription_id(cmd.cli_ctx)
     scope = resource_id(subscription=sub, resource_group=resource_group_name)
-
-    client = resource_client_factory(cmd.cli_ctx).tags
-
+    client = cf_resources(cmd.cli_ctx).tags
     result = client.get_at_scope(scope)
-
     return result.properties.tags
+
+
+# def get_gallery():

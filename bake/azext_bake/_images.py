@@ -3,29 +3,20 @@
 # Licensed under the MIT License.
 # ------------------------------------
 
-import argparse
 import json
 import os
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-import azure as az
-import loggers
-import syaml
+import requests
+import yaml
+from azure.cli.core.azclierror import (ClientRequestError, FileOperationError,
+                                       MutuallyExclusiveArgumentError,
+                                       ResourceNotFoundError, ValidationError)
+from azure.cli.core.util import should_disable_connection_verify
+from knack.log import get_logger
 
-IMAGE_REQUIRED_PROPERTIES = ['publisher', 'offer', 'sku', 'version', 'os', 'replicaLocations']
-IMAGE_ALLOWED_PROPERTIES = ['publisher', 'offer', 'sku', 'version', 'os', 'replicaLocations', 'description',
-                            'buildResourceGroup', 'keyVault', 'virtualNetwork', 'virtualNetworkSubnet',
-                            'virtualNetworkResourceGroup', 'subscription']
-
-COMMON_ALLOWED_PROPERTIES = ['publisher', 'offer', 'replicaLocations', 'buildResourceGroup', 'keyVault',
-                             'virtualNetwork', 'virtualNetworkSubnet', 'virtualNetworkResourceGroup', 'subscription']
-
-GALLERY_REQUIRED_PROPERTIES = ['name', 'resourceGroup']
-GALLERY_ALLOWED_PROPERTIES = ['name', 'resourceGroup', 'subscription']
-
-log = loggers.getLogger(__name__)
+logger = get_logger(__name__)
 
 # indicates if the script is running in the docker container
 in_builder = os.environ.get('AZ_BAKE_IMAGE_BUILDER', False)
@@ -46,10 +37,10 @@ def get_gallery() -> dict:
     gallery_path = syaml.get_file(repo, 'gallery', required=True)
     gallery = syaml.parse(gallery_path, required=GALLERY_REQUIRED_PROPERTIES, allowed=GALLERY_ALLOWED_PROPERTIES)
 
-    log.info(f'Found gallery properties in {gallery_path}')
-    log.info(f'Gallery properties:')
+    logger.warning(f'Found gallery properties in {gallery_path}')  # info
+    logger.warning(f'Gallery properties:')  # info
     for line in json.dumps(gallery, indent=4).splitlines():
-        log.info(line)
+        logger.warning(line)  # info
 
     return gallery
 
@@ -63,10 +54,10 @@ def get_common() -> dict:
 
     common = syaml.parse(images_path, allowed=COMMON_ALLOWED_PROPERTIES)
 
-    log.info(f'Found common image properties in {images_path}')
-    log.info(f'Common image properties:')
+    logger.warning(f'Found common image properties in {images_path}')  # info
+    logger.warning(f'Common image properties:')  # info
     for line in json.dumps(common, indent=4).splitlines():
-        log.info(line)
+        logger.warning(line)  # info
 
     return common
 
@@ -81,7 +72,7 @@ def _missing_key_or_value(obj, key):
 
 def _pre_validate(image):
     '''Validate the image properties without doing any azure stuff'''
-    log.info(f'Validating image {image["name"]} (initional)')
+    logger.warning(f'Validating image {image["name"]} (initional)')  # info
 
     if _missing_key_or_value(image, 'name'):
         error_exit(f'name was not correctly applied to image object for image {image}')
@@ -89,12 +80,12 @@ def _pre_validate(image):
     if _missing_key_or_value(image, 'path'):
         error_exit(f'path was not correctly applied to image object for image {image}')
 
-    log.info(f'Image {image["name"]} passed initional validation')
+    logger.warning(f'Image {image["name"]} passed initional validation')  # info
 
 
 def _validate(image):
     '''Validate the image properties after supplementing azure stuff'''
-    log.info(f'Validating image {image["name"]} (full)')
+    logger.warning(f'Validating image {image["name"]} (full)')  # info
 
     if _has_key_and_value(image, 'buildResourceGroup') and _has_key_and_value(image, 'tempResourceGroup'):
         error_exit(f'image.yaml for {image["name"]} has values for both buildResourceGroup and tempResourceGroup properties. must only define one')
@@ -120,13 +111,13 @@ def _validate(image):
         if _missing_key_or_value(image['gallery'], key):
             error_exit(f'gallery property {key} was not correctly applied to image object for {image["name"]}')
 
-    log.info(f'Image {image["name"]} passed full validation')
+    logger.warning(f'Image {image["name"]} passed full validation')  # info
 
 
 def _get(image_name, gallery, common=None) -> dict:
     '''Get the image properties from the image.yaml file'''
     image_dir = images_root / image_name
-    log.info(f'Getting image {image_name} from {image_dir}')
+    logger.warning(f'Getting image {image_name} from {image_dir}')  # info
 
     image_path = syaml.get_file(image_dir, 'image', required=True)
     image = syaml.parse(image_path)
@@ -151,9 +142,9 @@ def _get(image_name, gallery, common=None) -> dict:
     if _missing_key_or_value(image['gallery'], 'subscription') and _has_key_and_value(image, 'subscription'):
         image['gallery']['subscription'] = image['subscription']
 
-    log.info(f'Found (initial) image properties in {image_path}')
+    logger.warning(f'Found (initial) image properties in {image_path}')  # info
     for line in json.dumps(image, indent=4).splitlines():
-        log.info(line)
+        logger.warning(line)  # info
 
     _pre_validate(image)
 
@@ -184,9 +175,9 @@ def get(image_name, gallery, common=None, suffix=None, ensure_azure=False) -> di
             image['location'] = image_def['location']
             image['tempResourceGroup'] = f'{image["gallery"]["name"]}-{image["name"]}-{suffix}'
 
-        log.info(f'Image {image["name"]} properties:')
+        logger.warning(f'Image {image["name"]} properties:')  # info
         for line in json.dumps(image, indent=4).splitlines():
-            log.info(line)
+            logger.warning(line)  # info
 
         _validate(image)
 
@@ -244,9 +235,9 @@ async def get_async(image_name, gallery, common=None, suffix=None, ensure_azure=
             image['location'] = image_def['location']
             image['tempResourceGroup'] = f'{image["gallery"]["name"]}-{image["name"]}-{suffix}'
 
-        log.info(f'Image {image["name"]} properties:')
+        logger.warning(f'Image {image["name"]} properties:')  # info
         for line in json.dumps(image, indent=4).splitlines():
-            log.info(line)
+            logger.warning(line)  # info
 
         _validate(image)
 

@@ -8,8 +8,8 @@ param location string = resourceGroup().location
 @description('The prefix to use in the name of all resources created. For example if Contoso-Images is provided, a key vault, storage account, and vnet will be created and named Contoso-Images-kv, contosoimagesstorage, and contoso-images-vent respectively.')
 param baseName string
 
-@description('The principal id of a service principal used in the image build pipeline. It will be givin contributor role to the resource group, and the appropriate permissions on the key vault and storage account')
-param builderPrincipalId string
+// @description('The principal id of a service principal used in the image build pipeline. It will be givin contributor role to the resource group, and the appropriate permissions on the key vault and storage account')
+// param builderPrincipalId string
 
 param vnetAddressPrefixes array = [ '10.0.0.0/24' ] // 256 addresses
 
@@ -35,24 +35,47 @@ var keyVaultName = baseNameLowerNoSpaceHyphenLength <= 21 ? '${baseNameLowerNoSp
 // ex. contosoimagesstorage
 // req: (3-24) Lowercase letters and numbers only. Globally unique.
 var baseNameLowerAlphaNumLength = length(baseNameLowerAlphaNum)
-var storageName = baseNameLowerAlphaNumLength <= 17 ? '${baseNameLowerAlphaNum}storage' : baseNameLowerAlphaNumLength <= 20 ? '${baseNameLowerAlphaNum}stor' : baseNameLowerAlphaNumLength <= 24 ? baseNameLowerAlphaNum : take(baseNameLowerAlphaNum, 24)
+var storageName = baseNameLowerAlphaNumLength <= 17 ? '${baseNameLowerAlphaNum}store' : baseNameLowerAlphaNumLength <= 20 ? '${baseNameLowerAlphaNum}stor' : baseNameLowerAlphaNumLength <= 24 ? baseNameLowerAlphaNum : take(baseNameLowerAlphaNum, 24)
 
 // ex. contoso-images-vnet
 // req: (2-64) Alphanumerics, underscores, periods, and hyphens. Start with alphanumeric. End alphanumeric or underscore. Resource Group unique.
 var vnetName = '${baseNameLowerNoSpace}-vnet'
+
+// ex. contoso-images
+// req: (3-128) Alphanumerics, underscores, and hyphens. Start with alphanumeric. Resource Group unique.
+var identityName = '${baseNameLowerNoSpace}-id'
 
 // docs: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor
 var contributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 // docs: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer
 var secretsOfficerRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
 
-var builderGroupAssignmentId = guid('groupreader${resourceGroup().id}${baseName}${builderPrincipalId}')
-var builderSecretsAssignmentId = guid('kvsecretofficer${resourceGroup().id}${keyVaultName}${builderPrincipalId}')
+// var builderGroupAssignmentId = guid('groupreader${resourceGroup().id}${baseName}${builderPrincipalId}')
+// var builderSecretsAssignmentId = guid('kvsecretofficer${resourceGroup().id}${keyVaultName}${builderPrincipalId}')
 
-resource builderGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(builderPrincipalId)) {
+var builderGroupAssignmentId = guid('groupreader${resourceGroup().id}${baseName}${identityName}')
+var builderSecretsAssignmentId = guid('kvsecretofficer${resourceGroup().id}${keyVaultName}${identityName}')
+
+// resource builderGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(builderPrincipalId)) {
+//   name: builderGroupAssignmentId
+//   properties: {
+//     principalId: builderPrincipalId
+//     roleDefinitionId: contributorRoleId
+//   }
+//   scope: resourceGroup()
+// }
+
+resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
+  name: identityName
+  location: location
+  tags: tags
+}
+
+resource builderGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: builderGroupAssignmentId
   properties: {
-    principalId: builderPrincipalId
+    principalId: builderIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
     roleDefinitionId: contributorRoleId
   }
   scope: resourceGroup()
@@ -123,10 +146,20 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
   tags: tags
 }
 
-resource builderKeyVaultAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(builderPrincipalId)) {
+// resource builderKeyVaultAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(builderPrincipalId)) {
+//   name: builderSecretsAssignmentId
+//   properties: {
+//     principalId: builderPrincipalId
+//     roleDefinitionId: secretsOfficerRoleId
+//   }
+//   scope: keyVault
+// }
+
+resource builderKeyVaultAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: builderSecretsAssignmentId
   properties: {
-    principalId: builderPrincipalId
+    principalId: builderIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
     roleDefinitionId: secretsOfficerRoleId
   }
   scope: keyVault
@@ -209,16 +242,19 @@ resource group_tags 'Microsoft.Resources/tags@2021-04-01' = {
   name: 'default'
   properties: {
     tags: union({
-        'hidden-bake:image:buildResourceGroup': resourceGroup().name
-        'hidden-bake:image:keyVault': keyVault.name
-        'hidden-bake:image:virtualNetwork': vnet.name
-        'hidden-bake:image:virtualNetworkSubnet': defaultSubnetName
-        'hidden-bake:image:virtualNetworkResourceGroup': resourceGroup().name
-        'hidden-bake:image:subscription': az.subscription().subscriptionId
-        'hidden-bake:builder:storageAccount': storage.name
-        'hidden-bake:builder:subnetId': '${vnet.id}/subnets/${builderSubnetName}'
-        'hidden-bake:sandbox:baseName': baseName
-        'hidden-bake:sandbox:builderPrincipalId': builderPrincipalId
+        'hidden-bake:location': location
+        'hidden-bake:baseName': baseName
+        'hidden-bake:resourceGroup': resourceGroup().name
+        'hidden-bake:subscription': az.subscription().subscriptionId
+        'hidden-bake:virtualNetwork': vnet.name
+        'hidden-bake:virtualNetworkResourceGroup': resourceGroup().name
+        'hidden-bake:defaultSubnet': defaultSubnetName
+        'hidden-bake:builderSubnet': builderSubnetName
+        'hidden-bake:keyVault': keyVault.name
+        'hidden-bake:storageAccount': storage.name
+        // 'hidden-bake:subnetId': '${vnet.id}/subnets/${builderSubnetName}'
+        'hidden-bake:identityId': builderIdentity.id
+        // 'hidden-bake:sandbox:builderPrincipalId': builderPrincipalId
       }, tags)
   }
 }

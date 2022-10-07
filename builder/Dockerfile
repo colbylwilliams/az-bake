@@ -9,8 +9,8 @@ ARG IMAGE_VERSION
 # Metadata as defined at http://label-schema.org
 ARG BUILD_DATE
 
-ENV ACI_IMAGE_BUILDER=1
-ENV ACI_IMAGE_BUILDER_VERSION=$IMAGE_VERSION
+ENV AZ_BAKE_IMAGE_BUILDER=1
+ENV AZ_BAKE_IMAGE_BUILDER_VERSION=$IMAGE_VERSION
 
 LABEL maintainer="Microsoft" \
     org.opencontainers.image.created=$BUILD_DATE \
@@ -36,6 +36,9 @@ LABEL maintainer="Microsoft" \
 
 # install packer
 RUN apk add --no-cache packer --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
+
+# install az-bake
+RUN az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.5-py3-none-any.whl -y
 
 COPY . /builder.d
 

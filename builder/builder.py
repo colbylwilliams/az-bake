@@ -14,16 +14,16 @@ import loggers
 import packer
 
 # indicates if the script is running in the docker container
-in_builder = os.environ.get('ACI_IMAGE_BUILDER', False)
+in_builder = os.environ.get('AZ_BAKE_IMAGE_BUILDER', False)
 in_builder = True if in_builder else False
 
-builder_version = os.environ.get('ACI_IMAGE_BUILDER_VERSION', 'unknown')
+builder_version = os.environ.get('AZ_BAKE_IMAGE_BUILDER_VERSION', 'unknown')
 
 log = loggers.getLogger(__name__)
 
 
-log.info(f'ACI_IMAGE_BUILDER: {in_builder}')
-log.info(f'ACI_IMAGE_BUILDER_VERSION: {builder_version}')
+log.info(f'AZ_BAKE_IMAGE_BUILDER: {in_builder}')
+log.info(f'AZ_BAKE_IMAGE_BUILDER_VERSION: {builder_version}')
 log.debug(f'in_builder: {in_builder}')
 
 
@@ -48,11 +48,11 @@ if not os.path.isdir(repo):
 if not os.path.isdir(storage):
     log.warning(f'Missing volume {storage}')
 
-for env in ['BUILD_IMAGE_NAME']:
+for env in ['AZ_BAKE_BUILD_IMAGE_NAME']:
     if not os.environ.get(env, False):
         error_exit(f'Missing {env} environment variable')
 
-image_name = os.environ['BUILD_IMAGE_NAME']
+image_name = os.environ['AZ_BAKE_BUILD_IMAGE_NAME']
 image_path = repo / 'images' / image_name
 
 log.info(f'Image name: {image_name}')

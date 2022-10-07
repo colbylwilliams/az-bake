@@ -21,7 +21,7 @@ DEFAULT_PKR_VARS = ['subscription', 'name', 'location', 'version', 'tempResource
 log = loggers.getLogger(__name__)
 
 # indicates if the script is running in the docker container
-in_builder = os.environ.get('ACI_IMAGE_BUILDER', False)
+in_builder = os.environ.get('AZ_BAKE_IMAGE_BUILDER', False)
 
 repo = Path('/mnt/repo') if in_builder else Path(__file__).resolve().parent.parent
 
