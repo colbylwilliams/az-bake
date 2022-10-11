@@ -11,7 +11,7 @@ packer {
 # https://www.packer.io/plugins/builders/azure/arm
 source "azure-arm" "vm" {
   skip_create_image                = false
-  user_assigned_managed_identities = var.identities # optional
+  user_assigned_managed_identities = [var.sandbox.identityId] # optional
   async_resourcegroup_delete       = true
   vm_size                          = "Standard_D8s_v3" # default is Standard_A1
   # winrm options
@@ -27,30 +27,31 @@ source "azure-arm" "vm" {
   image_version      = "latest"
   use_azure_cli_auth = true
   # managed image options
-  managed_image_name                = var.name
+  managed_image_name                = var.image.name
   managed_image_resource_group_name = var.gallery.resourceGroup
   # packer creates a temporary resource group
-  subscription_id          = var.subscription
-  location                 = var.location
-  temp_resource_group_name = var.tempResourceGroup
+  subscription_id = var.sandbox.subscription
+  // location                 = var.location
+  // temp_resource_group_name = var.tempResourceGroup
   # OR use an existing resource group
-  build_resource_group_name = var.buildResourceGroup
+  build_resource_group_name = var.sandbox.resourceGroup
   # optional use an existing key vault
-  build_key_vault_name = var.keyVault
+  build_key_vault_name = var.sandbox.keyVault
   # optional use an existing virtual network
-  virtual_network_name                = var.virtualNetwork
-  virtual_network_subnet_name         = var.virtualNetworkSubnet
-  virtual_network_resource_group_name = var.virtualNetworkResourceGroup
+  virtual_network_name                = var.sandbox.virtualNetwork
+  virtual_network_subnet_name         = var.sandbox.defaultSubnet
+  virtual_network_resource_group_name = var.sandbox.virtualNetworkResourceGroup
   shared_image_gallery_destination {
     subscription         = var.gallery.subscription
     gallery_name         = var.gallery.name
     resource_group       = var.gallery.resourceGroup
-    image_name           = var.name
-    image_version        = var.version
-    replication_regions  = var.replicaLocations
+    image_name           = var.image.name
+    image_version        = var.image.version
+    replication_regions  = var.image.replicaLocations
     storage_account_type = "Standard_LRS" # default is Standard_LRS
   }
 }
+
 
 build {
   sources = ["source.azure-arm.vm"]

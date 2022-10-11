@@ -13,7 +13,10 @@ from pathlib import Path
 from azure.cli.core.azclierror import ValidationError
 from knack.log import get_logger
 
-from ._constants import PKR_AUTO_VARS_FILE, PKR_DEFAULT_VARS
+from ._constants import (BAKE_PLACEHOLDER, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
+                         PKR_DEFAULT_VARS, PKR_PACKAGES_CONFIG_FILE,
+                         PKR_VARS_FILE)
+from ._utils import get_templates_path
 
 logger = get_logger(__name__)
 
@@ -47,13 +50,18 @@ def _parse_command(command):
     if args[0] != packer:
         args = [packer] + args
 
+    # convert Path objects to strings
+    for i, arg in enumerate(args):
+        if isinstance(arg, Path):
+            args[i] = str(arg)
+
     return args
 
 
 def get_packer_vars(image):
     '''Gets the available packer variables from the variable.pkr.hcl file'''
     try:
-        args = _parse_command(['inspect', '-machine-readable', image['path']])
+        args = _parse_command(['inspect', '-machine-readable', image['dir']])
         logger.info(f'Running packer command: {" ".join(args)}')
         proc = subprocess.run(args, capture_output=True, check=True, text=True)
         if proc.stdout:
@@ -64,33 +72,47 @@ def get_packer_vars(image):
         return PKR_DEFAULT_VARS
 
 
-def save_packer_vars_file(image):
+def _clean_for_vars(obj, allowed_keys):
+    obj_vars = {}
+    for k in obj:
+        if k in allowed_keys:
+            obj_vars[k] = obj[k]
+    return obj_vars
+
+
+def save_packer_vars_file(sandbox, gallery, image, additonal_vars=None):
     '''Saves properties from image.yaml to a packer auto variables file'''
     pkr_vars = get_packer_vars(image)
+    logger.info(f'Packer variables for {image["name"]}: {pkr_vars}')
     auto_vars = {}
 
-    for v in pkr_vars:
-        if v in image and image[v]:
-            auto_vars[v] = image[v]
+    if additonal_vars:
+        for v in pkr_vars:
+            if v in additonal_vars and additonal_vars[v]:
+                auto_vars[v] = additonal_vars[v]
+
+    auto_vars['sandbox'] = _clean_for_vars(sandbox, PKR_DEFAULT_VARS['sandbox'])
+    auto_vars['gallery'] = _clean_for_vars(gallery, PKR_DEFAULT_VARS['gallery'])
+    auto_vars['image'] = _clean_for_vars(image, PKR_DEFAULT_VARS['image'])
 
     logger.info(f'Saving {image["name"]} packer auto variables:')
     for line in json.dumps(auto_vars, indent=4).splitlines():
         logger.info(line)
 
-    with open(Path(image['path']) / PKR_AUTO_VARS_FILE, 'w') as f:
+    with open(image['dir'] / PKR_AUTO_VARS_FILE, 'w') as f:
         json.dump(auto_vars, f, ensure_ascii=False, indent=4, sort_keys=True)
 
 
-def save_packer_vars_files(images):
+def save_packer_vars_files(sandbox, gallery, images, additonal_vars=None):
     '''Saves properties from each image.yaml to packer auto variables files'''
     for image in images:
-        save_packer_vars_file(image)
+        save_packer_vars_file(sandbox, gallery, image, additonal_vars)
 
 
 def packer_init(image):
     '''Executes the packer init command on an image'''
     logger.info(f'Executing packer init for {image["name"]}')
-    args = _parse_command(['init', image['path']])
+    args = _parse_command(['init', image['dir']])
     logger.info(f'Running packer command: {" ".join(args)}')
     proc = subprocess.run(args, stdout=sys.stdout, stderr=sys.stderr, check=True, text=True)
     logger.info(f'Done executing packer init for {image["name"]}')
@@ -100,7 +122,7 @@ def packer_init(image):
 def packer_build(image):
     '''Executes the packer build command on an image'''
     logger.info(f'Executing packer build for {image["name"]}')
-    args = _parse_command(['build', '-force', image['path']])
+    args = _parse_command(['build', '-force', image['dir']])
     if in_builder:
         args.insert(2, '-color=false')
     logger.info(f'Running packer command: {" ".join(args)}')
@@ -113,3 +135,55 @@ def packer_execute(image):
     '''Executes the packer init and build commands on an image'''
     i = packer_init(image)
     return packer_build(image) if i == 0 else i
+
+
+def copy_packer_files(image_dir):
+    '''Copies the packer files from the bake templates to the image directory'''
+    templates_dir = get_templates_path()
+    shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
+    shutil.copy2(templates_dir / PKR_VARS_FILE, image_dir)
+
+
+def inject_choco_provisioners(image_dir, config_xml):
+    '''Injects the chocolatey provisioners into the packer build file'''
+    # create the choco packages config file
+    with open(image_dir / PKR_PACKAGES_CONFIG_FILE, 'w') as f:
+        f.write(config_xml)
+
+    choco_install = f'''
+  # Injected by az bake
+  provisioner "file" {{
+    source = "${{path.root}}/{PKR_PACKAGES_CONFIG_FILE}"
+    destination = "C:/Windows/Temp/{PKR_PACKAGES_CONFIG_FILE}"
+  }}
+
+  # Injected by az bake
+  provisioner "powershell" {{
+    elevated_user     = build.User
+    elevated_password = build.Password
+    inline = [
+      "choco install C:/Windows/Temp/{PKR_PACKAGES_CONFIG_FILE} --yes --no-progress"
+    ]
+  }}
+
+  {BAKE_PLACEHOLDER}
+    '''
+
+    build_file_path = image_dir / PKR_BUILD_FILE
+
+    if not build_file_path.exists():
+        raise ValidationError(f'Could not find {PKR_BUILD_FILE} file at {build_file_path}')
+    if not build_file_path.is_file():
+        raise ValidationError(f'{build_file_path} is not a file')
+
+    # inject chocolatey install into build.pkr.hcl
+    with open(build_file_path, 'r') as f:
+        pkr_build = f.read()
+
+    if BAKE_PLACEHOLDER not in pkr_build:
+        raise ValidationError(f'Could not find {BAKE_PLACEHOLDER} in {PKR_BUILD_FILE} at {build_file_path}')
+
+    pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, choco_install)
+
+    with open(build_file_path, 'w') as f:
+        f.write(pkr_build)

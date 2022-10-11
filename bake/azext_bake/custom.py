@@ -27,29 +27,93 @@ from knack.log import get_logger
 # from knack.prompting import prompt_y_n
 from knack.util import CLIError
 
+from ._arm import (create_image_definition, create_subnet,
+                   deploy_arm_template_at_resource_group,
+                   ensure_gallery_permissions, get_arm_output, get_gallery,
+                   get_image_definition, get_image_version,
+                   get_resource_group_tags, image_version_exists,
+                   tag_resource_group)
 from ._client_factory import cf_msi, cf_network
-from ._constants import (BAKE_PLACEHOLDER, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
+from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER,
+                         AZ_BAKE_IMAGE_BUILDER_VERSION, AZ_BAKE_REPO_VOLUME,
+                         AZ_BAKE_STORAGE_VOLUME, BAKE_PLACEHOLDER,
+                         BAKE_PROPERTIES, IMAGE_PROPERTIES, KEY_ALLOWED,
+                         KEY_REQUIRED, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
                          PKR_PACKAGES_CONFIG_FILE, PKR_VARS_FILE, TAG_PREFIX,
                          tag_key)
-from ._deploy_utils import (create_subnet,
-                            deploy_arm_template_at_resource_group,
-                            get_arm_output, get_resource_group_tags,
-                            tag_resource_group)
-from ._gallery import (create_image_definition, ensure_gallery_permissions,
-                       get_gallery, get_image_definition, get_image_version,
-                       image_version_exists)
-from ._github_utils import (get_github_release, get_release_templates,
-                            get_template_url)
-from ._packer import check_packer_install
+from ._github import (get_github_release, get_release_templates,
+                      get_template_url)
+from ._packer import (check_packer_install, copy_packer_files,
+                      inject_choco_provisioners, save_packer_vars_file)
 from ._utils import get_yaml_file_contents, get_yaml_file_path
 
 logger = get_logger(__name__)
 
 
 def bake_test(cmd):
-    from ._github_utils import get_github_release
+    from ._github import get_github_release
     foo = get_github_release(prerelease=True)
     return foo['tag_name']
+
+
+def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=None, gallery=None, image=None, suffix=None):
+
+    if in_builder:
+        from azure.cli.command_modules.profile.custom import login
+        # from azure.cli.core._profile import Profile
+        from azure.cli.core.auth.identity import (AZURE_CLIENT_ID,
+                                                  AZURE_CLIENT_SECRET,
+                                                  AZURE_TENANT_ID)
+
+        # profile = Profile(cli_ctx=cmd.cli_ctx)
+        az_client_id = os.environ.get(AZURE_CLIENT_ID, None)
+        az_client_secret = os.environ.get(AZURE_CLIENT_SECRET, None)
+        az_tenant_id = os.environ.get(AZURE_TENANT_ID, None)
+
+        if az_client_id and az_client_secret and az_tenant_id:
+            logger.info(f'Found credentials for Azure Service Principal')
+            logger.info(f'Logging in with Service Principal')
+            login(cmd=cmd, service_principal=True, allow_no_subscriptions=True,
+                  username=az_client_id, password=az_client_secret, tenant=az_tenant_id)
+        else:
+            logger.info(f'No credentials for Azure Service Principal')
+            logger.info(f'Logging in to Azure with managed identity')
+            login(cmd=cmd, allow_no_subscriptions=True, identity=True)
+    else:
+        logger.warning('Not in builder. Skipping login.')
+
+    # logger.warning(json.dumps(sandbox, indent=4))
+    # logger.warning(json.dumps(gallery, indent=4))
+    # logger.warning(image)
+
+    # copy build.pkr.hcl and variable.pkr.hcl to the image directory
+    copy_packer_files(image['dir'])
+
+    from ._utils import get_choco_package_config, get_install_choco_dict
+
+    choco_install = get_install_choco_dict(image)
+
+    choco_config = get_choco_package_config(choco_install)
+    # logger.warning(choco_config)
+
+    # create the choco packages config file
+    inject_choco_provisioners(image['dir'], choco_config)
+
+    save_packer_vars_file(sandbox, gallery, image)
+
+    gallery_res = get_gallery(cmd, gallery['resourceGroup'], gallery['name'])
+
+    definition = get_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'])
+    if not definition:
+        logger.warning(f'Image definition {image["name"]} does not exist. Creating...')
+        definition = create_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'], image['publisher'],
+                                             image['offer'], image['sku'], gallery_res.location)
+    elif image_version_exists(cmd, gallery['resourceGroup'], gallery['name'], image['name'], image['version']):
+        raise CLIError('Image version already exists')
+
+    logger.warning(f'Image version {image["version"]} does not exist.')
+
+    pass
 
 
 def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
@@ -95,140 +159,21 @@ def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
     return deployment
 
 
-def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=None):
-
-    tags = get_resource_group_tags(cmd, sandbox_resource_group_name)
-
-    sub = tags.get(tag_key('subscription'))
-    loc = tags.get(tag_key('location'))
-    identity_id = tags.get(tag_key('identityId'))
-    keyvault_name = tags.get(tag_key('keyVault'))
-    storage_account = tags.get(tag_key('storageAccount'))
-    vnet_name = tags.get(tag_key('virtualNetwork'))
-    vnet_group = tags.get(tag_key('virtualNetworkResourceGroup'))
-    default_subnet = tags.get(tag_key('defaultSubnet'))
-    builder_subnet = tags.get(tag_key('builderSubnet'))
-
-    if not sub:
-        sub = get_subscription_id(cmd.cli_ctx)
-
-    # if not loc:
-
-    if not identity_id or not keyvault_name or not storage_account or not vnet_name:
-        resources = get_resources_in_resource_group(cmd.cli_ctx, sandbox_resource_group_name)
-
-    # check for identity
-    if not identity_id:
-        identity = next((r for r in resources if r.type == 'Microsoft.ManagedIdentity/userAssignedIdentities'), None)
-        if not identity:
-            raise CLIError('No identity found in sandbox resource group')
-        identity_id = identity.id
-
-    if not is_valid_resource_id(identity_id):
-        raise CLIError('Invalid identity id. Must be a resource id')
-
-    if gallery_resource_id:
-        identity_id = ensure_gallery_permissions(cmd, gallery_resource_id, identity_id)
-
-    # check for keyvault
-    if not keyvault_name:
-        keyvault = next((r for r in resources if r.type == 'Microsoft.KeyVault/vaults'), None)
-        if not keyvault:
-            raise CLIError('Could not find keyvault in sandbox resource group')
-        keyvault_name = keyvault.name
-
-    # check for storage
-    if not storage_account:
-        storage = next((r for r in resources if r.type == 'Microsoft.Storage/storageAccounts'), None)
-        if not storage:
-            raise CLIError('Could not find storage in sandbox resource group')
-        storage_account = storage.name
-
-    # check for vnet
-    if not vnet_name:
-        vnet = next((r for r in resources if r.type == 'Microsoft.Network/virtualNetworks'), None)
-        if not vnet:
-            raise CLIError('Could not find vnet in sandbox resource group')
-        vnet_name = vnet.name
-
-    if not default_subnet or not builder_subnet:
-        net_client = cf_network(cmd.cli_ctx).virtual_networks
-        vnet = net_client.get(sandbox_resource_group_name, vnet_name)
-
-        # check for builders subnet
-        delegated_subnets = [s for s in vnet.subnets if s.delegations and any([d for d in s.delegations if d.service_name == 'Microsoft.ContainerInstance/containerGroups'])]
-        if not delegated_subnets:
-            raise CLIError('Could not find builders subnet (delegated to ACI) in vnet')
-        if len(delegated_subnets) > 1:
-            raise CLIError('Found more than one subnet delegated to ACI in vnet. Cant determine which subnet to use for builders.')
-        builder_subnet = delegated_subnets[0]
-
-        # check for default subnet
-        other_subnets = [s for s in vnet.subnets if s.id != builder_subnet.id]
-        if not other_subnets:
-            raise CLIError('Could not find a default subnet in vnet')
-        if len(other_subnets) > 1:
-            raise CLIError('Found more than one subnet (not delegated to ACI) in vnet. Cant determine which subnet to use for default.')
-        default_subnet = other_subnets[0]
-
-        default_subnet = default_subnet.name
-        builder_subnet = builder_subnet.name
-
-    bake_yaml = {
-        'version': 1.0
-    }
-
-    bake_yaml['sandbox'] = {
-        'resourceGroup': sandbox_resource_group_name,
-        'subscription': sub,
-        'virtualNetwork': vnet_name,
-        'virtualNetworkResourceGroup': sandbox_resource_group_name,
-        'defaultSubnet': default_subnet,
-        'builderSubnet': builder_subnet,
-        'keyVault': keyvault_name,
-        'storageAcccount': storage_account,
-        'identityId': identity_id
-    }
-
-    if gallery_resource_id:
-        gallery_id = parse_resource_id(gallery_resource_id)
-        bake_yaml['gallery'] = {
-            'name': gallery_id['name'],
-            'resourceGroup': gallery_id['resource_group'],
-            'subscription': gallery_id['subscription'],
-        }
-
-    # bake_yaml['images'] = {
-    #     'publisher': 'Contoso',
-    #     'offer': 'DevBox',
-    #     'replicaLocations': ['eastus', 'westus'],
-    # }
-
-    bake_file = os.path.abspath('/Users/colbylwilliams/GitHub/colbylwilliams/az-bake/.local/bake_test3.yaml')
-
-    with open(bake_file, 'w+') as f:
-        yaml.safe_dump(bake_yaml, f, default_flow_style=False, sort_keys=False)
-
-    # tags = {
-    #     tag_key('builder:storageAccount'): storage.name,
-    #     tag_key('builder:subnetId'): builder_subnet.id,
-    #     # tag_key('cli:version'): 'v0.0.2',
-    #     tag_key('image:buildResourceGroup'): sandbox_resource_group_name,
-    #     tag_key('image:keyVault'): keyvault.name,
-    #     tag_key('image:subscription'): sub,
-    #     tag_key('image:virtualNetwork'): vnet.name,
-    #     tag_key('image:virtualNetworkResourceGroup'): sandbox_resource_group_name,
-    #     tag_key('image:virtualNetworkSubnet'): default_subnet.name,
-    #     # tag_key('sandbox:baseName'): 'colbysbtemp3',
-    #     # tag_key('sandbox:builderPrincipalId'): 'ae2d3344-c4a5-41bd-85c7-644bc3bea8a4',
-    #     # tag_key('sandbox:version'): 'v0.0.4'
-    # }
-
-    return tags
+def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=None, sandbox=None, gallery=None):
+    if gallery_resource_id and 'identityId' in sandbox and sandbox['identityId']:
+        identity_id = sandbox['identityId']
+        if not is_valid_resource_id(identity_id):
+            raise CLIError(f'Invalid sandbox identityId: {identity_id}\n Must be a valid resource id')
+        logger.warning('Validating gallery permissions')
+        ensure_gallery_permissions(cmd, gallery_resource_id, sandbox['identityId'])
+    return True
 
 
 # sandbox, gallery, and images come from validator
 def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None, gallery=None, images=None):
+    from azure.cli.command_modules.resource._bicep import \
+        ensure_bicep_installation
+    ensure_bicep_installation()
 
     hook = cmd.cli_ctx.get_progress_controller()
     hook.begin()
@@ -264,7 +209,7 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
 
     if is_ci:
         logger.warning('Running in CI mode')
-        from ._ci import get_repo
+        from ._repos import get_repo
         repo = get_repo()
 
         for prop in ['provider', 'url', 'ref', 'sha']:
@@ -356,11 +301,7 @@ def bake_image(cmd, image_path, sandbox_resource_group_name=None, bake_yaml=None
     #     image_file = get_yaml_file_path(image_dir, 'image', required=True)
     #     image_name = image_path.name
 
-    import tempfile
-
-    from ._utils import get_choco_config
-
-    templates_dir = Path(__file__).resolve().parent / 'templates'
+    from ._utils import get_choco_package_config
 
     choco = [
         {
@@ -371,50 +312,17 @@ def bake_image(cmd, image_path, sandbox_resource_group_name=None, bake_yaml=None
         }
     ]
 
-    choco_xml = get_choco_config(choco)
+    choco_xml = get_choco_package_config(choco)
     logger.warning(choco_xml)
 
     image_dir = image['dir']
     image_name = image['name']
     image_file = image['file']
     # copy build.pkr.hcl and variable.pkr.hcl to the image directory
-    shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
-    shutil.copy2(templates_dir / PKR_VARS_FILE, image_dir)
+    copy_packer_files(image_dir)
 
     # create the choco packages config file
-    with open(image_dir / PKR_PACKAGES_CONFIG_FILE, 'w') as f:
-        f.write(choco_xml)
-
-    choco_install = f'''
-  # Injected by az bake
-  provisioner "file" {{
-    source = "${{path.root}}/{PKR_PACKAGES_CONFIG_FILE}"
-    destination = "C:/Windows/Temp/{PKR_PACKAGES_CONFIG_FILE}"
-  }}
-
-  # Injected by az bake
-  provisioner "powershell" {{
-    elevated_user     = build.User
-    elevated_password = build.Password
-    inline = [
-      "choco install C:/Windows/Temp/{PKR_PACKAGES_CONFIG_FILE} --yes --no-progress"
-    ]
-  }}
-    '''
-
-    # inject chocolatey install into build.pkr.hcl
-    with open(image_dir / PKR_BUILD_FILE, 'r') as f:
-        pkr_build = f.read()
-
-    if BAKE_PLACEHOLDER not in pkr_build:
-        raise ValidationError(f'Could not find {BAKE_PLACEHOLDER} in {PKR_BUILD_FILE}')
-
-    pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, choco_install)
-
-    with open(image_dir / PKR_BUILD_FILE, 'w') as f:
-        f.write(pkr_build)
-
-    # shutil.copy2(image_file, image_dir)
+    inject_choco_provisioners(image_dir, choco_xml)
 
     logger.warning(f'Image file {image_file}')
     logger.warning(f'Image name {image_name}')

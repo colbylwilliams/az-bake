@@ -10,7 +10,7 @@ from azure.cli.core.decorators import Completer
 from knack.log import get_logger
 
 from ._client_factory import cf_network, cf_resources
-from ._github_utils import get_github_releases
+from ._github import get_github_releases
 
 logger = get_logger(__name__)
 

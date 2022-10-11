@@ -3,7 +3,15 @@
 # Licensed under the MIT License.
 # ------------------------------------
 
+from pathlib import Path
+
 BAKE_PLACEHOLDER = '###BAKE###'
+
+AZ_BAKE_IMAGE_BUILDER = 'AZ_BAKE_IMAGE_BUILDER'
+AZ_BAKE_BUILD_IMAGE_NAME = 'AZ_BAKE_BUILD_IMAGE_NAME'
+AZ_BAKE_IMAGE_BUILDER_VERSION = 'AZ_BAKE_IMAGE_BUILDER_VERSION'
+AZ_BAKE_REPO_VOLUME = '/mnt/repo'
+AZ_BAKE_STORAGE_VOLUME = '/mnt/storage'
 
 PKR_BUILD_FILE = 'build.pkr.hcl'
 PKR_VARS_FILE = 'variable.pkr.hcl'
@@ -38,6 +46,10 @@ SANDBOX_REQUIRED_PROPERTIES = [
 SANDBOX_ALLOWED_PROPERTIES = SANDBOX_REQUIRED_PROPERTIES + [
     'location'
 ]
+SANDBOX_PROPERTIES = {
+    KEY_REQUIRED: SANDBOX_REQUIRED_PROPERTIES,
+    KEY_ALLOWED: SANDBOX_ALLOWED_PROPERTIES
+}
 
 GALLERY_REQUIRED_PROPERTIES = [
     'name',
@@ -46,6 +58,10 @@ GALLERY_REQUIRED_PROPERTIES = [
 GALLERY_ALLOWED_PROPERTIES = GALLERY_REQUIRED_PROPERTIES + [
     'subscription'
 ]
+GALLERY_PROPERTIES = {
+    KEY_REQUIRED: GALLERY_REQUIRED_PROPERTIES,
+    KEY_ALLOWED: GALLERY_ALLOWED_PROPERTIES
+}
 
 IMAGE_COMMON_ALLOWED_PROPERTIES = [
     'publisher',
@@ -72,17 +88,11 @@ IMAGE_INSTALL_ALLOWED_PROPERTIES = [
 
 BAKE_PROPERTIES = {
     KEY_REQUIRED: BAKE_REQUIRED_PROPERTIES,
-    'sandbox': {
-        KEY_REQUIRED: SANDBOX_REQUIRED_PROPERTIES,
-        KEY_ALLOWED: SANDBOX_ALLOWED_PROPERTIES
-    },
+    'sandbox': SANDBOX_PROPERTIES,
     'images': {
         KEY_ALLOWED: IMAGE_COMMON_ALLOWED_PROPERTIES
     },
-    'gallery': {
-        KEY_REQUIRED: GALLERY_REQUIRED_PROPERTIES,
-        KEY_ALLOWED: GALLERY_ALLOWED_PROPERTIES
-    }
+    'gallery': GALLERY_PROPERTIES
 }
 
 IMAGE_PROPERTIES = {
@@ -91,22 +101,46 @@ IMAGE_PROPERTIES = {
 }
 
 
-PKR_DEFAULT_VARS = [
-    'subscription',
-    'name',
-    'location',
-    'version',
-    'tempResourceGroup',
-    'buildResourceGroup',
-    'gallery',
-    'replicaLocations',
-    'keyVault',
-    'virtualNetwork',
-    'virtualNetworkSubnet',
-    'virtualNetworkResourceGroup',
-    'branch',
-    'commit'
-]
+# PKR_DEFAULT_VARS = [
+#     'subscription',
+#     'name',
+#     'location',
+#     'version',
+#     'tempResourceGroup',
+#     'buildResourceGroup',
+#     'gallery',
+#     'replicaLocations',
+#     'keyVault',
+#     'virtualNetwork',
+#     'virtualNetworkSubnet',
+#     'virtualNetworkResourceGroup',
+#     'branch',
+#     'commit'
+# ]
+
+PKR_DEFAULT_VARS = {
+    'image': [
+        'name',
+        'version',
+        'replicaLocations'
+    ],
+    'gallery': [
+        'name',
+        'resourceGroup',
+        'subscription'
+    ],
+    'sandbox': [
+        'resourceGroup',
+        'subscription',
+        'virtualNetwork',
+        'virtualNetworkResourceGroup',
+        'defaultSubnet',
+        'builderSubnet',
+        'keyVault',
+        'storageAccount',
+        'identityId'
+    ]
+}
 
 PKR_VARS_MAP = {
 

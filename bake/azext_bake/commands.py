@@ -4,10 +4,10 @@
 # ------------------------------------
 
 # from ._transformers import transform_rg_table
-from ._validators import (process_bake_image_namespace,
-                          process_bake_repo_namespace,
-                          process_bake_repo_validate_namespace,
-                          process_sandbox_create_namespace)
+from ._validators import (  # process_bake_sandbox_validate_namespace,
+    builder_validator, process_bake_image_namespace,
+    process_bake_repo_namespace, process_bake_repo_validate_namespace,
+    process_sandbox_create_namespace)
 
 
 def load_command_table(self, _):  # pylint: disable=too-many-statements
@@ -37,5 +37,8 @@ def load_command_table(self, _):  # pylint: disable=too-many-statements
 
     with self.command_group('bake image') as g:
         g.custom_command('test', 'bake_image_test')
+
+    with self.command_group('bake _builder') as g:
+        g.custom_command('build', 'bake_builder_build', validator=builder_validator)
 
     # with self.command_group('bake')

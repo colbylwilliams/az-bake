@@ -3,7 +3,12 @@
 # Licensed under the MIT License.
 # ------------------------------------
 
+import os
+
 from azure.cli.core.azclierror import CLIError
+from knack.log import get_logger
+
+logger = get_logger(__name__)
 
 
 def _is_github_url(url) -> bool:
@@ -108,6 +113,97 @@ def parse_repo_url(url) -> dict:
         return _parse_devops_url(url)
 
     raise CLIError(f'{url} is not a valid repository url')
+
+# ----------------
+# CI Environment
+# ----------------
+
+
+# GitHub Actions
+
+
+def _is_github_actions():
+    ci = os.environ.get('CI', False)
+    github_action = os.environ.get('GITHUB_ACTION', False)
+    return ci and github_action
+
+
+def _get_github_repo_url():
+    github_server_url = os.environ.get('GITHUB_SERVER_URL', None)
+    github_repository = os.environ.get('GITHUB_REPOSITORY', None)
+    if github_server_url and github_repository:
+        return f'{github_server_url}/{github_repository}'
+    return None
+
+
+def _get_github_token():
+    token = os.environ.get('GITHUB_TOKEN', None)
+    if not token:
+        logger.warning('GITHUB_TOKEN environment variable not set. This is required for private repositories.')
+        # raise CLIError('GITHUB_TOKEN environment variable not set')
+    return token
+
+
+def _get_github_ref():
+    return os.environ.get('GITHUB_REF', None)
+
+
+def _get_github_sha():
+    return os.environ.get('GITHUB_SHA', None)
+
+
+def _is_devops_pipeline():
+    return os.environ.get('TF_BUILD', False)
+
+
+# DevOps Pipeline
+
+
+def _get_devops_repo_url():
+    return os.environ.get('BUILD_REPOSITORY_URI', None)
+
+
+def _get_devops_token():
+    return os.environ.get('SYSTEM_ACCESSTOKEN', None)
+
+
+def _get_devops_ref():
+    return os.environ.get('BUILD_SOURCEBRANCH', None)
+
+
+def _get_devops_sha():
+    return os.environ.get('BUILD_SOURCEVERSION', None)
+
+
+def get_repo():
+    repo = {}
+    if _is_github_actions():
+        logger.warning('Running in GitHub Action')
+        repo['provider'] = 'github'
+
+        url = _get_github_repo_url()
+        if (token := _get_github_token()):
+            url = url.replace('https://', f'https://{token}@')
+
+        repo['url'] = url
+        repo['ref'] = _get_github_ref()
+        repo['sha'] = _get_github_sha()
+
+    elif _is_devops_pipeline():
+        logger.warning('Running in Azure DevOps Pipeline')
+        repo['provider'] = 'devops'
+
+        url = _get_devops_repo_url()
+        if (token := _get_devops_token()):
+            url = url.replace('https://', f'https://{token}@')
+
+        repo['url'] = url
+        repo['ref'] = _get_devops_ref()
+        repo['sha'] = _get_devops_sha()
+    else:
+        raise CLIError('Could not determine CI environment. Currently only support GitHub Actions and Azure DevOps Pipelines')
+
+    return repo
 
 
 if __name__ == '__main__':

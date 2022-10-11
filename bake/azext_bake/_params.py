@@ -10,7 +10,9 @@ from knack.arguments import CLIArgumentType
 
 from ._completers import get_version_completion_list
 from ._validators import (bake_source_version_validator,
-                          repository_path_validator)
+                          gallery_resource_id_validator, image_names_validator,
+                          repository_path_validator,
+                          sandbox_resource_group_name_validator)
 
 # get_resource_group_completion_list,)
 
@@ -25,11 +27,12 @@ def load_arguments(self, _):
     # )
 
     sandbox_resource_group_name_type = CLIArgumentType(
-        options_list=['--resource-group', '--sandbox', '-sb', '-g'],
+        options_list=['--sandbox', '-sb', '-g'],
         completer=get_resource_group_completion_list,
         # id_part='resource_group',
         help="Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`",
         configured_default='bake-sandbox',
+        validator=sandbox_resource_group_name_validator,
     )
 
     gallery_resource_id_type = CLIArgumentType(
@@ -38,6 +41,7 @@ def load_arguments(self, _):
         # id_part='name',
         help="Resource Id of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`",
         configured_default='bake-gallery',
+        validator=gallery_resource_id_validator,
     )
 
     with self.argument_context('bake upgrade') as c:
@@ -53,6 +57,14 @@ def load_arguments(self, _):
     for scope in ['bake sandbox validate']:
         with self.argument_context(scope) as c:
             c.argument('gallery_resource_id', gallery_resource_id_type)
+            c.ignore('sandbox')
+            c.ignore('gallery')
+
+    for scope in ['bake image', 'bake repo', 'bake _builder']:
+        with self.argument_context(scope) as c:
+            c.ignore('sandbox')
+            c.ignore('gallery')
+            c.ignore('image')
 
     # sandbox create uses a command level validator, param validators will be ignored
     with self.argument_context('bake sandbox create') as c:
@@ -104,19 +116,20 @@ def load_arguments(self, _):
         c.argument('image_names', options_list=['--images', '-i'], nargs='*',
                    help='Space separated list of images to bake.  Default: all images in repository.')
         c.argument('is_ci', options_list=['--ci'], action='store_true', help='Run in CI mode.')
-        c.ignore('sandbox')
-        c.ignore('gallery')
-        c.ignore('images')
 
+    # bake image uses a command level validator, param validators will be ignored
     with self.argument_context('bake image') as c:
-        c.argument('bake_yaml', options_list=['--bake-yaml', '-b'], type=file_type, help='Path to bake.yaml file.')
         c.argument('image_path', options_list=['--image-path', '-i'], type=file_type, help='Path to image to bake.')
+        c.argument('bake_yaml', options_list=['--bake-yaml', '-b'], type=file_type, help='Path to bake.yaml file.')
         c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
         c.argument('gallery_resource_id', gallery_resource_id_type)
-        c.ignore('sandbox')
-        c.ignore('gallery')
-        c.ignore('image')
 
     with self.argument_context('bake image test') as c:
         c.argument('gallery_name', options_list=['--gallery-name', '-r'], id_part='name', help='gallery name')
         # c.argument('gallery_image_name', options_list=['--gallery-image-definition', '-i'], id_part='child_name_1', help='gallery image definition')
+
+    with self.argument_context('bake _builder') as c:
+        c.ignore('in_builder')
+        c.ignore('repo')
+        c.ignore('storage')
+        c.ignore('suffix')

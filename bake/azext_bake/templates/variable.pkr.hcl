@@ -16,78 +16,54 @@ variable "gallery" {
     resourceGroup = string
     subscription  = string
   })
+  default = {
+    name          = ""
+    resourceGroup = ""
+    subscription  = ""
+  }
   description = "The azure compute gallery to publish the image"
 }
 
 variable "sandbox" {
   type = object({
-    // name          = string
-    resourceGroup = string
-    subscription  = string
-    // virtualNetwork = object({
-    //   name = string
-    //   resourceGroup = string
-    //   subscription = string
-    // defaultSubnet = string
-    // builderSubnet = string
-    // })
-    virtualNetwork = string
+    resourceGroup               = string
+    subscription                = string
+    virtualNetwork              = string
     virtualNetworkResourceGroup = string
-    defaultSubnet = string
-    builderSubnet = string
-    keyVault = string
-    storageAccount = string
-    identityId = string
+    defaultSubnet               = string
+    builderSubnet               = string
+    keyVault                    = string
+    storageAccount              = string
+    identityId                  = string
   })
+  default = {
+    resourceGroup               = ""
+    subscription                = ""
+    virtualNetwork              = ""
+    virtualNetworkResourceGroup = ""
+    defaultSubnet               = ""
+    builderSubnet               = ""
+    keyVault                    = ""
+    storageAccount              = ""
+    identityId                  = ""
+  }
   description = "The azure compute builder to use for the build"
 }
 
-variable "name" {
-  type        = string
-  default     = ""
-  description = "The name of the image to use for the build"
-}
-
-variable "replicaLocations" {
-  type        = list(string)
-  default     = []
-  description = "The locations to replicate the image to"
-}
-
-variable "location" {
-  type        = string
-  default     = ""
-  description = "Azure datacenter in which your VM will build, if this is provided buildResourceGroup should be left blank"
-}
-
-variable "tempResourceGroup" {
-  type        = string
-  default     = ""
-  description = "Name assigned to the temporary resource group created during the build. If this value is not set, a random value will be assigned. This resource group is deleted at the end of the build. If this is provided buildResourceGroup should be left blank"
-}
-
-variable "buildResourceGroup" {
-  type        = string
-  default     = ""
-  description = "Specify an existing resource group to run the build in. If this is provided tempResourceGroup and location should not be provided"
-}
-
-variable "subscription" {
-  type        = string
-  default     = ""
-  description = "The subscription to use for the build"
-}
-
-variable "version" {
-  type        = string
-  default     = ""
-  description = "The version to use for the build"
-}
-
-variable "identities" {
-  type        = list(string)
-  default     = []
-  description = "One or more fully-qualified resource IDs of user assigned managed identities to be configured on the VM"
+variable "image" {
+  type = object({
+    name             = string
+    version          = string
+    replicaLocations = list(string)
+    // subscription  = string
+  })
+  default = {
+    name             = ""
+    version          = ""
+    replicaLocations = []
+    subscription     = ""
+  }
+  description = "The azure compute image to publish"
 }
 
 variable "repos" {
@@ -99,24 +75,3 @@ variable "repos" {
   description = "The repositories to clone on the image"
 }
 
-variable "keyVault" {
-  type        = string
-  default     = ""
-  description = "Specify an existing key vault to use for uploading certificates to the instance to connect."
-}
-
-variable "virtualNetwork" {
-  type        = string
-  default     = ""
-  description = "Use a pre-existing virtual network for the VM"
-}
-
-variable "virtualNetworkSubnet" {
-  type    = string
-  default = ""
-}
-
-variable "virtualNetworkResourceGroup" {
-  type    = string
-  default = ""
-}

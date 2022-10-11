@@ -132,3 +132,7 @@ dmypy.json
 .local/
 
 *.DS_Store
+
+bake.yml
+bake.yaml
+images/
