@@ -6,12 +6,12 @@
 from azure.cli.core.azclierror import ValidationError
 from azure.cli.core.commands.client_factory import get_subscription_id
 from azure.cli.core.commands.parameters import get_resources_in_resource_group
-from azure.mgmt.core.tools import is_valid_resource_id
+from azure.mgmt.core.tools import is_valid_resource_id, resource_id
 from knack.log import get_logger
 
+from ._arm import get_resource_group_tags
 from ._client_factory import cf_msi, cf_network
 from ._constants import tag_key
-from ._arm import get_resource_group_tags
 
 logger = get_logger(__name__)
 
@@ -112,3 +112,12 @@ def get_sandbox_from_group(cmd, resource_group_name):
         'storageAccount': storage_account,
         'identityId': identity_id
     }
+
+
+def get_builder_subnet_id(sandbox):
+    for k in ['subscription', 'virtualNetworkResourceGroup', 'virtualNetwork', 'builderSubnet']:
+        if k not in sandbox or not sandbox[k]:
+            raise ValidationError(f'Sandbox is missing required property: {k}')
+    return resource_id(subscription=sandbox['subscription'], resource_group=sandbox['virtualNetworkResourceGroup'],
+                       namespace='Microsoft.Network', type='virtualNetworks', name=sandbox['virtualNetwork'],
+                       child_type_1='subnets', child_name_1=sandbox['builderSubnet'])

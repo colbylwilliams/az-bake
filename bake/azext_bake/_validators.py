@@ -10,13 +10,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from re import match
 
-from azure.cli.core.azclierror import (FileOperationError,
+from azure.cli.core.azclierror import (ArgumentUsageError, FileOperationError,
                                        InvalidArgumentValueError,
                                        MutuallyExclusiveArgumentError,
                                        RequiredArgumentMissingError,
                                        ValidationError)
 from azure.cli.core.commands.validators import validate_tags
 from azure.cli.core.extension import get_extension
+from azure.cli.core.util import is_guid
 from azure.mgmt.core.tools import (is_valid_resource_id, parse_resource_id,
                                    resource_id)
 from knack.log import get_logger
@@ -30,6 +31,7 @@ from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER,
 from ._github import (get_github_latest_release_version,
                       github_release_version_exists)
 from ._packer import check_packer_install
+from ._repos import get_repo, is_ci, parse_repo_url
 from ._sandbox import get_sandbox_from_group
 from ._utils import get_yaml_file_contents, get_yaml_file_path
 
@@ -59,6 +61,35 @@ def process_bake_repo_namespace(cmd, ns):
     bake_obj = bake_yaml_validator(cmd, ns)
     for i, image in enumerate(ns.images):
         ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
+
+    ci = is_ci()
+    ns.is_ci = ci
+
+    if ci:
+        logger.warning('Running in CI environment')
+        if ns.repository_url or ns.repository_token or ns.repository_revision:
+            raise ArgumentUsageError('--repo-url, --repo-token, and --repo-revision can not be used in a CI environment')
+        repo = get_repo()
+        ns.repository_url = repo['url']
+        ns.repository_token = repo['token']
+        ns.repository_revision = repo['sha']
+    else:
+        logger.warning('Running in local environment')
+        if not ns.repository_url:
+            raise RequiredArgumentMissingError('--repo-url is required when not running in a CI environment')
+        repo = parse_repo_url(ns.repository_url)
+        # if not ns.repository_token:
+        #     logger.warning('No repository token was provided. If the repository is private, the build will fail.')
+        # else:
+        #     repo['url'] = repo['url'].replace('https://', f'https://{ns.repository_token}@')
+
+    for prop in ['provider', 'url']:
+        if prop not in repo:
+            raise ValidationError(f'Repo is missing {prop} property')
+        if not repo[prop]:
+            raise ValidationError(f'Repo {prop} property is empty')
+
+    ns.repo = repo
 
 
 def process_bake_repo_validate_namespace(cmd, ns):
@@ -271,6 +302,12 @@ def bake_yaml_content_validator(cmd, ns, path):
     for key in BAKE_PROPERTIES:
         if key not in [KEY_REQUIRED, KEY_ALLOWED]:
             _validate_object(bake_obj['file'], bake_obj[key], BAKE_PROPERTIES[key], parent_key=key)
+
+    if not is_guid(bake_obj['sandbox']['subscription']):
+        raise ValidationError(f'sandbox.subscription is not a valid GUID')
+
+    if not is_valid_resource_id(bake_obj['sandbox']['identityId']):
+        raise ValidationError(f'sandbox.identityId is not a valid resource ID')
 
     if hasattr(ns, 'bake_obj'):
         ns.bake_obj = bake_obj

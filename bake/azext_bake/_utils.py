@@ -4,12 +4,10 @@
 # ------------------------------------
 
 import json
-import os
 from pathlib import Path
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
 
-import requests
 import yaml
 from azure.cli.core.azclierror import (ClientRequestError, FileOperationError,
                                        MutuallyExclusiveArgumentError,

@@ -50,21 +50,22 @@ def load_arguments(self, _):
         c.argument('prerelease', options_list=['--pre'], action='store_true',
                    help='Update to the latest template prerelease version.')
 
-    for scope in ['bake sandbox']:
+    for scope in ['bake image', 'bake repo', 'bake _builder', 'bake sandbox validate']:
+        with self.argument_context(scope) as c:
+            c.ignore('sandbox')
+            c.ignore('gallery')
+
+    for scope in ['bake image', 'bake _builder']:
+        with self.argument_context(scope) as c:
+            c.ignore('image')
+
+    for scope in ['bake image', 'bake sandbox']:
         with self.argument_context(scope) as c:
             c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
 
-    for scope in ['bake sandbox validate']:
+    for scope in ['bake image', 'bake sandbox validate']:
         with self.argument_context(scope) as c:
             c.argument('gallery_resource_id', gallery_resource_id_type)
-            c.ignore('sandbox')
-            c.ignore('gallery')
-
-    for scope in ['bake image', 'bake repo', 'bake _builder']:
-        with self.argument_context(scope) as c:
-            c.ignore('sandbox')
-            c.ignore('gallery')
-            c.ignore('image')
 
     # sandbox create uses a command level validator, param validators will be ignored
     with self.argument_context('bake sandbox create') as c:
@@ -111,22 +112,22 @@ def load_arguments(self, _):
 
     # bake repo uses a command level validator, param validators will be ignored
     with self.argument_context('bake repo') as c:
-        c.argument('repository_path', options_list=['--repository-path', '-r'], type=file_type,
-                   help='Path to repository to test.')
+        c.argument('repository_path', options_list=['--repo-path', '-r'], type=file_type,
+                   help='Path to the locally cloned repository.')
         c.argument('image_names', options_list=['--images', '-i'], nargs='*',
                    help='Space separated list of images to bake.  Default: all images in repository.')
-        c.argument('is_ci', options_list=['--ci'], action='store_true', help='Run in CI mode.')
+        # c.argument('is_ci', options_list=['--ci'], action='store_true', help='Run in CI mode.')
+        c.argument('repository_url', options_list=['--repo-url'], arg_group='Repo', help='Repository url.')
+        c.argument('repository_token', options_list=['--repo-token'], arg_group='Repo', help='Repository token.')
+        c.argument('repository_revision', options_list=['--repo-revision'], arg_group='Repo', help='Repository revision.')
+        c.ignore('is_ci')
+        c.ignore('repo')
+        c.ignore('images')
 
     # bake image uses a command level validator, param validators will be ignored
     with self.argument_context('bake image') as c:
         c.argument('image_path', options_list=['--image-path', '-i'], type=file_type, help='Path to image to bake.')
         c.argument('bake_yaml', options_list=['--bake-yaml', '-b'], type=file_type, help='Path to bake.yaml file.')
-        c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
-        c.argument('gallery_resource_id', gallery_resource_id_type)
-
-    with self.argument_context('bake image test') as c:
-        c.argument('gallery_name', options_list=['--gallery-name', '-r'], id_part='name', help='gallery name')
-        # c.argument('gallery_image_name', options_list=['--gallery-image-definition', '-i'], id_part='child_name_1', help='gallery image definition')
 
     with self.argument_context('bake _builder') as c:
         c.ignore('in_builder')

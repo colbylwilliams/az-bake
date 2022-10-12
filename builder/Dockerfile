@@ -40,10 +40,11 @@ RUN apk add --no-cache packer --repository=http://dl-cdn.alpinelinux.org/alpine/
 # install az-bake
 RUN az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.5-py3-none-any.whl -y
 
-COPY . /builder.d
+# COPY . /builder.d
 
 # Terminate container on stop
 STOPSIGNAL SIGTERM
 
 CMD [ "" ]
-ENTRYPOINT [ "python", "/builder.d/builder.py" ]
+# ENTRYPOINT [ "python", "/builder.d/builder.py" ]
+ENTRYPOINT [ "az", "bake", "_builder", "build" ]

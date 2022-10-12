@@ -11,6 +11,10 @@ from knack.log import get_logger
 logger = get_logger(__name__)
 
 
+# ----------------
+# Repository URLs
+# ----------------
+
 def _is_github_url(url) -> bool:
     return 'github.com' in url.lower()
 
@@ -164,7 +168,11 @@ def _get_devops_repo_url():
 
 
 def _get_devops_token():
-    return os.environ.get('SYSTEM_ACCESSTOKEN', None)
+    token = os.environ.get('SYSTEM_ACCESSTOKEN', None)
+    if not token:
+        logger.warning('SYSTEM_ACCESSTOKEN environment variable not set. This is required for private repositories.')
+        # raise CLIError('SYSTEM_ACCESSTOKEN environment variable not set')
+    return token
 
 
 def _get_devops_ref():
@@ -175,29 +183,35 @@ def _get_devops_sha():
     return os.environ.get('BUILD_SOURCEVERSION', None)
 
 
+def is_ci():
+    return _is_github_actions() or _is_devops_pipeline()
+
+
 def get_repo():
-    repo = {}
+
     if _is_github_actions():
         logger.warning('Running in GitHub Action')
-        repo['provider'] = 'github'
 
         url = _get_github_repo_url()
-        if (token := _get_github_token()):
-            url = url.replace('https://', f'https://{token}@')
+        repo = _parse_github_url(url)
 
-        repo['url'] = url
+        # if (token := _get_github_token()):
+        #     repo['url'] = repo['url'].replace('https://', f'https://{token}@')
+
+        repo['token'] = _get_github_token()
         repo['ref'] = _get_github_ref()
         repo['sha'] = _get_github_sha()
 
     elif _is_devops_pipeline():
         logger.warning('Running in Azure DevOps Pipeline')
-        repo['provider'] = 'devops'
 
         url = _get_devops_repo_url()
-        if (token := _get_devops_token()):
-            url = url.replace('https://', f'https://{token}@')
+        repo = _parse_devops_url(url)
 
-        repo['url'] = url
+        # if (token := _get_devops_token()):
+        #     repo['url'] = repo['url'].replace('https://', f'https://{token}@')
+
+        repo['token'] = _get_devops_token()
         repo['ref'] = _get_devops_ref()
         repo['sha'] = _get_devops_sha()
     else:
