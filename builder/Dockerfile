@@ -38,7 +38,7 @@ LABEL maintainer="Microsoft" \
 RUN apk add --no-cache packer --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 
 # install az-bake
-RUN az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.5-py3-none-any.whl -y
+RUN az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.6-py3-none-any.whl -y
 
 # COPY . /builder.d
 
@@ -47,4 +47,4 @@ STOPSIGNAL SIGTERM
 
 CMD [ "" ]
 # ENTRYPOINT [ "python", "/builder.d/builder.py" ]
-ENTRYPOINT [ "az", "bake", "_builder", "build" ]
+ENTRYPOINT [ "/usr/local/bin/az", "bake", "_builder", "build" ]

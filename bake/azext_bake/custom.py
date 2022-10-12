@@ -175,7 +175,7 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
         hook.add(message=f'Deploying builder for {image["name"]}')
         deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox['resourceGroup'],
                                                                     template_file=template_file, template_uri=template_uri,
-                                                                    parameters=[params])
+                                                                    parameters=[image_params])
         deployments.append(deployment)
 
     hook.end(message=' ')
