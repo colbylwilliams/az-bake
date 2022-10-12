@@ -136,4 +136,8 @@ if not ci:  # if working locally, print the assets.json to a file
     with open(f'{path_assets}/assets.json', 'w') as f:
         json.dump(assets, f, ensure_ascii=False, indent=4, sort_keys=True)
 
-print("::set-output name=assets::{}".format(json.dumps(assets)))
+
+github_output = os.environ.get('GITHUB_OUTPUT', None)
+if github_output:
+    with open(github_output, 'a+') as f:
+        f.write(f'assets={json.dumps(assets)}')
