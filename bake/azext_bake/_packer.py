@@ -139,7 +139,7 @@ def packer_execute(image):
 
 def copy_packer_files(image_dir):
     '''Copies the packer files from the bake templates to the image directory'''
-    templates_dir = get_templates_path()
+    templates_dir = get_templates_path('packer')
     shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
     shutil.copy2(templates_dir / PKR_VARS_FILE, image_dir)
 

@@ -18,12 +18,10 @@ from knack.log import get_logger
 logger = get_logger(__name__)
 
 
-def get_index_path():
-    return Path(__file__).resolve().parent / 'index'
-
-
-def get_templates_path():
-    return Path(__file__).resolve().parent / 'templates'
+def get_templates_path(folder=None):
+    '''Get the path to the templates folder'''
+    path = Path(__file__).resolve().parent / 'templates'
+    return path / folder if folder else path
 
 
 def get_yaml_file_path(dir, file, required=True):
@@ -73,8 +71,8 @@ def get_install_choco_dict(image):
     if 'install' not in image or 'choco' not in image['install']:
         return None
 
-    index_path = get_index_path()
-    choco_index_path = index_path / 'choco.json'
+    install_path = get_templates_path('install')
+    choco_index_path = install_path / 'choco.json'
     choco_index = {}
     with open(choco_index_path, 'r') as f:
         choco_index = json.load(f)

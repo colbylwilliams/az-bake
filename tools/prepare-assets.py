@@ -8,10 +8,11 @@ from re import search
 ci = os.environ.get('CI', False)
 
 path_root = Path(__file__).resolve().parent.parent
+path_bake = path_root / 'bake'
 path_assets = path_root / 'release_assets' if ci else path_root / '.local/release_assets'
 
 # Get CLI version
-with open(path_root / 'bake' / 'setup.py', 'r') as f:
+with open(path_bake / 'setup.py', 'r') as f:
     for line in f:
         if line.startswith('VERSION'):
             txt = str(line).rstrip()
@@ -82,7 +83,7 @@ with open(f'{path_assets}/index.json', 'w') as f:
 path_templates = path_assets / 'templates'
 
 # copy the templates folder to assets folder
-shutil.copytree(path_root / 'templates', path_templates, dirs_exist_ok=not ci)
+shutil.copytree(path_bake / 'azext_bake' / 'templates', path_templates, dirs_exist_ok=not ci)
 
 bicep_templates = []
 templates = {}
