@@ -91,20 +91,19 @@ def get_release_templates(version=None, prerelease=False, templates_url=None):
         version = version or get_github_latest_release_version(prerelease=prerelease)
         templates_url = f'https://github.com/colbylwilliams/az-bake/releases/download/{version}/templates.json'
     templates = get_release_asset(asset_url=templates_url)
-    if not (sandbox := templates.get('sandbox')):
-        raise ClientRequestError('Unable to get sandbox node from templates.json. Improper json format.')
-    if not (builder := templates.get('builder')):
-        raise ClientRequestError('Unable to get builder node from templates.json. Improper json format.')
-    if not (images := templates.get('images')):
-        raise ClientRequestError('Unable to get images node from templates.json. Improper json format.')
-    return version, sandbox, builder, images
+    for k in ['builder', 'install', 'packer', 'sandbox']:
+        if not templates.get(k):
+            raise ClientRequestError(f'Unable to get {k} node from templates.json. Improper json format.')
+    return version, templates
 
 
-def get_template_url(templates, name):
-    if not (template := templates.get(name)):
-        raise ResourceNotFoundError(f'Unable to get template {name} from templates.json.')
+def get_template_url(templates, parent, name):
+    if not (parent_node := templates.get(parent)):
+        raise ResourceNotFoundError(f'Unable to get {parent} node from templates.json. Improper json format.')
+    if not (template := parent_node.get(name)):
+        raise ResourceNotFoundError(f'Unable to get template {name} from {parent} in templates.json.')
     if not (template_url := template.get('downloadUrl')):
-        raise ResourceNotFoundError(f'Unable to get template {name} downloadUrl from templates.json.')
+        raise ResourceNotFoundError(f'Unable to get template downloadUrl from {parent}.{name} in templates.json.')
     return template_url
 
 

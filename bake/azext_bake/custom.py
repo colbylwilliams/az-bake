@@ -108,13 +108,11 @@ def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
         template_uri = None
     else:
         hook.add(message='Getting templates from GitHub')
-        version, sandbox, _, _ = get_release_templates(
-            version=version, prerelease=prerelease, templates_url=templates_url)
-
-        logger.warning('Deploying%s version: %s', ' prerelease' if prerelease else '', version)
+        version, templates = get_release_templates(version=version, prerelease=prerelease, templates_url=templates_url)
+        logger.warning(f'Deploying{" prerelease" if prerelease else ""} version: {version}')
 
         hook.add(message='Getting sandbox template')
-        template_uri = get_template_url(sandbox, 'sandbox.json')
+        template_uri = get_template_url(templates, 'sandbox', 'sandbox.json')
 
     params = []
     params.append(f'location={location}')
@@ -161,12 +159,11 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
         template_uri = None
     else:
         hook.add(message='Getting templates from GitHub')
-        version, _, builder, _ = get_release_templates(
-            version=version, prerelease=prerelease, templates_url=templates_url)
+        version, templates = get_release_templates(version=version, prerelease=prerelease, templates_url=templates_url)
         logger.warning(f'Deploying{" prerelease" if prerelease else ""} version: {version}')
 
         hook.add(message='Getting builder template')
-        template_uri = get_template_url(builder, 'builder.json')
+        template_uri = get_template_url(templates, 'builder', 'builder.json')
 
     deployments = []
 
