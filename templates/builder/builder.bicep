@@ -20,12 +20,12 @@ param image string
 @description('The resource ID of a user assigned managed identity')
 param identityId string
 
-// @description('The client (app) id for the service principal to use for authentication.')
-// param clientId string
+@description('The client (app) id for the service principal to use for authentication.')
+param clientId string = ''
 
-// @secure()
-// @description('The secret for the service principal to use for authentication.')
-// param clientSecret string
+@secure()
+@description('The secret for the service principal to use for authentication.')
+param clientSecret string = ''
 
 @description('The name of an existing storage account to use with the container instance. If not specified, the container instance will not mount a persistant file share.')
 param storageAccount string = ''
@@ -44,12 +44,12 @@ param packerVars object = {}
 var validImageName = replace(image, '_', '-')
 var validImageNameLower = toLower(validImageName)
 
-var defaultEnvironmentVars = [
+var defaultEnvironmentVars = !empty(clientId) && !empty(clientSecret) ? [
   { name: 'AZ_BAKE_BUILD_IMAGE_NAME', value: image }
-  // { name: 'AZURE_TENANT_ID', value: tenant().tenantId }
-  // { name: 'AZURE_CLIENT_ID', value: clientId }
-  // { name: 'AZURE_CLIENT_SECRET', secureValue: clientSecret }
-]
+  { name: 'AZURE_TENANT_ID', value: tenant().tenantId }
+  { name: 'AZURE_CLIENT_ID', value: clientId }
+  { name: 'AZURE_CLIENT_SECRET', secureValue: clientSecret }
+] : [ { name: 'AZ_BAKE_BUILD_IMAGE_NAME', value: image } ]
 
 var packerEnvironmentVars = [for kv in items(packerVars): {
   name: 'PKR_VAR_${kv.key}'
