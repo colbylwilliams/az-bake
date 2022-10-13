@@ -38,7 +38,7 @@ LABEL maintainer="Microsoft" \
 RUN apk add --no-cache packer --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 
 # install az-bake
-RUN az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.19-py3-none-any.whl -y
+RUN az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.20-py3-none-any.whl -y
 
 # Terminate container on stop
 STOPSIGNAL SIGTERM

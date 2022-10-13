@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.20
+++++++
++ Try VS images
+
 0.0.19
 ++++++
 + Fix choco paths

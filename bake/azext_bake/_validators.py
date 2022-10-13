@@ -103,7 +103,7 @@ def builder_validator(cmd, ns):
     in_builder = True if in_builder else False
     ns.in_builder = in_builder
 
-    builder_version = os.environ.get('{AZ_BAKE_IMAGE_BUILDER_VERSION}', 'unknown') if in_builder else 'local'
+    builder_version = os.environ.get(AZ_BAKE_IMAGE_BUILDER_VERSION, 'unknown') if in_builder else 'local'
 
     logger.info(f'{AZ_BAKE_IMAGE_BUILDER}: {in_builder}')
     logger.info(f'{AZ_BAKE_IMAGE_BUILDER_VERSION}: {builder_version}')
