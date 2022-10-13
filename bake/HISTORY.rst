@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.18
+++++++
++ Temporarily disable windows update for testing
+
 0.0.17
 ++++++
 + Add logging

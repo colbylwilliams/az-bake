@@ -156,6 +156,15 @@ def inject_choco_provisioners(image_dir, config_xml):
 
     choco_install = f'''
   # Injected by az bake
+  provisioner "powershell" {{
+    environment_vars = ["chocolateyUseWindowsCompression=false"]
+    inline = [
+      "(new-object net.webclient).DownloadFile('https://chocolatey.org/install.ps1', 'C:\\Windows\\Temp\\chocolatey.ps1')",
+      "& C:\\Windows\\Temp\\chocolatey.ps1"
+    ]
+  }}
+
+  # Injected by az bake
   provisioner "file" {{
     source = "${{path.root}}/{PKR_PACKAGES_CONFIG_FILE}"
     destination = "C:/Windows/Temp/{PKR_PACKAGES_CONFIG_FILE}"

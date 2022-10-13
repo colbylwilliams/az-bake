@@ -1,21 +1,20 @@
 version: 1.0
 sandbox:
-  location: eastus
-  resourceGroup: Contoso-Sandbox
-  subscription: e5f715ae-6c72-4a5c-87c8-495590c34828
-  virtualNetwork: contoso-sandbox-vnet
-  # this should default to resourceGroup if not provided
-  virtualNetworkResourceGroup: Contoso-Sandbox
+  resourceGroup: Bake-Sandbox
+  subscription: 00000000-0000-0000-0000-000000000000
+  virtualNetwork: bake-sandbox-vnet
+  virtualNetworkResourceGroup: Bake-Sandbox
   defaultSubnet: default
   builderSubnet: builders
-  storageAccount: contososandboxstore
-  identityId: /subscriptions/e5f715ae-6c72-4a5c-87c8-495590c34828/resourceGroups/Contoso-Sandbox/providers/Microsoft.ManagedIdentity/userAssignedIdentities/contoso-sandbox-id
+  keyVault: bake-sandbox-kv
+  storageAccount: bakesandboxstorage
+  identityId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Bake-Sandbox/providers/Microsoft.ManagedIdentity/userAssignedIdentities/bake-sandbox-id
 gallery:
-  name: Contoso.Sandbox
-  resourceGroup: Contoso-Sandbox-Gallery
-  subscription: e5f715ae-6c72-4a5c-87c8-495590c34828
+  name: Bake
+  resourceGroup: Bake-Gallery
+  subscription: 00000000-0000-0000-0000-000000000000
 images:
-  publisher: ContosoSandbox
+  publisher: Bake
   offer: DevBox
   replicaLocations:
     - eastus

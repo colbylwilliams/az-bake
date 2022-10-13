@@ -11,8 +11,8 @@ env:
 jobs:
   build:
     name: Create new Release
-    # if: "!contains(join(github.event.commits.*.message), '+norelease')"
-    if: "contains(join(github.event.commits.*.message), '+release')"
+    if: "!contains(join(github.event.commits.*.message), '+norelease')"
+    # if: "contains(join(github.event.commits.*.message), '+release')"
     runs-on: ubuntu-latest
 
     steps:
