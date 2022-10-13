@@ -23,7 +23,7 @@ source "azure-arm" "vm" {
   # base image options (Azure Marketplace Images only)
   image_publisher    = "microsoftwindowsdesktop"
   image_offer        = "windows-ent-cpc"
-  image_sku          = "win11-21h2-ent-cpc-m365"
+  image_sku          = "win11-22h2-ent-cpc-m365"
   image_version      = "latest"
   use_azure_cli_auth = true
   # managed image options
