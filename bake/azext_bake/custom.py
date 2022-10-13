@@ -172,9 +172,19 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
 
     params = []
 
-    params.append(f'repository={repository_url if not repository_token else repository_url.replace("https://", f"https://{repository_token}@")}')
+    if repository_token:
+        if repo['provider'] == 'github':
+            params.append(f'repository={repository_url.replace("https://", f"https://gituser:{repository_token}@")}')
+        elif repo['provider'] == 'azuredevops':
+            params.append(f'repository={repository_url.replace("https://", f"https://azurereposuser:{repository_token}@")}')
+        else:
+            params.append(f'repository={repository_url.replace("https://", f"https://{repository_token}@")}')
+    else:
+        params.append(f'repository={repository_url}')
+
     if repository_revision:
         params.append(f'revision={repository_revision}')
+
     params.append(f'subnetId={get_builder_subnet_id(sandbox)}')
     params.append(f'storageAccount={sandbox["storageAccount"]}')
     params.append(f'identityId={sandbox["identityId"]}')
