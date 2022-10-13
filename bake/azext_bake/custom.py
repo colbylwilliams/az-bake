@@ -17,7 +17,8 @@ from ._arm import (create_image_definition,
 from ._github import (get_github_release, get_release_templates,
                       get_template_url)
 from ._packer import (check_packer_install, copy_packer_files,
-                      inject_choco_provisioners, save_packer_vars_file)
+                      inject_choco_provisioners, packer_execute,
+                      save_packer_vars_file)
 from ._sandbox import get_builder_subnet_id
 from ._utils import get_choco_package_config, get_install_choco_dict
 
@@ -31,6 +32,10 @@ logger = get_logger(__name__)
 
 
 def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=None, gallery=None, image=None, suffix=None):
+
+    logger.info('(info) hello world')
+    logger.debug('(debug) hello world')
+    logger.warning('(warning) hello world')
 
     if in_builder:
         from azure.cli.command_modules.profile.custom import login
@@ -56,15 +61,6 @@ def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=N
     else:
         logger.warning('Not in builder. Skipping login.')
 
-    copy_packer_files(image['dir'])
-
-    choco_install = get_install_choco_dict(image)
-    choco_config = get_choco_package_config(choco_install)
-
-    inject_choco_provisioners(image['dir'], choco_config)
-
-    save_packer_vars_file(sandbox, gallery, image)
-
     gallery_res = get_gallery(cmd, gallery['resourceGroup'], gallery['name'])
 
     definition = get_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'])
@@ -77,7 +73,23 @@ def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=N
 
     logger.warning(f'Image version {image["version"]} does not exist.')
 
-    pass
+    logger.debug(f'Copying packer template files to image directory')
+    copy_packer_files(image['dir'])
+
+    logger.debug(f'Getting choco install dictionary from image.yaml')
+    choco_install = get_install_choco_dict(image)
+
+    logger.debug(f'Getting choco package config file from install dictionary')
+    choco_config = get_choco_package_config(choco_install)
+
+    logger.debug(f'Injecting choco provisioners into packer.json')
+    inject_choco_provisioners(image['dir'], choco_config)
+
+    logger.debug(f'Saving packer auto variables file to image directory')
+    save_packer_vars_file(sandbox, gallery, image)
+
+    logger.debug(f'Running packer init and packer build')
+    return packer_execute(image)
 
 
 def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
