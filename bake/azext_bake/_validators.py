@@ -276,7 +276,6 @@ def validate_subnet(cmd, ns, subnet, vnet_prefixes):
 def bake_yaml_validator(cmd, ns):
 
     if hasattr(ns, 'repository_path') and ns.repository_path:
-        logger.warning('repository_path')
         # should have already run the repository_path_validator
         path = get_yaml_file_path(ns.repository_path, 'bake', required=True)
     elif hasattr(ns, 'bake_yaml') and ns.bake_yaml:
