@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.19
+++++++
++ Fix choco paths
+
 0.0.18
 ++++++
 + Temporarily disable windows update for testing
