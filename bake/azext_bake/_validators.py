@@ -66,7 +66,7 @@ def process_bake_repo_namespace(cmd, ns):
     ns.is_ci = ci
 
     if ci:
-        logger.warning('Running in CI environment')
+        logger.info('Running in CI environment')
         if ns.repository_url or ns.repository_token or ns.repository_revision:
             raise ArgumentUsageError('--repo-url, --repo-token, and --repo-revision can not be used in a CI environment')
         repo = get_repo()
@@ -74,14 +74,10 @@ def process_bake_repo_namespace(cmd, ns):
         ns.repository_token = repo['token']
         ns.repository_revision = repo['sha']
     else:
-        logger.warning('Running in local environment')
+        logger.info('Running in local environment')
         if not ns.repository_url:
             raise RequiredArgumentMissingError('--repo-url is required when not running in a CI environment')
         repo = parse_repo_url(ns.repository_url)
-        # if not ns.repository_token:
-        #     logger.warning('No repository token was provided. If the repository is private, the build will fail.')
-        # else:
-        #     repo['url'] = repo['url'].replace('https://', f'https://{ns.repository_token}@')
 
     for prop in ['provider', 'url']:
         if prop not in repo:
@@ -284,7 +280,6 @@ def bake_yaml_validator(cmd, ns):
         ns.bake_yaml = bake_yaml
         path = bake_yaml
     else:
-        logger.warning('no repository_path or bake_yaml')
         raise RequiredArgumentMissingError('usage error: --repository-path or --bake-yaml is required.')
 
     return bake_yaml_content_validator(cmd, ns, path)
@@ -358,7 +353,7 @@ def image_yaml_validator(cmd, ns, image=None, common=None):
         temp.update(image)
         image = temp.copy()
 
-    # logger.warning(f'Validating image: {image["name"]}')
+    logger.info(f'Validating image: {image["name"]}')
     _validate_object(image['file'], image, IMAGE_PROPERTIES)
 
     if hasattr(ns, 'image'):

@@ -26,6 +26,7 @@ in_builder = os.environ.get('ACI_IMAGE_BUILDER', False)
 
 def check_packer_install(raise_error=True):
     '''Checks if packer is installed'''
+    logger.info('Checking if packer is installed')
     packer = shutil.which('packer')
     installed = True if packer else False
     if not installed and raise_error:
@@ -82,6 +83,7 @@ def _clean_for_vars(obj, allowed_keys):
 
 def save_packer_vars_file(sandbox, gallery, image, additonal_vars=None):
     '''Saves properties from image.yaml to a packer auto variables file'''
+    logger.info(f'Saving packer auto variables file for {image["name"]}')
     pkr_vars = get_packer_vars(image)
     logger.info(f'Packer variables for {image["name"]}: {pkr_vars}')
     auto_vars = {}
@@ -139,6 +141,7 @@ def packer_execute(image):
 
 def copy_packer_files(image_dir):
     '''Copies the packer files from the bake templates to the image directory'''
+    logger.info(f'Copying packer files to {image_dir}')
     templates_dir = get_templates_path('packer')
     shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
     shutil.copy2(templates_dir / PKR_VARS_FILE, image_dir)
@@ -147,6 +150,7 @@ def copy_packer_files(image_dir):
 def inject_choco_provisioners(image_dir, config_xml):
     '''Injects the chocolatey provisioners into the packer build file'''
     # create the choco packages config file
+    logger.info(f'Creating file: {image_dir / PKR_PACKAGES_CONFIG_FILE}')
     with open(image_dir / PKR_PACKAGES_CONFIG_FILE, 'w') as f:
         f.write(config_xml)
 
@@ -177,6 +181,8 @@ def inject_choco_provisioners(image_dir, config_xml):
         raise ValidationError(f'{build_file_path} is not a file')
 
     # inject chocolatey install into build.pkr.hcl
+    logger.info(f'Injecting chocolatey install provisioners into {build_file_path}')
+
     with open(build_file_path, 'r') as f:
         pkr_build = f.read()
 

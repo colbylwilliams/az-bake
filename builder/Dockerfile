@@ -38,10 +38,10 @@ LABEL maintainer="Microsoft" \
 RUN apk add --no-cache packer --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 
 # install az-bake
-RUN az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.16-py3-none-any.whl -y
+RUN az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.17-py3-none-any.whl -y
 
 # Terminate container on stop
 STOPSIGNAL SIGTERM
 
 CMD [ "" ]
-ENTRYPOINT az bake _builder build
+ENTRYPOINT az bake _builder build --verbose

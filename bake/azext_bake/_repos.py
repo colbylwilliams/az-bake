@@ -143,7 +143,7 @@ def _get_github_repo_url():
 def _get_github_token():
     token = os.environ.get('GITHUB_TOKEN', None)
     if not token:
-        logger.warning('GITHUB_TOKEN environment variable not set. This is required for private repositories.')
+        logger.warning('WARNING: GITHUB_TOKEN environment variable not set. This is required for private repositories.')
         # raise CLIError('GITHUB_TOKEN environment variable not set')
     return token
 
@@ -170,7 +170,7 @@ def _get_devops_repo_url():
 def _get_devops_token():
     token = os.environ.get('SYSTEM_ACCESSTOKEN', None)
     if not token:
-        logger.warning('SYSTEM_ACCESSTOKEN environment variable not set. This is required for private repositories.')
+        logger.warning('WARNING: SYSTEM_ACCESSTOKEN environment variable not set. This is required for private repositories.')
         # raise CLIError('SYSTEM_ACCESSTOKEN environment variable not set')
     return token
 
@@ -190,7 +190,7 @@ def is_ci():
 def get_repo():
 
     if _is_github_actions():
-        logger.warning('Running in GitHub Action')
+        logger.info('Running in GitHub Action')
 
         url = _get_github_repo_url()
         repo = _parse_github_url(url)
@@ -203,7 +203,7 @@ def get_repo():
         repo['sha'] = _get_github_sha()
 
     elif _is_devops_pipeline():
-        logger.warning('Running in Azure DevOps Pipeline')
+        logger.info('Running in Azure DevOps Pipeline')
 
         url = _get_devops_repo_url()
         repo = _parse_devops_url(url)

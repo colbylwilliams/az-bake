@@ -52,6 +52,7 @@ def get_yaml_file_path(dir, file, required=True):
 
 
 def get_yaml_file_contents(path):
+    '''Get the contents of a yaml file'''
     path = (path if isinstance(path, Path) else Path(path)).resolve()
     if not path.is_file():
         raise FileOperationError(f'Could not find yaml file at {path}')
@@ -68,6 +69,8 @@ def get_yaml_file_contents(path):
 
 
 def get_install_choco_dict(image):
+    '''Get the dict for the install choco section supplemented by the index'''
+    logger.info(f'Getting choco install dictionary from image.yaml')
     if 'install' not in image or 'choco' not in image['install']:
         return None
 
@@ -79,7 +82,7 @@ def get_install_choco_dict(image):
 
     choco = []
     for c in image['install']['choco']:
-        logger.warning(f'Getting choco config for {c} type {type(c)}')
+        logger.info(f'Getting choco config for {c} type {type(c)}')
         if isinstance(c, str):
             if c in choco_index:
                 choco.append(choco_index[c])
@@ -94,7 +97,8 @@ def get_install_choco_dict(image):
 
 
 def get_choco_package_config(packages, indent=2):
-    '''Get the chocolatey config file'''
+    '''Get the chocolatey package config file'''
+    logger.info(f'Getting choco package config contents from install dict')
     elem = Element('packages')
     for package in packages:
         child = Element('package', package)

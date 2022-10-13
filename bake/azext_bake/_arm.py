@@ -185,32 +185,35 @@ def ensure_gallery_permissions(cmd, gallery_id, identity_id, create_assignment=T
 #     logger('Ensuring permissions for sandbox %s', sandbox_id)
 
 def get_gallery(cmd, resource_group_name, gallery_name):
+    logger.info(f'Getting gallery {gallery_name} in resource group {resource_group_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
         gallery = client.galleries.get(resource_group_name, gallery_name)
         return gallery
     except ResourceNotFoundError:
-        logger.warning(f'Gallery {gallery_name} not found in resource group {resource_group_name}')
+        logger.info(f'Gallery {gallery_name} not found in resource group {resource_group_name}')
         return None
 
 
 def get_image_definition(cmd, resource_group_name, gallery_name, gallery_image_name):
+    logger.info(f'Getting image definition {gallery_image_name} in gallery {gallery_name} in resource group {resource_group_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
         definition = client.gallery_images.get(resource_group_name, gallery_name, gallery_image_name)
         return definition
     except ResourceNotFoundError:
-        logger.warning(f'Image definition {gallery_image_name} not found in {gallery_name}')
+        logger.info(f'Image definition {gallery_image_name} not found in {gallery_name}')
         return None
 
 
 def get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name):
+    logger.info(f'Getting image version {gallery_image_version_name} in image definition {gallery_image_name} in gallery {gallery_name} in resource group {resource_group_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
         version = client.gallery_image_versions.get(resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name)
         return version
     except ResourceNotFoundError:
-        logger.warning(f'Version {gallery_image_version_name} not for image definition {gallery_image_name}')
+        logger.info(f'Version {gallery_image_version_name} for found for image definition {gallery_image_name}')
         return None
 
 
@@ -219,7 +222,7 @@ def image_version_exists(cmd, resource_group_name, gallery_name, gallery_image_n
 
 
 def create_image_definition(cmd, resource_group_name, gallery_name, gallery_image_name, publisher, offer, sku, location=None, os_type='Windows', os_state='Generalized', end_of_life_date=None, description=None, tags=None):
-    logger.warning(f'Creating image definition {gallery_image_name} in gallery {gallery_name} ...')
+    logger.info(f'Creating image definition {gallery_image_name} in gallery {gallery_name} ...')
 
     if location is None:
         location = get_gallery(cmd, resource_group_name, gallery_name).location

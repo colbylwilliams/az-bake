@@ -32,8 +32,7 @@ def get_github_releases(org='colbylwilliams', repo='az-bake', prerelease=False):
 
 def get_github_release(org='colbylwilliams', repo='az-bake', version=None, prerelease=False):
     if version and prerelease:
-        raise MutuallyExclusiveArgumentError(
-            'Only use one of --version/-v | --pre')
+        raise MutuallyExclusiveArgumentError('Only use one of --version/-v | --pre')
 
     url = f'https://api.github.com/repos/{org}/{repo}/releases'
 
@@ -55,11 +54,13 @@ def get_github_release(org='colbylwilliams', repo='az-bake', version=None, prere
 
 
 def get_github_latest_release_version(org='colbylwilliams', repo='az-bake', prerelease=False):
+    logger.info(f'Getting latest release version from GitHub ({org}/{repo})')
     version_json = get_github_release(org, repo, prerelease=prerelease)
     return version_json['tag_name']
 
 
 def github_release_version_exists(version, org='colbylwilliams', repo='az-bake'):
+    logger.info(f'Checking if release version {version} exists on GitHub ({org}/{repo})')
     version_url = f'https://api.github.com/repos/{org}/{repo}/releases/tags/{version}'
     version_res = requests.get(version_url, verify=not should_disable_connection_verify())
     return version_res.status_code < 400
@@ -90,6 +91,7 @@ def get_release_templates(version=None, prerelease=False, templates_url=None):
     if templates_url is None:
         version = version or get_github_latest_release_version(prerelease=prerelease)
         templates_url = f'https://github.com/colbylwilliams/az-bake/releases/download/{version}/templates.json'
+    logger.info(f'Getting templates.json from GitHub release ({version})')
     templates = get_release_asset(asset_url=templates_url)
     for k in ['builder', 'install', 'packer', 'sandbox']:
         if not templates.get(k):
@@ -98,6 +100,7 @@ def get_release_templates(version=None, prerelease=False, templates_url=None):
 
 
 def get_template_url(templates, parent, name):
+    logger.info(f'Getting url from template.json for {parent}.{name}')
     if not (parent_node := templates.get(parent)):
         raise ResourceNotFoundError(f'Unable to get {parent} node from templates.json. Improper json format.')
     if not (template := parent_node.get(name)):

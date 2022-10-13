@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.17
+++++++
++ Add logging
+
 0.0.16
 ++++++
 + Bug fixes and minor improvements.
