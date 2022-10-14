@@ -3,6 +3,7 @@
 # Licensed under the MIT License.
 # ------------------------------------
 
+from argcomplete.completers import DirectoriesCompleter, FilesCompleter
 from azure.cli.core.commands.parameters import (
     file_type, get_location_type, get_resource_group_completion_list,
     tags_type)
@@ -12,7 +13,8 @@ from ._completers import get_version_completion_list
 from ._validators import (bake_source_version_validator,
                           gallery_resource_id_validator, image_names_validator,
                           repository_path_validator,
-                          sandbox_resource_group_name_validator)
+                          sandbox_resource_group_name_validator,
+                          yaml_out_validator)
 
 # get_resource_group_completion_list,)
 
@@ -27,22 +29,21 @@ def load_arguments(self, _):
     # )
 
     sandbox_resource_group_name_type = CLIArgumentType(
-        options_list=['--sandbox', '-sb', '-g'],
-        completer=get_resource_group_completion_list,
-        # id_part='resource_group',
-        help="Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`",
-        configured_default='bake-sandbox',
-        validator=sandbox_resource_group_name_validator,
+        options_list=['--sandbox', '-sb', '-g'], configured_default='bake-sandbox',
+        completer=get_resource_group_completion_list, validator=sandbox_resource_group_name_validator,
+        help='Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`'
     )
 
     gallery_resource_id_type = CLIArgumentType(
-        options_list=['--gallery', '-r'],
-        completer=get_resource_group_completion_list,
-        # id_part='name',
-        help="Resource Id of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`",
-        configured_default='bake-gallery',
-        validator=gallery_resource_id_validator,
+        options_list=['--gallery', '-r'], configured_default='bake-gallery',
+        completer=get_resource_group_completion_list, validator=gallery_resource_id_validator,
+        help='Resource Id of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`'
     )
+
+    # yaml_outfile_type validator also validates yaml_outdir_type and yaml_stdout_type
+    yaml_outfile_type = CLIArgumentType(options_list=['--outfile'], completer=FilesCompleter(), validator=yaml_out_validator, help='When set, saves the output as the specified file path.')
+    yaml_outdir_type = CLIArgumentType(options_list=['--outdir'], completer=DirectoriesCompleter(), help='When set, saves the output at the specified directory.')
+    yaml_stdout_type = CLIArgumentType(options_list=['--stdout'], action='store_true', help='When set, prints all output to stdout instead of corresponding files.')
 
     with self.argument_context('bake upgrade') as c:
         c.argument('version', options_list=['--version', '-v'], help='Version (tag). Default: latest stable.',
@@ -50,25 +51,10 @@ def load_arguments(self, _):
         c.argument('prerelease', options_list=['--pre'], action='store_true',
                    help='Update to the latest template prerelease version.')
 
-    for scope in ['bake image', 'bake repo', 'bake _builder', 'bake sandbox validate']:
-        with self.argument_context(scope) as c:
-            c.ignore('sandbox')
-            c.ignore('gallery')
-
-    for scope in ['bake image', 'bake _builder']:
-        with self.argument_context(scope) as c:
-            c.ignore('image')
-
-    for scope in ['bake image', 'bake sandbox']:
-        with self.argument_context(scope) as c:
-            c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
-
-    for scope in ['bake image', 'bake sandbox validate']:
-        with self.argument_context(scope) as c:
-            c.argument('gallery_resource_id', gallery_resource_id_type)
-
     # sandbox create uses a command level validator, param validators will be ignored
     with self.argument_context('bake sandbox create') as c:
+        c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
+        c.argument('gallery_resource_id', gallery_resource_id_type)
         c.argument('location', get_location_type(self.cli_ctx))
         c.argument('tags', tags_type)
 
@@ -110,6 +96,12 @@ def load_arguments(self, _):
         c.argument('templates_url', arg_group='Advanced', help='URL to custom templates.json file.')
         c.argument('template_file', arg_group='Advanced', type=file_type, help='Path to custom sandbox arm/bicep template.')
 
+    with self.argument_context('bake sandbox validate') as c:
+        c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
+        c.argument('gallery_resource_id', gallery_resource_id_type)
+        c.ignore('sandbox')
+        c.ignore('gallery')
+
     # bake repo uses a command level validator, param validators will be ignored
     with self.argument_context('bake repo') as c:
         c.argument('repository_path', options_list=['--repo-path', '-r'], type=file_type,
@@ -121,16 +113,36 @@ def load_arguments(self, _):
         c.argument('repository_token', options_list=['--repo-token'], arg_group='Repo', help='Repository token.')
         c.argument('repository_revision', options_list=['--repo-revision'], arg_group='Repo', help='Repository revision.')
         c.ignore('is_ci')
-        c.ignore('repo')
+        c.ignore('sandbox')
+        c.ignore('gallery')
         c.ignore('images')
+        c.ignore('repo')
 
     # bake image uses a command level validator, param validators will be ignored
     with self.argument_context('bake image') as c:
+        c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
+        c.argument('gallery_resource_id', gallery_resource_id_type)
         c.argument('image_path', options_list=['--image-path', '-i'], type=file_type, help='Path to image to bake.')
         c.argument('bake_yaml', options_list=['--bake-yaml', '-b'], type=file_type, help='Path to bake.yaml file.')
+        c.ignore('sandbox')
+        c.ignore('gallery')
+        c.ignore('image')
+
+    with self.argument_context('bake yaml export') as c:
+        c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
+        c.argument('gallery_resource_id', gallery_resource_id_type)
+        c.argument('outfile', yaml_outfile_type, default='./bake.yml')
+        c.argument('outdir', yaml_outdir_type)
+        c.argument('stdout', yaml_stdout_type)
+        c.ignore('sandbox')
+        c.ignore('gallery')
+        c.ignore('images')
 
     with self.argument_context('bake _builder') as c:
         c.ignore('in_builder')
+        c.ignore('sandbox')
+        c.ignore('gallery')
+        c.ignore('image')
         c.ignore('repo')
         c.ignore('storage')
         c.ignore('suffix')

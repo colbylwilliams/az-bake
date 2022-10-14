@@ -426,6 +426,26 @@ def templates_version_validator(cmd, ns):
             ns.templates_url = f'https://github.com/colbylwilliams/az-bake/releases/download/{ns.version}/templates.json'
 
 
+def yaml_out_validator(cmd, ns):
+    if ns.outfile:
+        if getattr(ns.outfile, 'is_default', None) is None:
+            if ns.outdir or ns.stdout:
+                raise MutuallyExclusiveArgumentError(
+                    'Only use one of --outdir | --outfile | --stdout',
+                    recommendation='Remove all --outdir, --outfile, and --stdout to output a bake.yaml file '
+                    'in the current directory, or only specify --stdout to output to stdout.')
+        ns.outfile = Path(ns.outfile).resolve()
+    elif ns.outdir and ns.stdout:
+        raise MutuallyExclusiveArgumentError(
+            'Only use one of --outdir | --stdout',
+            recommendation='Remove all --outdir and --stdout to output a bake.yaml file '
+            'in the current directory, or only specify --stdout to output to stdout.')
+    else:
+        ns.outfile = None
+        if ns.outdir:
+            ns.outdir = _validate_dir_path(ns.outdir)
+
+
 def _validate_object(path, obj, properties, parent_key=None):
 
     key_prefix = f'{parent_key}.' if parent_key else ''

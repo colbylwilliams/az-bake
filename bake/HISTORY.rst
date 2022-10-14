@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.0.21
+++++++
++ Add bake yaml commands
+* Add output to bake repo to track packer
+
 0.0.20
 ++++++
 + Try VS images

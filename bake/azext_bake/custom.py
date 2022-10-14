@@ -7,12 +7,13 @@
 import json
 import os
 
+import yaml
 from knack.log import get_logger
 from knack.util import CLIError
 
 from ._arm import (create_image_definition,
                    deploy_arm_template_at_resource_group,
-                   ensure_gallery_permissions, get_gallery,
+                   ensure_gallery_permissions, get_arm_output, get_gallery,
                    get_image_definition, image_version_exists)
 from ._github import (get_github_release, get_release_templates,
                       get_template_url)
@@ -77,7 +78,14 @@ def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=N
 
     save_packer_vars_file(sandbox, gallery, image)
 
-    return packer_execute(image)
+    success = packer_execute(image)
+
+    if not success:
+        raise CLIError('Packer build failed')
+    else:
+        logger.info('Packer build succeeded')
+
+    return success
 
 # sandbox, gallery, and images come from validator
 
@@ -142,11 +150,20 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
         deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox['resourceGroup'],
                                                                     template_file=template_file, template_uri=template_uri,
                                                                     parameters=[image_params])
-        logger.info(f'Finished deploying {image["name"]} builder')
+        logs = get_arm_output(outputs, 'logs')
+        portal = get_arm_output(outputs, 'portal')
+
+        logger.warning(f'Finished deploying builder for {image["name"]} but packer is still running.')
+        logger.warning(f'You can check the progress of the packer build:')
+        logger.warning(f'  - Azure CLI: {logs}')
+        logger.warning(f'  - Azure Portal: {portal}')
+        logger.warning(f'')
+
         deployments.append(deployment)
 
     hook.end(message=' ')
-    return deployments
+
+    return True
 
 
 def bake_repo_validate(cmd, repository_path, sandbox=None, gallery=None, images=None):
@@ -196,9 +213,41 @@ def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
                                                           template_file=template_file, template_uri=template_uri,
                                                           parameters=[params])
     logger.info(f'Finished deploying sandbox')
+    logger.warning(f'Successfully deployed sandbox environment')
+    logger.warning(f'You can configure it as your default sandbox using `az configure --defaults bake-sandbox={sandbox_resource_group_name}`')
 
     hook.end(message=' ')
-    return deployment
+    return True
+
+
+def bake_yaml_export(cmd, sandbox_resource_group_name, gallery_resource_id, sandbox=None, gallery=None, images=None,
+                     outfile='./bake.yml', outdir=None, stdout=False):
+    logger.info('Exporting bake.yaml file')
+
+    bake_obj = {
+        'version': 1.0,
+        'sandbox': sandbox,
+        'gallery': gallery
+    }
+    if images:
+        bake_obj['images'] = images
+
+    if stdout:
+        print(yaml.safe_dump(bake_obj, default_flow_style=False, sort_keys=False))
+    elif outfile:
+        with open(outfile, 'w') as f:
+            yaml.safe_dump(bake_obj, f, default_flow_style=False, sort_keys=False)
+    elif outdir:
+        with open(outdir / 'bake.yml', 'w') as f:
+            yaml.safe_dump(bake_obj, f, default_flow_style=False, sort_keys=False)
+
+    return
+
+
+def bake_yaml_validate(cmd):
+    logger.info('Validating bake.yaml file')
+    return True
+    # raise CLIError('Not implemented')
 
 
 def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=None, sandbox=None, gallery=None):
