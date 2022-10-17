@@ -124,8 +124,8 @@ with open(f'{path_assets}/templates.json', 'w') as f:
 
 
 # copy the bake and image schemas to assets folder
-shutil.copy2(path_root / 'schemas' / 'bake.schema.json', path_assets)
-shutil.copy2(path_root / 'schemas' / 'image.schema.json', path_assets)
+shutil.copy2(path_root / 'schema' / 'bake.schema.json', path_assets)
+shutil.copy2(path_root / 'schema' / 'image.schema.json', path_assets)
 
 assets = []
 
