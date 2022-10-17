@@ -1,0 +1,202 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "az bake image definition",
+    "description": "Schema for bake image definitions",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "name",
+        "publisher",
+        "offer",
+        "sku",
+        "version",
+        "os"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The display name of the image"
+        },
+        "description": {
+            "type": "string",
+            "description": "The description of this gallery image definition resource."
+        },
+        "publisher": {
+            "type": "string",
+            "description": "The name of the gallery image definition publisher."
+        },
+        "offer": {
+            "type": "string",
+            "description": "The name of the gallery image definition offer."
+        },
+        "sku": {
+            "type": "string",
+            "description": "The name of the gallery image definition SKU."
+        },
+        "version": {
+            "type": "string",
+            "description": "The name of the gallery image definition version.",
+            "pattern": "^[^\\\\/:\\*\\?\"<>\\|\\x01-\\x1f]+$",
+            "maxLength": 128
+        },
+        "os": {
+            "type": "string",
+            "description": "The name of the gallery image definition offer.",
+            "default": "Windows",
+            "enum": [
+                "Windows",
+                "Linux"
+            ]
+        },
+        "replicaLocations": {
+            "type": "array",
+            "description": "The list of replica locations for this image.",
+            "items": {
+                "type": "string"
+            }
+        },
+        "install": {
+            "type": "object",
+            "description": "The install section of the image definition",
+            "additionalProperties": false,
+            "properties": {
+                "choco": {
+                    "type:": "object",
+                    "description": "The choco section of the image definition",
+                    "additionalProperties": false,
+                    "required": [
+                        "packages"
+                    ],
+                    "properties": {
+                        "defaults": {
+                            "type": "object",
+                            "description": "The default choco install options",
+                            "additionalProperties": false,
+                            "properties": {
+                                "source": {
+                                    "type": "string",
+                                    "description": "The source to find the package(s) to install."
+                                },
+                                "installArguments": {
+                                    "type": "string",
+                                    "description": "Install Arguments to pass to the native installer in the package."
+                                }
+                            }
+                        },
+                        "packages": {
+                            "type": "array",
+                            "description": "The list of chocolatey packages to install",
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "source": {
+                                                "type": "string",
+                                                "description": "The source to find the package(s) to install."
+                                            },
+                                            "version": {
+                                                "type": "string",
+                                                "description": "A specific version to install."
+                                            },
+                                            "installArguments": {
+                                                "type": "string",
+                                                "description": "Install Arguments to pass to the native installer in the package."
+                                            },
+                                            "packageParameters": {
+                                                "type": "string",
+                                                "description": "Parameters to pass to the package."
+                                            }
+                                        },
+                                        "required": [
+                                            "id"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "winget": {
+                    "type": "object",
+                    "description": "The winget install configuration",
+                    "additionalProperties": false,
+                    "required": [
+                        "packages"
+                    ],
+                    "properties": {
+                        "defaults": {
+                            "type": "object",
+                            "description": "The default winget install options",
+                            "additionalProperties": false,
+                            "properties": {
+                                "source": {
+                                    "type": "string",
+                                    "description": "The source to find the package(s) to install."
+                                }
+                            }
+                        },
+                        "packages": {
+                            "type": "array",
+                            "description": "The list of winget packages to install",
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "string",
+                                                "description": "Limits the install to the ID of the application."
+                                            },
+                                            "version": {
+                                                "type": "string",
+                                                "description": "Enables you to specify an exact version to install. If not specified, latest will install the highest versioned application."
+                                            },
+                                            "source": {
+                                                "type": "string",
+                                                "description": "Restricts the search to the source name provided. Must be followed by the source name."
+                                            }
+                                        },
+                                        "required": [
+                                            "id"
+                                        ]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "Limits the install to the name of the application."
+                                            },
+                                            "version": {
+                                                "type": "string",
+                                                "description": "Enables you to specify an exact version to install. If not specified, latest will install the highest versioned application."
+                                            },
+                                            "source": {
+                                                "type": "string",
+                                                "description": "Restricts the search to the source name provided. Must be followed by the source name."
+                                            }
+                                        },
+                                        "required": [
+                                            "name"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {}
+}

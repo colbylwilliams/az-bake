@@ -1,12 +1,12 @@
-// packer {
-//   required_plugins {
-//     # https://github.com/rgl/packer-plugin-windows-update
-//     windows-update = {
-//       version = "0.14.1"
-//       source  = "github.com/rgl/windows-update"
-//     }
-//   }
-// }
+packer {
+  required_plugins {
+    # https://github.com/rgl/packer-plugin-windows-update
+    windows-update = {
+      version = "0.14.1"
+      source  = "github.com/rgl/windows-update"
+    }
+  }
+}
 
 # https://www.packer.io/plugins/builders/azure/arm
 source "azure-arm" "vm" {
@@ -21,13 +21,13 @@ source "azure-arm" "vm" {
   winrm_use_ssl  = true
   os_type        = "Windows" # tells packer to create a certificate for WinRM connection
   # base image options (Azure Marketplace Images only)
-  // image_publisher    = "microsoftwindowsdesktop"
-  // image_offer        = "windows-ent-cpc"
-  // image_sku          = "win11-22h2-ent-cpc-m365"
+  image_publisher    = "microsoftwindowsdesktop"
+  image_offer        = "windows-ent-cpc"
+  image_sku          = "win11-22h2-ent-cpc-m365"
 
-  image_publisher    = "microsoftvisualstudio"
-  image_offer        = "visualstudioplustools"
-  image_sku          = "vs-2022-ent-general-win11-m365-gen2"
+  // image_publisher    = "microsoftvisualstudio"
+  // image_offer        = "visualstudioplustools"
+  // image_sku          = "vs-2022-ent-general-win11-m365-gen2"
 
   image_version      = "latest"
   use_azure_cli_auth = true
@@ -79,9 +79,8 @@ build {
   }
 
   # https://github.com/rgl/packer-plugin-windows-update
-  // provisioner "windows-update" {
-  // }
-
+  provisioner "windows-update" {
+  }
   ###BAKE###
 
   # Disable Auto-Logon that was enabled above

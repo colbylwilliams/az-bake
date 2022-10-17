@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.0.22
+++++++
++ Add new schema files
+* Add winget support
+
 0.0.21
 ++++++
 + Add bake yaml commands

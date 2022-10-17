@@ -74,6 +74,9 @@ def get_install_choco_dict(image):
     if 'install' not in image or 'choco' not in image['install']:
         return None
 
+    if 'packages' not in image['install']['choco']:
+        raise ValidationError(f'No packages found in install.choco in image.yaml')
+
     install_path = get_templates_path('install')
     choco_index_path = install_path / 'choco.json'
     choco_index = {}
@@ -81,17 +84,27 @@ def get_install_choco_dict(image):
         choco_index = json.load(f)
 
     choco = []
-    for c in image['install']['choco']:
+
+    choco_defaults = image['install']['choco']['defaults'] if 'defaults' in image['install']['choco'] else None
+
+    for c in image['install']['choco']['packages']:
         logger.info(f'Getting choco config for {c} type {type(c)}')
         if isinstance(c, str):
-            if c in choco_index:
-                choco.append(choco_index[c])
-            else:
-                choco.append({'id': c})
+            # if only the id was givin, check the index for the rest of the config
+            choco_node = choco_index[c] if c in choco_index else {'id': c}
         elif isinstance(c, dict):
-            choco.append(c)
+            # if the full config was given, use it
+            choco_node = c
         else:
             raise ValidationError(f'Invalid choco config {c} in image {image["name"]}')
+
+        # if defaults were given, add them to the config
+        if choco_defaults:  # merge common properties into image properties
+            temp = choco_defaults.copy()
+            temp.update(choco_node)
+            choco_node = temp.copy()
+
+        choco.append(choco_node)
 
     return choco
 
@@ -111,6 +124,46 @@ def get_choco_package_config(packages, indent=2):
 
     return xml_string
 
+
+def get_install_winget(image):
+    '''Get the dict for the install winget section supplemented by the index'''
+    logger.info(f'Getting wingit install dictionary from image.yaml')
+    if 'install' not in image or 'winget' not in image['install']:
+        return None
+
+    if 'packages' not in image['install']['winget']:
+        raise ValidationError(f'No packages found in install.winget in image.yaml')
+
+    install_path = get_templates_path('install')
+    winget_index_path = install_path / 'winget.json'
+    winget_index = {}
+    with open(winget_index_path, 'r') as f:
+        winget_index = json.load(f)
+
+    winget = []
+
+    winget_defaults = image['install']['winget']['defaults'] if 'defaults' in image['install']['winget'] else None
+
+    for c in image['install']['winget']['packages']:
+        logger.info(f'Getting winget config for {c} type {type(c)}')
+        if isinstance(c, str):
+            # if only the id was givin, check the index for the rest of the config
+            winget_node = winget_index[c] if c in winget_index else {'moniker': c}
+        elif isinstance(c, dict):
+            # if the full config was given, use it
+            winget_node = c
+        else:
+            raise ValidationError(f'Invalid winget config {c} in image {image["name"]}')
+
+        # if defaults were given, add them to the config
+        if winget_defaults:  # merge common properties into image properties
+            temp = winget_defaults.copy()
+            temp.update(winget_node)
+            winget_node = temp.copy()
+
+        winget.append(winget_node)
+
+    return winget
 
 # def _get_current_user_object_id(graph_client):
 #     try:

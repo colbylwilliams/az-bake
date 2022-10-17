@@ -122,14 +122,19 @@ for dirpath, dirnames, files in os.walk(path_templates):
 with open(f'{path_assets}/templates.json', 'w') as f:
     json.dump(templates, f, ensure_ascii=False, indent=4, sort_keys=True)
 
+
+# copy the bake and image schemas to assets folder
+shutil.copy2(path_root / 'schemas' / 'bake.schema.json', path_assets)
+shutil.copy2(path_root / 'schemas' / 'image.schema.json', path_assets)
+
 assets = []
 
-# add all the files in the root of hte assets folder to the assets list
+# add all the files in the root of the assets folder to the assets list
 with os.scandir(path_assets) as s:
     for f in s:
         if f.is_file():
             print(f.path)
-            name = f.name.rsplit('.', 1)[0]
+            # name = f.name.rsplit('.', 1)[0]
             assets.append({'name': f.name, 'path': f.path})
 
 

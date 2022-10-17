@@ -178,9 +178,7 @@ def inject_choco_provisioners(image_dir, config_xml):
       "choco install C:/Windows/Temp/{PKR_PACKAGES_CONFIG_FILE} --yes --no-progress"
     ]
   }}
-
-  {BAKE_PLACEHOLDER}
-    '''
+  {BAKE_PLACEHOLDER}'''
 
     build_file_path = image_dir / PKR_BUILD_FILE
 
@@ -199,6 +197,74 @@ def inject_choco_provisioners(image_dir, config_xml):
         raise ValidationError(f'Could not find {BAKE_PLACEHOLDER} in {PKR_BUILD_FILE} at {build_file_path}')
 
     pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, choco_install)
+
+    with open(build_file_path, 'w') as f:
+        f.write(pkr_build)
+
+
+def inject_winget_provisioners(image_dir, winget_packages):
+    '''Injects the winget provisioners into the packer build file'''
+
+    winget_install = f'''
+  # Injected by az bake
+  provisioner "powershell" {{
+    inline = [
+      "$file=Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle",
+      "$path=$env:TEMP/$file",
+      "Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/latest/download/$file -OutFile $path",
+      "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path $path",
+      "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath $path",
+
+      "$file=source.msix",
+      "$path=$env:TEMP/$file",
+      "Invoke-WebRequest -Uri https://winget.azureedge.net/cache/$file -OutFile $path",
+      "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path $path",
+      "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath $path",
+
+      "winget source reset --force",
+      "winget source list"
+    ]
+  }}
+
+  # Injected by az bake
+  provisioner "powershell" {{
+    inline = [
+'''
+
+    for i, p in enumerate(winget_packages):
+        winget_cmd = f'winget install '
+        for a in ['id', 'name', 'moniker', 'version', 'source']:
+            if a in p:
+                winget_cmd += f'--{a} {p[a]} '
+        winget_cmd += '--scope machine'
+
+        winget_install += f'      "{winget_cmd}"'
+
+        if i < len(winget_packages) - 1:
+            winget_install += ',\n'
+
+    winget_install += f'''
+    ]
+  }}
+  {BAKE_PLACEHOLDER}'''
+
+    build_file_path = image_dir / PKR_BUILD_FILE
+
+    if not build_file_path.exists():
+        raise ValidationError(f'Could not find {PKR_BUILD_FILE} file at {build_file_path}')
+    if not build_file_path.is_file():
+        raise ValidationError(f'{build_file_path} is not a file')
+
+    # inject winget install into build.pkr.hcl
+    logger.info(f'Injecting winget install provisioners into {build_file_path}')
+
+    with open(build_file_path, 'r') as f:
+        pkr_build = f.read()
+
+    if BAKE_PLACEHOLDER not in pkr_build:
+        raise ValidationError(f'Could not find {BAKE_PLACEHOLDER} in {PKR_BUILD_FILE} at {build_file_path}')
+
+    pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, winget_install)
 
     with open(build_file_path, 'w') as f:
         f.write(pkr_build)

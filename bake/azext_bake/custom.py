@@ -18,10 +18,11 @@ from ._arm import (create_image_definition,
 from ._github import (get_github_release, get_release_templates,
                       get_template_url)
 from ._packer import (check_packer_install, copy_packer_files,
-                      inject_choco_provisioners, packer_execute,
-                      save_packer_vars_file)
+                      inject_choco_provisioners, inject_winget_provisioners,
+                      packer_execute, save_packer_vars_file)
 from ._sandbox import get_builder_subnet_id
-from ._utils import get_choco_package_config, get_install_choco_dict
+from ._utils import (get_choco_package_config, get_install_choco_dict,
+                     get_install_winget)
 
 logger = get_logger(__name__)
 
@@ -76,9 +77,14 @@ def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=N
 
     inject_choco_provisioners(image['dir'], choco_config)
 
+    winget_config = get_install_winget(image)
+
+    inject_winget_provisioners(image['dir'], winget_config)
+
     save_packer_vars_file(sandbox, gallery, image)
 
     success = packer_execute(image)
+    # success = True
 
     if not success:
         raise CLIError('Packer build failed')
