@@ -170,6 +170,8 @@ def inject_winget_provisioners(image_dir, winget_packages):
 
   # Injected by az bake
   provisioner "powershell" {{
+    elevated_user     = build.User
+    elevated_password = build.Password
     inline = [
 '''
 
