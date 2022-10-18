@@ -226,23 +226,23 @@ PKR_PROVISIONER_WINGET_INSTALL = f'''
     elevated_user     = build.User
     elevated_password = build.Password
     inline = [
-      # "Write-Host '>>> Downloading package: {WINGET_INSTALLER_SRC} to {WINGET_INSTALLER_DEST}'",
-      # "(new-object net.webclient).DownloadFile('{WINGET_INSTALLER_SRC}', '{WINGET_INSTALLER_DEST}')",
-      # "Write-Host '>>> Installing package: {WINGET_INSTALLER_DEST}'",
-      # "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_INSTALLER_DEST}'",
+      "Write-Host '>>> Downloading package: {WINGET_INSTALLER_SRC} to {WINGET_INSTALLER_DEST}'",
+      "(new-object net.webclient).DownloadFile('{WINGET_INSTALLER_SRC}', '{WINGET_INSTALLER_DEST}')",
+      "Write-Host '>>> Installing package: {WINGET_INSTALLER_DEST}'",
+      "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_INSTALLER_DEST}'",
       # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath '{WINGET_INSTALLER_DEST}'",
 
-      # "Write-Host '>>> Downloading package: {WINGET_SOURCE_SRC} to {WINGET_SOURCE_DEST}'",
-      # "(new-object net.webclient).DownloadFile('{WINGET_SOURCE_SRC}', '{WINGET_SOURCE_DEST}')",
-      # "Write-Host '>>> Installing package: {WINGET_SOURCE_DEST}'",
-      # "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_SOURCE_DEST}'",
+      "Write-Host '>>> Downloading package: {WINGET_SOURCE_SRC} to {WINGET_SOURCE_DEST}'",
+      "(new-object net.webclient).DownloadFile('{WINGET_SOURCE_SRC}', '{WINGET_SOURCE_DEST}')",
+      "Write-Host '>>> Installing package: {WINGET_SOURCE_DEST}'",
+      "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_SOURCE_DEST}'",
       # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath '{WINGET_SOURCE_DEST}'",
 
       "winget --info",
 
-      # "Write-Host '>>> Resetting winget source'",
-      # "winget source reset --force",
-      # "winget source list"
+      "Write-Host '>>> Resetting winget source'",
+      "winget source reset --force",
+      "winget source list"
     ]
   }}
 

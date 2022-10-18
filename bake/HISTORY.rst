@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.31
+++++++
++ Re-enable winget preview install
+
 0.0.30
 ++++++
 + Add choco logs to builder output
