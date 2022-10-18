@@ -23,15 +23,15 @@ from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
 from ._completers import get_default_location_from_sandbox_resource_group
 from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER,
                          AZ_BAKE_IMAGE_BUILDER_VERSION, BAKE_PROPERTIES,
-                         IMAGE_PROPERTIES, KEY_ALLOWED, KEY_REQUIRED,
-                         SANDBOX_PROPERTIES, tag_key)
+                         IMAGE_PROPERTIES, IN_BUILDER, KEY_ALLOWED,
+                         KEY_REQUIRED, REPO_DIR, SANDBOX_PROPERTIES,
+                         STORAGE_DIR, tag_key)
 from ._github import (get_github_latest_release_version,
                       github_release_version_exists)
 from ._packer import check_packer_install
 from ._repos import get_repo, is_ci, parse_repo_url
 from ._sandbox import get_sandbox_from_group
-from ._utils import (IN_BUILDER, REPO_DIR, STORAGE_DIR, get_logger,
-                     get_yaml_file_contents, get_yaml_file_path)
+from ._utils import get_logger, get_yaml_file_contents, get_yaml_file_path
 
 logger = get_logger(__name__)
 

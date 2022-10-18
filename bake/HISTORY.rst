@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.30
+++++++
++ Add choco logs to builder output
+
 0.0.29
 ++++++
 + Create new directory for the builer logs

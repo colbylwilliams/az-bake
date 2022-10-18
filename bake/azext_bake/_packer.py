@@ -155,26 +155,7 @@ def inject_choco_provisioners(image_dir, config_xml):
     with open(image_dir / CHOCO_PACKAGES_CONFIG_FILE, 'w') as f:
         f.write(config_xml)
 
-    build_file_path = image_dir / PKR_BUILD_FILE
-
-    if not build_file_path.exists():
-        raise ValidationError(f'Could not find {PKR_BUILD_FILE} file at {build_file_path}')
-    if not build_file_path.is_file():
-        raise ValidationError(f'{build_file_path} is not a file')
-
-    # inject chocolatey install into build.pkr.hcl
-    logger.info(f'Injecting chocolatey install provisioners into {build_file_path}')
-
-    with open(build_file_path, 'r') as f:
-        pkr_build = f.read()
-
-    if BAKE_PLACEHOLDER not in pkr_build:
-        raise ValidationError(f'Could not find {BAKE_PLACEHOLDER} in {PKR_BUILD_FILE} at {build_file_path}')
-
-    pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, PKR_PROVISIONER_CHOCO)
-
-    with open(build_file_path, 'w') as f:
-        f.write(pkr_build)
+    _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO)
 
 
 def inject_winget_provisioners(image_dir, winget_packages):
@@ -191,6 +172,7 @@ def inject_winget_provisioners(image_dir, winget_packages):
   provisioner "powershell" {{
     inline = [
 '''
+
     for i, p in enumerate(winget_packages):
         winget_cmd = f'winget install '
 
@@ -217,6 +199,12 @@ def inject_winget_provisioners(image_dir, winget_packages):
   }}
   {BAKE_PLACEHOLDER}'''
 
+    _inject_provisioner(image_dir, winget_install)
+
+
+def _inject_provisioner(image_dir, provisioner):
+    '''Injects the provisioner into the packer build file'''
+
     build_file_path = image_dir / PKR_BUILD_FILE
 
     if not build_file_path.exists():
@@ -224,8 +212,8 @@ def inject_winget_provisioners(image_dir, winget_packages):
     if not build_file_path.is_file():
         raise ValidationError(f'{build_file_path} is not a file')
 
-    # inject winget install into build.pkr.hcl
-    logger.info(f'Injecting winget install provisioners into {build_file_path}')
+    # inject provisioner into build.pkr.hcl
+    logger.info(f'Injecting provisioner into {build_file_path}')
 
     with open(build_file_path, 'r') as f:
         pkr_build = f.read()
@@ -233,7 +221,7 @@ def inject_winget_provisioners(image_dir, winget_packages):
     if BAKE_PLACEHOLDER not in pkr_build:
         raise ValidationError(f'Could not find {BAKE_PLACEHOLDER} in {PKR_BUILD_FILE} at {build_file_path}')
 
-    pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, winget_install)
+    pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, provisioner)
 
     with open(build_file_path, 'w') as f:
         f.write(pkr_build)

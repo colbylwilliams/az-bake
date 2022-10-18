@@ -3,15 +3,32 @@
 # Licensed under the MIT License.
 # ------------------------------------
 
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 
-BAKE_PLACEHOLDER = '###BAKE###'
+timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
 
 AZ_BAKE_IMAGE_BUILDER = 'AZ_BAKE_IMAGE_BUILDER'
 AZ_BAKE_BUILD_IMAGE_NAME = 'AZ_BAKE_BUILD_IMAGE_NAME'
 AZ_BAKE_IMAGE_BUILDER_VERSION = 'AZ_BAKE_IMAGE_BUILDER_VERSION'
 AZ_BAKE_REPO_VOLUME = '/mnt/repo'
 AZ_BAKE_STORAGE_VOLUME = '/mnt/storage'
+
+IN_BUILDER = os.environ.get(AZ_BAKE_IMAGE_BUILDER)
+IN_BUILDER = True if IN_BUILDER else False
+
+REPO_DIR = Path(AZ_BAKE_REPO_VOLUME) if IN_BUILDER else Path(__file__).resolve().parent.parent.parent
+STORAGE_DIR = Path(AZ_BAKE_STORAGE_VOLUME) if IN_BUILDER else REPO_DIR / '.local' / 'storage'
+
+OUTPUT_DIR = STORAGE_DIR / timestamp
+
+if IN_BUILDER:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+BAKE_PLACEHOLDER = '###BAKE###'
+
 
 PKR_BUILD_FILE = 'build.pkr.hcl'
 PKR_VARS_FILE = 'variable.pkr.hcl'
@@ -174,6 +191,13 @@ PKR_PROVISIONER_CHOCO = f'''
       "choco install C:/Windows/Temp/{CHOCO_PACKAGES_CONFIG_FILE} --yes --no-progress"
     ]
   }}
+
+  # Injected by az bake
+  provisioner "file" {{
+    source = "C:/ProgramData/chocolatey/logs/chocolatey.log"
+    destination = "{OUTPUT_DIR}/chocolatey.log"
+    direction = "download"
+  }}
   {BAKE_PLACEHOLDER}'''
 
 WINGET_SETTINGS_FILE = 'settings.json'
@@ -202,23 +226,23 @@ PKR_PROVISIONER_WINGET_INSTALL = f'''
     elevated_user     = build.User
     elevated_password = build.Password
     inline = [
-      "Write-Host '>>> Downloading package: {WINGET_INSTALLER_SRC} to {WINGET_INSTALLER_DEST}'",
-      "(new-object net.webclient).DownloadFile('{WINGET_INSTALLER_SRC}', '{WINGET_INSTALLER_DEST}')",
-      "Write-Host '>>> Installing package: {WINGET_INSTALLER_DEST}'",
-      "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_INSTALLER_DEST}'",
+      # "Write-Host '>>> Downloading package: {WINGET_INSTALLER_SRC} to {WINGET_INSTALLER_DEST}'",
+      # "(new-object net.webclient).DownloadFile('{WINGET_INSTALLER_SRC}', '{WINGET_INSTALLER_DEST}')",
+      # "Write-Host '>>> Installing package: {WINGET_INSTALLER_DEST}'",
+      # "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_INSTALLER_DEST}'",
       # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath '{WINGET_INSTALLER_DEST}'",
 
-      "Write-Host '>>> Downloading package: {WINGET_SOURCE_SRC} to {WINGET_SOURCE_DEST}'",
-      "(new-object net.webclient).DownloadFile('{WINGET_SOURCE_SRC}', '{WINGET_SOURCE_DEST}')",
-      "Write-Host '>>> Installing package: {WINGET_SOURCE_DEST}'",
-      "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_SOURCE_DEST}'",
+      # "Write-Host '>>> Downloading package: {WINGET_SOURCE_SRC} to {WINGET_SOURCE_DEST}'",
+      # "(new-object net.webclient).DownloadFile('{WINGET_SOURCE_SRC}', '{WINGET_SOURCE_DEST}')",
+      # "Write-Host '>>> Installing package: {WINGET_SOURCE_DEST}'",
+      # "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_SOURCE_DEST}'",
       # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath '{WINGET_SOURCE_DEST}'",
 
       "winget --info",
 
-      "Write-Host '>>> Resetting winget source'",
-      "winget source reset --force",
-      "winget source list"
+      # "Write-Host '>>> Resetting winget source'",
+      # "winget source reset --force",
+      # "winget source list"
     ]
   }}
 

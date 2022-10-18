@@ -72,13 +72,13 @@ def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=N
     copy_packer_files(image['dir'])
 
     choco_install = get_install_choco_dict(image)
-    choco_config = get_choco_package_config(choco_install)
-
-    inject_choco_provisioners(image['dir'], choco_config)
+    if choco_install:
+        choco_config = get_choco_package_config(choco_install)
+        inject_choco_provisioners(image['dir'], choco_config)
 
     winget_config = get_install_winget(image)
-
-    inject_winget_provisioners(image['dir'], winget_config)
+    if winget_config:
+        inject_winget_provisioners(image['dir'], winget_config)
 
     save_packer_vars_file(sandbox, gallery, image)
 
