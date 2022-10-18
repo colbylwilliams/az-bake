@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.0.24
+++++++
++ Fix winget install
+* Add license args to winget commands
+
 0.0.23
 ++++++
 + Fix winget install

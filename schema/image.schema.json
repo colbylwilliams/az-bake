@@ -86,13 +86,15 @@
                             "items": {
                                 "oneOf": [
                                     {
-                                        "type": "string"
+                                        "type": "string",
+                                        "description": "The id of the package to install"
                                     },
                                     {
                                         "type": "object",
                                         "properties": {
                                             "id": {
-                                                "type": "string"
+                                                "type": "string",
+                                                "description": "The id of the package to install"
                                             },
                                             "source": {
                                                 "type": "string",
@@ -145,7 +147,8 @@
                             "items": {
                                 "oneOf": [
                                     {
-                                        "type": "string"
+                                        "type": "string",
+                                        "description": "The moniker of the package to install"
                                     },
                                     {
                                         "type": "object",

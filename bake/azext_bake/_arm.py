@@ -170,7 +170,7 @@ def ensure_gallery_permissions(cmd, gallery_id, identity_id, create_assignment=T
             logger.warning('Please ensure the identity has Contributor or Owner permissions '
                            'on the Gallery Resource Group.')
         else:
-            logger.warning('Granting permissions...')
+            logger.warning(f'Granting {i_name} Contributor permissions on {g_rg}...')
             try:
                 create_role_assignment(cmd, role='Contributor', assignee_object_id=identity.principal_id,
                                        scope=g_rgid, assignee_principal_type='ServicePrincipal')
@@ -196,7 +196,7 @@ def get_gallery(cmd, resource_group_name, gallery_name):
 
 
 def get_image_definition(cmd, resource_group_name, gallery_name, gallery_image_name):
-    logger.info(f'Getting image definition {gallery_image_name} in gallery {gallery_name} in resource group {resource_group_name}')
+    logger.info(f'Getting image definition {gallery_image_name} from gallery {gallery_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
         definition = client.gallery_images.get(resource_group_name, gallery_name, gallery_image_name)
@@ -207,13 +207,13 @@ def get_image_definition(cmd, resource_group_name, gallery_name, gallery_image_n
 
 
 def get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name):
-    logger.info(f'Getting image version {gallery_image_version_name} in image definition {gallery_image_name} in gallery {gallery_name} in resource group {resource_group_name}')
+    logger.info(f'Getting version {gallery_image_version_name} of {gallery_image_name} in gallery {gallery_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
         version = client.gallery_image_versions.get(resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name)
         return version
     except ResourceNotFoundError:
-        logger.info(f'Version {gallery_image_version_name} for found for image definition {gallery_image_name}')
+        logger.info(f'Version {gallery_image_version_name} of {gallery_image_name} not found.')
         return None
 
 

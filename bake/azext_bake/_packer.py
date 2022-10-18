@@ -208,14 +208,16 @@ def inject_winget_provisioners(image_dir, winget_packages):
     winget_install = f'''
   # Injected by az bake
   provisioner "powershell" {{
+    elevated_user     = build.User
+    elevated_password = build.Password
     inline = [
       "(new-object net.webclient).DownloadFile('https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle', 'C:/Windows/Temp/appinstaller.msixbundle')",
       "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path 'C:/Windows/Temp/appinstaller.msixbundle'",
-      "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/appinstaller.msixbundle'",
+      # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/appinstaller.msixbundle'",
 
       "(new-object net.webclient).DownloadFile('https://winget.azureedge.net/cache/source.msix', 'C:/Windows/Temp/source.msix')",
       "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path 'C:/Windows/Temp/source.msix'",
-      "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/source.msix'",
+      # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/source.msix'",
 
       "winget source reset --force",
       "winget source list"
@@ -232,7 +234,7 @@ def inject_winget_provisioners(image_dir, winget_packages):
         for a in ['id', 'name', 'moniker', 'version', 'source']:
             if a in p:
                 winget_cmd += f'--{a} {p[a]} '
-        winget_cmd += '--scope machine'
+        winget_cmd += '--scope machine --accept-package-agreements --accept-source-agreements'
 
         winget_install += f'      "{winget_cmd}"'
 
