@@ -8,7 +8,6 @@ import json
 import os
 
 import yaml
-from knack.log import get_logger
 from knack.util import CLIError
 
 from ._arm import (create_image_definition,
@@ -22,7 +21,7 @@ from ._packer import (check_packer_install, copy_packer_files,
                       packer_execute, save_packer_vars_file)
 from ._sandbox import get_builder_subnet_id
 from ._utils import (get_choco_package_config, get_install_choco_dict,
-                     get_install_winget)
+                     get_install_winget, get_logger)
 
 logger = get_logger(__name__)
 

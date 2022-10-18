@@ -9,7 +9,8 @@ from azure.cli.core.azclierror import (ClientRequestError,
                                        MutuallyExclusiveArgumentError,
                                        ResourceNotFoundError)
 from azure.cli.core.util import should_disable_connection_verify
-from knack.log import get_logger
+
+from ._utils import get_logger
 
 ERR_TMPL_PRDR_TEMPLATES = 'Unable to get templates.\n'
 ERR_TMPL_NON_200 = f'{ERR_TMPL_PRDR_TEMPLATES}Server returned status code {{}} for {{}}'

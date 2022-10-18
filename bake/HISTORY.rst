@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.25
+++++++
++ Add file logging for builder
+
 0.0.24
 ++++++
 + Fix winget install

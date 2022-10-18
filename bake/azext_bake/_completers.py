@@ -7,10 +7,10 @@ import requests
 from azure.cli.core.commands.parameters import (
     get_resources_in_resource_group, get_resources_in_subscription)
 from azure.cli.core.decorators import Completer
-from knack.log import get_logger
 
 from ._client_factory import cf_network, cf_resources
 from ._github import get_github_releases
+from ._utils import get_logger
 
 logger = get_logger(__name__)
 

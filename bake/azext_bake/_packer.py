@@ -11,12 +11,11 @@ import sys
 from pathlib import Path
 
 from azure.cli.core.azclierror import ValidationError
-from knack.log import get_logger
 
 from ._constants import (BAKE_PLACEHOLDER, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
                          PKR_DEFAULT_VARS, PKR_PACKAGES_CONFIG_FILE,
                          PKR_VARS_FILE)
-from ._utils import get_templates_path
+from ._utils import get_logger, get_templates_path
 
 logger = get_logger(__name__)
 
@@ -211,14 +210,19 @@ def inject_winget_provisioners(image_dir, winget_packages):
     elevated_user     = build.User
     elevated_password = build.Password
     inline = [
+      "Write-Host '>>> Downloading package: https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'",
       "(new-object net.webclient).DownloadFile('https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle', 'C:/Windows/Temp/appinstaller.msixbundle')",
+      "Write-Host '>>> Installing package: C:/Windows/Temp/appinstaller.msixbundle'",
       "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path 'C:/Windows/Temp/appinstaller.msixbundle'",
       # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/appinstaller.msixbundle'",
 
+      "Write-Host '>>> Downloading package: https://winget.azureedge.net/cache/source.msix'",
       "(new-object net.webclient).DownloadFile('https://winget.azureedge.net/cache/source.msix', 'C:/Windows/Temp/source.msix')",
+      "Write-Host '>>> Installing package: C:/Windows/Temp/source.msix'",
       "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path 'C:/Windows/Temp/source.msix'",
       # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/source.msix'",
 
+      "Write-Host '>>> Resetting winget source'",
       "winget source reset --force",
       "winget source list"
     ]
@@ -236,6 +240,7 @@ def inject_winget_provisioners(image_dir, winget_packages):
                 winget_cmd += f'--{a} {p[a]} '
         winget_cmd += '--scope machine --accept-package-agreements --accept-source-agreements'
 
+        winget_install += f'      "Write-Host \'>>> Running command: {winget_cmd}\'",\n'
         winget_install += f'      "{winget_cmd}"'
 
         if i < len(winget_packages) - 1:

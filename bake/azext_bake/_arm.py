@@ -12,11 +12,11 @@ from azure.cli.core.commands.client_factory import get_subscription_id
 from azure.cli.core.profiles import ResourceType, get_sdk
 from azure.cli.core.util import find_child_item, random_string, sdk_no_wait
 from azure.core.exceptions import ResourceNotFoundError
-from knack.log import get_logger
 from knack.util import CLIError
 from msrestazure.tools import parse_resource_id, resource_id
 
 from ._client_factory import cf_compute, cf_msi, cf_network, cf_resources
+from ._utils import get_logger
 
 TRIES = 3
 

@@ -7,11 +7,11 @@ from azure.cli.core.azclierror import ValidationError
 from azure.cli.core.commands.client_factory import get_subscription_id
 from azure.cli.core.commands.parameters import get_resources_in_resource_group
 from azure.mgmt.core.tools import is_valid_resource_id, resource_id
-from knack.log import get_logger
 
 from ._arm import get_resource_group_tags
 from ._client_factory import cf_msi, cf_network
 from ._constants import tag_key
+from ._utils import get_logger
 
 logger = get_logger(__name__)
 

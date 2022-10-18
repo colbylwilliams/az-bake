@@ -4,6 +4,8 @@
 # ------------------------------------
 
 import json
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
@@ -13,7 +15,36 @@ from azure.cli.core.azclierror import (ClientRequestError, FileOperationError,
                                        MutuallyExclusiveArgumentError,
                                        ResourceNotFoundError, ValidationError)
 from azure.cli.core.util import should_disable_connection_verify
-from knack.log import get_logger
+from knack.log import get_logger as knack_get_logger
+
+from ._constants import (AZ_BAKE_IMAGE_BUILDER, AZ_BAKE_REPO_VOLUME,
+                         AZ_BAKE_STORAGE_VOLUME)
+
+timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
+
+
+def get_logger(name):
+    '''Get the logger for the extension'''
+    in_builder = os.environ.get(AZ_BAKE_IMAGE_BUILDER)
+    in_builder = True if in_builder else False
+
+    repo = Path(AZ_BAKE_REPO_VOLUME) if in_builder else Path(__file__).resolve().parent.parent.parent
+    storage = Path(AZ_BAKE_STORAGE_VOLUME) if in_builder else repo / '.local' / 'storage'
+
+    _logger = knack_get_logger(name)
+
+    if in_builder and os.path.isdir(storage):
+        import logging
+        log_file = storage / f'log_{timestamp}.txt'
+        formatter = logging.Formatter('{asctime} [{name:^28}] {levelname:<8}: {message}', datefmt='%m/%d/%Y %I:%M:%S %p', style='{',)
+        fh = logging.FileHandler(log_file)
+        fh.setLevel(level=_logger.level)
+        fh.setFormatter(formatter)
+
+        _logger.addHandler(fh)
+
+    return _logger
+
 
 logger = get_logger(__name__)
 

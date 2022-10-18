@@ -20,7 +20,6 @@ from azure.cli.core.extension import get_extension
 from azure.cli.core.util import is_guid
 from azure.mgmt.core.tools import (is_valid_resource_id, parse_resource_id,
                                    resource_id)
-from knack.log import get_logger
 
 from ._completers import get_default_location_from_sandbox_resource_group
 from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER,
@@ -33,7 +32,7 @@ from ._github import (get_github_latest_release_version,
 from ._packer import check_packer_install
 from ._repos import get_repo, is_ci, parse_repo_url
 from ._sandbox import get_sandbox_from_group
-from ._utils import get_yaml_file_contents, get_yaml_file_path
+from ._utils import get_logger, get_yaml_file_contents, get_yaml_file_path
 
 logger = get_logger(__name__)
 
