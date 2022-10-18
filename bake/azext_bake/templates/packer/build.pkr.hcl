@@ -83,6 +83,12 @@ build {
   // }
   ###BAKE###
 
+  provisioner "windows-restart" {
+    # needed to get elevated script execution working
+    restart_timeout = "30m"
+    pause_before    = "2m"
+  }
+
   # Disable Auto-Logon that was enabled above
   provisioner "powershell" {
     inline = [

@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.28
+++++++
++ Add another windows restart to packer build file
+
 0.0.27
 ++++++
 + Fix bug ignoring winget defaults
