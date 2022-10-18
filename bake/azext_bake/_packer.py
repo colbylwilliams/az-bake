@@ -193,12 +193,17 @@ def inject_winget_provisioners(image_dir, winget_packages):
 '''
     for i, p in enumerate(winget_packages):
         winget_cmd = f'winget install '
-        if 'ANY' in p:
+
+        if 'ANY' in p:  # user just specified a string, it could be a the moniker, name or id
             winget_cmd += f'{p["ANY"]} '
-        else:
-            for a in ['id', 'name', 'moniker', 'version', 'source']:
+        else:  # user specified the moniker, name or id
+            for a in ['id', 'name', 'moniker', 'source']:
                 if a in p:
                     winget_cmd += f'--{a} {p[a]} '
+        for a in ['source']:  # even if the user only specified a string, source could be in defaults
+            if a in p:
+                winget_cmd += f'--{a} {p[a]} '
+
         winget_cmd += '--accept-package-agreements --accept-source-agreements'
 
         winget_install += f'      "Write-Host \'>>> Running command: {winget_cmd}\'",\n'

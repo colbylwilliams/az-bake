@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.27
+++++++
++ Fix bug ignoring winget defaults
+
 0.0.26
 ++++++
 + Use winget settings.json
