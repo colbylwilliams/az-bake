@@ -11,10 +11,7 @@ from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
 
 import yaml
-from azure.cli.core.azclierror import (ClientRequestError, FileOperationError,
-                                       MutuallyExclusiveArgumentError,
-                                       ResourceNotFoundError, ValidationError)
-from azure.cli.core.util import should_disable_connection_verify
+from azure.cli.core.azclierror import FileOperationError, ValidationError
 from knack.log import get_logger as knack_get_logger
 
 from ._constants import (AZ_BAKE_IMAGE_BUILDER, AZ_BAKE_REPO_VOLUME,
@@ -22,25 +19,29 @@ from ._constants import (AZ_BAKE_IMAGE_BUILDER, AZ_BAKE_REPO_VOLUME,
 
 timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')
 
+IN_BUILDER = os.environ.get(AZ_BAKE_IMAGE_BUILDER)
+IN_BUILDER = True if IN_BUILDER else False
+
+REPO_DIR = Path(AZ_BAKE_REPO_VOLUME) if IN_BUILDER else Path(__file__).resolve().parent.parent.parent
+STORAGE_DIR = Path(AZ_BAKE_STORAGE_VOLUME) if IN_BUILDER else REPO_DIR / '.local' / 'storage'
+
+OUTPUT_DIR = STORAGE_DIR / timestamp
+
+if IN_BUILDER:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def get_logger(name):
     '''Get the logger for the extension'''
-    in_builder = os.environ.get(AZ_BAKE_IMAGE_BUILDER)
-    in_builder = True if in_builder else False
-
-    repo = Path(AZ_BAKE_REPO_VOLUME) if in_builder else Path(__file__).resolve().parent.parent.parent
-    storage = Path(AZ_BAKE_STORAGE_VOLUME) if in_builder else repo / '.local' / 'storage'
-
     _logger = knack_get_logger(name)
 
-    if in_builder and os.path.isdir(storage):
+    if IN_BUILDER and os.path.isdir(STORAGE_DIR):
         import logging
-        log_file = storage / f'log_{timestamp}.txt'
+        log_file = OUTPUT_DIR / f'builder.txt'
         formatter = logging.Formatter('{asctime} [{name:^28}] {levelname:<8}: {message}', datefmt='%m/%d/%Y %I:%M:%S %p', style='{',)
         fh = logging.FileHandler(log_file)
         fh.setLevel(level=_logger.level)
         fh.setFormatter(formatter)
-
         _logger.addHandler(fh)
 
     return _logger

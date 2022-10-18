@@ -66,6 +66,7 @@ build {
   # So we enable AutoAdminLogon and use packer's windows-restart provisioner to get the system into a good state to allow scheduled tasks to run.
   provisioner "powershell" {
     inline = [
+      "Write-Host 'Enabling AutoAdminLogon to allow packers scheduled task created by elevated_user to run...'",
       "Set-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon' -Name AutoAdminLogon -Value 1 -type String -ErrorAction Stop",
       "Set-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon' -Name DefaultUsername -Value ${build.User} -type String -ErrorAction Stop",
       "Set-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon' -Name DefaultPassword -Value ${build.Password} -type String -ErrorAction Stop"
@@ -92,6 +93,7 @@ build {
   # Disable Auto-Logon that was enabled above
   provisioner "powershell" {
     inline = [
+      "Write-Host 'Disabling AutoAdminLogon...'",
       "Remove-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon' -Name AutoAdminLogon -ErrorAction Stop",
       "Remove-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon' -Name DefaultUserName -ErrorAction Stop",
       "Remove-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon' -Name DefaultPassword -ErrorAction Stop",
@@ -102,13 +104,20 @@ build {
   provisioner "powershell" {
     inline = [
       # Generalize the image
+      "Write-Host '>>> Waiting for GA Service (RdAgent) to start ...'",
       "while ((Get-Service RdAgent -ErrorAction SilentlyContinue) -and ((Get-Service RdAgent).Status -ne 'Running')) { Start-Sleep -s 5 }",
+      "Write-Host '>>> Waiting for GA Service (WindowsAzureTelemetryService) to start ...'",
       "while ((Get-Service WindowsAzureTelemetryService -ErrorAction SilentlyContinue) -and ((Get-Service WindowsAzureTelemetryService).Status -ne 'Running')) { Start-Sleep -s 5 }",
+      "Write-Host '>>> Waiting for GA Service (WindowsAzureGuestAgent) to start ...'",
       "while ((Get-Service WindowsAzureGuestAgent -ErrorAction SilentlyContinue) -and ((Get-Service WindowsAzureGuestAgent).Status -ne 'Running')) { Start-Sleep -s 5 }",
+      "Write-Host '>>> Sysprepping VM ...'",
       "Remove-Item $Env:SystemRoot\\system32\\Sysprep\\unattend.xml -Force -ErrorAction SilentlyContinue",
       # https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep-command-line-options?view=windows-11
       "& $Env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /mode:vm /generalize /quiet /quit",
-      "while ($true) { $imageState = (Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State).ImageState; Write-Output $imageState; if ($imageState -eq 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { break }; Start-Sleep -s 5 }"
+      # "while ($true) { $imageState = (Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State).ImageState; Write-Output $imageState; if ($imageState -eq 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { break }; Start-Sleep -s 5 }",
+      "$imageStateCompleteCount = 0; while ($true) { if ($imageStateCompleteCount -gt 12) { Write-Host '===> SYSPREP ACTLOG'; Get-Content -Path 'C:\\windows\\system32\\sysprep\\panther\\setupact.log' -ErrorAction SilentlyContinue; Write-Host '===> SYSPREP ERRLOG'; Get-Content -Path 'C:\\windows\\system32\\sysprep\\panther\\setuperr.log' -ErrorAction SilentlyContinue; exit 1 }; $imageState = (Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State).ImageState; Write-Output $imageState; if ($imageState -eq 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { break }; if ($imageState -eq 'IMAGE_STATE_COMPLETE') { $imageStateCompleteCount += 1 }; Start-Sleep -s 5 }",
+      "Write-Host '>>> Sysprep complete ...'",
+      "Write-Host '>>> Shutting down VM ...'"
     ]
   }
 }

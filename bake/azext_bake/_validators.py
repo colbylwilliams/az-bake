@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from re import match
 
-from azure.cli.core.azclierror import (ArgumentUsageError, FileOperationError,
+from azure.cli.core.azclierror import (ArgumentUsageError,
                                        InvalidArgumentValueError,
                                        MutuallyExclusiveArgumentError,
                                        RequiredArgumentMissingError,
@@ -18,21 +18,20 @@ from azure.cli.core.azclierror import (ArgumentUsageError, FileOperationError,
 from azure.cli.core.commands.validators import validate_tags
 from azure.cli.core.extension import get_extension
 from azure.cli.core.util import is_guid
-from azure.mgmt.core.tools import (is_valid_resource_id, parse_resource_id,
-                                   resource_id)
+from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
 
 from ._completers import get_default_location_from_sandbox_resource_group
 from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER,
-                         AZ_BAKE_IMAGE_BUILDER_VERSION, AZ_BAKE_REPO_VOLUME,
-                         AZ_BAKE_STORAGE_VOLUME, BAKE_PROPERTIES,
-                         GALLERY_PROPERTIES, IMAGE_PROPERTIES, KEY_ALLOWED,
-                         KEY_REQUIRED, SANDBOX_PROPERTIES, tag_key)
+                         AZ_BAKE_IMAGE_BUILDER_VERSION, BAKE_PROPERTIES,
+                         IMAGE_PROPERTIES, KEY_ALLOWED, KEY_REQUIRED,
+                         SANDBOX_PROPERTIES, tag_key)
 from ._github import (get_github_latest_release_version,
                       github_release_version_exists)
 from ._packer import check_packer_install
 from ._repos import get_repo, is_ci, parse_repo_url
 from ._sandbox import get_sandbox_from_group
-from ._utils import get_logger, get_yaml_file_contents, get_yaml_file_path
+from ._utils import (IN_BUILDER, REPO_DIR, STORAGE_DIR, get_logger,
+                     get_yaml_file_contents, get_yaml_file_path)
 
 logger = get_logger(__name__)
 
@@ -98,29 +97,27 @@ def process_bake_repo_validate_namespace(cmd, ns):
 def builder_validator(cmd, ns):
     check_packer_install(raise_error=True)
 
-    in_builder = os.environ.get(AZ_BAKE_IMAGE_BUILDER)
-    in_builder = True if in_builder else False
-    ns.in_builder = in_builder
+    ns.in_builder = IN_BUILDER
 
-    builder_version = os.environ.get(AZ_BAKE_IMAGE_BUILDER_VERSION, 'unknown') if in_builder else 'local'
+    builder_version = os.environ.get(AZ_BAKE_IMAGE_BUILDER_VERSION, 'unknown') if IN_BUILDER else 'local'
 
-    logger.info(f'{AZ_BAKE_IMAGE_BUILDER}: {in_builder}')
+    logger.info(f'{AZ_BAKE_IMAGE_BUILDER}: {IN_BUILDER}')
     logger.info(f'{AZ_BAKE_IMAGE_BUILDER_VERSION}: {builder_version}')
 
-    if not in_builder:
+    if not IN_BUILDER:
         logger.warning('WARNING: Running outside of the builder container. This should only be done during testing.')
 
     # if not in_builder:
     #     raise CLIError('Not in builder')
 
-    repo = Path(AZ_BAKE_REPO_VOLUME) if in_builder else Path(__file__).resolve().parent.parent.parent
-    storage = Path(AZ_BAKE_STORAGE_VOLUME) if in_builder else repo / '.local' / 'storage'
+    # repo = REPO_DIR
+    # storage = STORAGE_DIR
 
-    _validate_dir_path(repo, 'repo')
-    _validate_dir_path(storage, 'storage')
+    _validate_dir_path(REPO_DIR, 'repo')
+    _validate_dir_path(STORAGE_DIR, 'storage')
 
-    ns.repo = repo
-    ns.storage = storage
+    ns.repo = REPO_DIR
+    ns.storage = STORAGE_DIR
 
     # check for required environment variables
     for env in [AZ_BAKE_BUILD_IMAGE_NAME]:
@@ -128,7 +125,7 @@ def builder_validator(cmd, ns):
             raise ValidationError(f'Missing environment variable: {env}')
 
     image_name = os.environ[AZ_BAKE_BUILD_IMAGE_NAME]
-    image_path = repo / 'images' / image_name
+    image_path = REPO_DIR / 'images' / image_name
 
     _validate_dir_path(image_path, image_name)
 
@@ -140,7 +137,7 @@ def builder_validator(cmd, ns):
 
     logger.info(f'Build suffix: {ns.suffix}')
 
-    bake_yaml = get_yaml_file_path(repo, 'bake', required=True)
+    bake_yaml = get_yaml_file_path(REPO_DIR, 'bake', required=True)
 
     bake_obj = bake_yaml_content_validator(cmd, ns, bake_yaml)
 

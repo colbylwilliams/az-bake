@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.29
+++++++
++ Create new directory for the builer logs
+
 0.0.28
 ++++++
 + Add another windows restart to packer build file
