@@ -16,7 +16,6 @@ AZ_BAKE_STORAGE_VOLUME = '/mnt/storage'
 PKR_BUILD_FILE = 'build.pkr.hcl'
 PKR_VARS_FILE = 'variable.pkr.hcl'
 PKR_AUTO_VARS_FILE = 'vars.auto.pkrvars.json'
-PKR_PACKAGES_CONFIG_FILE = 'packages.config'
 
 TAG_PREFIX = 'hidden-bake:'
 
@@ -100,24 +99,6 @@ IMAGE_PROPERTIES = {
     KEY_ALLOWED: IMAGE_ALLOWED_PROPERTIES
 }
 
-
-# PKR_DEFAULT_VARS = [
-#     'subscription',
-#     'name',
-#     'location',
-#     'version',
-#     'tempResourceGroup',
-#     'buildResourceGroup',
-#     'gallery',
-#     'replicaLocations',
-#     'keyVault',
-#     'virtualNetwork',
-#     'virtualNetworkSubnet',
-#     'virtualNetworkResourceGroup',
-#     'branch',
-#     'commit'
-# ]
-
 PKR_DEFAULT_VARS = {
     'image': [
         'name',
@@ -151,10 +132,6 @@ def tag_key(key):
     return f'{TAG_PREFIX}{key}'
 
 
-# def tag_key(key):
-#     return f'{TAG_PREFIX}{key}'
-
-
 DEFAULT_TAGS = {
     tag_key('cli-version'),
     tag_key('sandbox-version'),
@@ -170,3 +147,84 @@ DEFAULT_TAGS = {
     tag_key('subnetId'),
     tag_key('identityId'),
 }
+
+CHOCO_PACKAGES_CONFIG_FILE = 'packages.config'
+
+PKR_PROVISIONER_CHOCO = f'''
+  # Injected by az bake
+  provisioner "powershell" {{
+    environment_vars = ["chocolateyUseWindowsCompression=false"]
+    inline = [
+      "(new-object net.webclient).DownloadFile('https://chocolatey.org/install.ps1', 'C:/Windows/Temp/chocolatey.ps1')",
+      "& C:/Windows/Temp/chocolatey.ps1"
+    ]
+  }}
+
+  # Injected by az bake
+  provisioner "file" {{
+    source = "${{path.root}}/{CHOCO_PACKAGES_CONFIG_FILE}"
+    destination = "C:/Windows/Temp/{CHOCO_PACKAGES_CONFIG_FILE}"
+  }}
+
+  # Injected by az bake
+  provisioner "powershell" {{
+    elevated_user     = build.User
+    elevated_password = build.Password
+    inline = [
+      "choco install C:/Windows/Temp/{CHOCO_PACKAGES_CONFIG_FILE} --yes --no-progress"
+    ]
+  }}
+  {BAKE_PLACEHOLDER}'''
+
+WINGET_SETTINGS_FILE = 'settings.json'
+
+WINGET_INSTALLER_SRC = 'https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'
+WINGET_INSTALLER_DEST = 'C:/Windows/Temp/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'
+WINGET_SOURCE_SRC = 'https://winget.azureedge.net/cache/source.msix'
+WINGET_SOURCE_DEST = 'C:/Windows/Temp/source.msix'
+
+WINGET_SETTINGS_PATH = 'C:/Users/packer/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json'
+
+WINGET_SETTINGS_JSON = f'''
+{{
+    "$schema": "https://aka.ms/winget-settings.schema.json",
+    "installBehavior": {{
+        "preferences": {{
+            "scope": "machine"
+        }}
+    }}
+}}
+'''
+
+PKR_PROVISIONER_WINGET_INSTALL = f'''
+  # Injected by az bake
+  provisioner "powershell" {{
+    elevated_user     = build.User
+    elevated_password = build.Password
+    inline = [
+      "Write-Host '>>> Downloading package: {WINGET_INSTALLER_SRC} to {WINGET_INSTALLER_DEST}'",
+      "(new-object net.webclient).DownloadFile('{WINGET_INSTALLER_SRC}', '{WINGET_INSTALLER_DEST}')",
+      "Write-Host '>>> Installing package: {WINGET_INSTALLER_DEST}'",
+      "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_INSTALLER_DEST}'",
+      # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath '{WINGET_INSTALLER_DEST}'",
+
+      "Write-Host '>>> Downloading package: {WINGET_SOURCE_SRC} to {WINGET_SOURCE_DEST}'",
+      "(new-object net.webclient).DownloadFile('{WINGET_SOURCE_SRC}', '{WINGET_SOURCE_DEST}')",
+      "Write-Host '>>> Installing package: {WINGET_SOURCE_DEST}'",
+      "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path '{WINGET_SOURCE_DEST}'",
+      # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath '{WINGET_SOURCE_DEST}'",
+
+      "winget --info",
+
+      "Write-Host '>>> Resetting winget source'",
+      "winget source reset --force",
+      "winget source list"
+    ]
+  }}
+
+  # Injected by az bake
+  provisioner "file" {{
+    source = "${{path.root}}/{WINGET_SETTINGS_FILE}"
+    destination = "{WINGET_SETTINGS_PATH}"
+  }}
+'''

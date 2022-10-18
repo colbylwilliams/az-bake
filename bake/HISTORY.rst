@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.0.26
+++++++
++ Use winget settings.json
+* Allow use of moniker name or id
+
 0.0.25
 ++++++
 + Add file logging for builder

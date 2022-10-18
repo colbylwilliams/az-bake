@@ -12,9 +12,11 @@ from pathlib import Path
 
 from azure.cli.core.azclierror import ValidationError
 
-from ._constants import (BAKE_PLACEHOLDER, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
-                         PKR_DEFAULT_VARS, PKR_PACKAGES_CONFIG_FILE,
-                         PKR_VARS_FILE)
+from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE,
+                         PKR_AUTO_VARS_FILE, PKR_BUILD_FILE, PKR_DEFAULT_VARS,
+                         PKR_PROVISIONER_CHOCO, PKR_PROVISIONER_WINGET_INSTALL,
+                         PKR_VARS_FILE, WINGET_SETTINGS_FILE,
+                         WINGET_SETTINGS_JSON)
 from ._utils import get_logger, get_templates_path
 
 logger = get_logger(__name__)
@@ -149,35 +151,9 @@ def copy_packer_files(image_dir):
 def inject_choco_provisioners(image_dir, config_xml):
     '''Injects the chocolatey provisioners into the packer build file'''
     # create the choco packages config file
-    logger.info(f'Creating file: {image_dir / PKR_PACKAGES_CONFIG_FILE}')
-    with open(image_dir / PKR_PACKAGES_CONFIG_FILE, 'w') as f:
+    logger.info(f'Creating file: {image_dir / CHOCO_PACKAGES_CONFIG_FILE}')
+    with open(image_dir / CHOCO_PACKAGES_CONFIG_FILE, 'w') as f:
         f.write(config_xml)
-
-    choco_install = f'''
-  # Injected by az bake
-  provisioner "powershell" {{
-    environment_vars = ["chocolateyUseWindowsCompression=false"]
-    inline = [
-      "(new-object net.webclient).DownloadFile('https://chocolatey.org/install.ps1', 'C:/Windows/Temp/chocolatey.ps1')",
-      "& C:/Windows/Temp/chocolatey.ps1"
-    ]
-  }}
-
-  # Injected by az bake
-  provisioner "file" {{
-    source = "${{path.root}}/{PKR_PACKAGES_CONFIG_FILE}"
-    destination = "C:/Windows/Temp/{PKR_PACKAGES_CONFIG_FILE}"
-  }}
-
-  # Injected by az bake
-  provisioner "powershell" {{
-    elevated_user     = build.User
-    elevated_password = build.Password
-    inline = [
-      "choco install C:/Windows/Temp/{PKR_PACKAGES_CONFIG_FILE} --yes --no-progress"
-    ]
-  }}
-  {BAKE_PLACEHOLDER}'''
 
     build_file_path = image_dir / PKR_BUILD_FILE
 
@@ -195,7 +171,7 @@ def inject_choco_provisioners(image_dir, config_xml):
     if BAKE_PLACEHOLDER not in pkr_build:
         raise ValidationError(f'Could not find {BAKE_PLACEHOLDER} in {PKR_BUILD_FILE} at {build_file_path}')
 
-    pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, choco_install)
+    pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, PKR_PROVISIONER_CHOCO)
 
     with open(build_file_path, 'w') as f:
         f.write(pkr_build)
@@ -204,41 +180,26 @@ def inject_choco_provisioners(image_dir, config_xml):
 def inject_winget_provisioners(image_dir, winget_packages):
     '''Injects the winget provisioners into the packer build file'''
 
+    logger.info(f'Creating file: {image_dir / WINGET_SETTINGS_FILE}')
+    with open(image_dir / WINGET_SETTINGS_FILE, 'w') as f:
+        f.write(WINGET_SETTINGS_JSON)
+
     winget_install = f'''
-  # Injected by az bake
-  provisioner "powershell" {{
-    elevated_user     = build.User
-    elevated_password = build.Password
-    inline = [
-      "Write-Host '>>> Downloading package: https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'",
-      "(new-object net.webclient).DownloadFile('https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle', 'C:/Windows/Temp/appinstaller.msixbundle')",
-      "Write-Host '>>> Installing package: C:/Windows/Temp/appinstaller.msixbundle'",
-      "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path 'C:/Windows/Temp/appinstaller.msixbundle'",
-      # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/appinstaller.msixbundle'",
-
-      "Write-Host '>>> Downloading package: https://winget.azureedge.net/cache/source.msix'",
-      "(new-object net.webclient).DownloadFile('https://winget.azureedge.net/cache/source.msix', 'C:/Windows/Temp/source.msix')",
-      "Write-Host '>>> Installing package: C:/Windows/Temp/source.msix'",
-      "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path 'C:/Windows/Temp/source.msix'",
-      # "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/source.msix'",
-
-      "Write-Host '>>> Resetting winget source'",
-      "winget source reset --force",
-      "winget source list"
-    ]
-  }}
+{PKR_PROVISIONER_WINGET_INSTALL}
 
   # Injected by az bake
   provisioner "powershell" {{
     inline = [
 '''
-
     for i, p in enumerate(winget_packages):
         winget_cmd = f'winget install '
-        for a in ['id', 'name', 'moniker', 'version', 'source']:
-            if a in p:
-                winget_cmd += f'--{a} {p[a]} '
-        winget_cmd += '--scope machine --accept-package-agreements --accept-source-agreements'
+        if 'ANY' in p:
+            winget_cmd += f'{p["ANY"]} '
+        else:
+            for a in ['id', 'name', 'moniker', 'version', 'source']:
+                if a in p:
+                    winget_cmd += f'--{a} {p[a]} '
+        winget_cmd += '--accept-package-agreements --accept-source-agreements'
 
         winget_install += f'      "Write-Host \'>>> Running command: {winget_cmd}\'",\n'
         winget_install += f'      "{winget_cmd}"'

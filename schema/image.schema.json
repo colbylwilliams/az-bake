@@ -148,7 +148,7 @@
                                 "oneOf": [
                                     {
                                         "type": "string",
-                                        "description": "The moniker of the package to install"
+                                        "description": "The moniker, id, or name of the package to install"
                                     },
                                     {
                                         "type": "object",
@@ -188,6 +188,26 @@
                                         },
                                         "required": [
                                             "name"
+                                        ]
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "moniker": {
+                                                "type": "string",
+                                                "description": "Limits the install to the moniker of the application."
+                                            },
+                                            "version": {
+                                                "type": "string",
+                                                "description": "Enables you to specify an exact version to install. If not specified, latest will install the highest versioned application."
+                                            },
+                                            "source": {
+                                                "type": "string",
+                                                "description": "Restricts the search to the source name provided. Must be followed by the source name."
+                                            }
+                                        },
+                                        "required": [
+                                            "moniker"
                                         ]
                                     }
                                 ]

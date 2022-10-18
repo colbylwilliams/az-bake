@@ -179,7 +179,7 @@ def get_install_winget(image):
         logger.info(f'Getting winget config for {c} type {type(c)}')
         if isinstance(c, str):
             # if only the id was givin, check the index for the rest of the config
-            winget_node = winget_index[c] if c in winget_index else {'moniker': c}
+            winget_node = winget_index[c] if c in winget_index else {'ANY': c}
         elif isinstance(c, dict):
             # if the full config was given, use it
             winget_node = c
