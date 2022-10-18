@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.32
+++++++
++ Fix return code from packer
+
 0.0.31
 ++++++
 + Re-enable winget preview install
