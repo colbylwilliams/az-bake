@@ -83,8 +83,7 @@ def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=N
 
     save_packer_vars_file(sandbox, gallery, image)
 
-    success = packer_execute(image)
-    # success = True
+    success = packer_execute(image) if in_builder else True
 
     if not success:
         raise CLIError('Packer build failed')

@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.23
+++++++
++ Fix winget install
+
 0.0.22
 ++++++
 + Add new schema files

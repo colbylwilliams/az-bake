@@ -21,7 +21,6 @@
             "description": "Sandbox configuration",
             "additionalProperties": false,
             "required": [
-                "location",
                 "resourceGroup",
                 "subscription",
                 "virtualNetwork",

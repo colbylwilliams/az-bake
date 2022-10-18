@@ -209,17 +209,13 @@ def inject_winget_provisioners(image_dir, winget_packages):
   # Injected by az bake
   provisioner "powershell" {{
     inline = [
-      "$file=Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle",
-      "$path=$env:TEMP/$file",
-      "Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/latest/download/$file -OutFile $path",
-      "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path $path",
-      "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath $path",
+      "(new-object net.webclient).DownloadFile('https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle', 'C:/Windows/Temp/appinstaller.msixbundle')",
+      "Add-AppxPackage -InstallAllResources -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path 'C:/Windows/Temp/appinstaller.msixbundle'",
+      "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/appinstaller.msixbundle'",
 
-      "$file=source.msix",
-      "$path=$env:TEMP/$file",
-      "Invoke-WebRequest -Uri https://winget.azureedge.net/cache/$file -OutFile $path",
-      "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path $path",
-      "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath $path",
+      "(new-object net.webclient).DownloadFile('https://winget.azureedge.net/cache/source.msix', 'C:/Windows/Temp/source.msix')",
+      "Add-AppxPackage -ForceTargetApplicationShutdown -ForceUpdateFromAnyVersion -Path 'C:/Windows/Temp/source.msix'",
+      "Add-AppxProvisionedPackage -Online -SkipLicense -PackagePath 'C:/Windows/Temp/source.msix'",
 
       "winget source reset --force",
       "winget source list"

@@ -5,9 +5,6 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
-        "name",
-        "publisher",
-        "offer",
         "sku",
         "version",
         "os"
