@@ -14,6 +14,7 @@ from ._arm import (create_image_definition,
                    deploy_arm_template_at_resource_group,
                    ensure_gallery_permissions, get_arm_output, get_gallery,
                    get_image_definition, image_version_exists)
+from ._constants import IN_BUILDER
 from ._github import (get_github_release, get_release_templates,
                       get_template_url)
 from ._packer import (check_packer_install, copy_packer_files,
@@ -32,8 +33,8 @@ logger = get_logger(__name__)
 #     return foo['tag_name']
 
 
-def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=None, gallery=None, image=None, suffix=None):
-    if in_builder:
+def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None):
+    if IN_BUILDER:
         from azure.cli.command_modules.profile.custom import login
         # from azure.cli.core._profile import Profile
         from azure.cli.core.auth.identity import (AZURE_CLIENT_ID,
@@ -69,20 +70,19 @@ def bake_builder_build(cmd, in_builder=False, repo=None, storage=None, sandbox=N
 
     logger.info(f'Image version {image["version"]} does not exist.')
 
-    copy_packer_files(image['dir'])
+    if copy_packer_files(image['dir']):
+        choco_install = get_install_choco_dict(image)
+        if choco_install:
+            choco_config = get_choco_package_config(choco_install)
+            inject_choco_provisioners(image['dir'], choco_config)
 
-    choco_install = get_install_choco_dict(image)
-    if choco_install:
-        choco_config = get_choco_package_config(choco_install)
-        inject_choco_provisioners(image['dir'], choco_config)
-
-    winget_config = get_install_winget(image)
-    if winget_config:
-        inject_winget_provisioners(image['dir'], winget_config)
+        winget_config = get_install_winget(image)
+        if winget_config:
+            inject_winget_provisioners(image['dir'], winget_config)
 
     save_packer_vars_file(sandbox, gallery, image)
 
-    success = packer_execute(image) if in_builder else 0
+    success = packer_execute(image) if IN_BUILDER else 0
 
     if success == 0:
         logger.info('Packer build succeeded')

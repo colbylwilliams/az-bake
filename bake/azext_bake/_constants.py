@@ -92,15 +92,24 @@ IMAGE_REQUIRED_PROPERTIES = IMAGE_COMMON_ALLOWED_PROPERTIES + [
 ]
 IMAGE_ALLOWED_PROPERTIES = IMAGE_REQUIRED_PROPERTIES + [
     'description',
-    'install'
+    'install',
+    'base'
 ]
 
-IMAGE_INSTALL_ALLOWED_PROPERTIES = [
-    'script',
-    'choco',
-    'winget',
-    # 'powershell',
-]
+IMAGE_INSTALL_PROPERTIES = {
+    KEY_ALLOWED: ['script', 'choco', 'winget']
+}
+
+IMAGE_BASE_PROPERTIES = {
+    KEY_REQUIRED: ['publisher', 'offer', 'sku', 'version'],
+}
+
+IMAGE_DEFAULT_BASE_WINDOWS = {
+    'publisher': 'microsoftwindowsdesktop',
+    'offer': 'windows-ent-cpc',
+    'sku': 'win11-22h2-ent-cpc-m365',
+    'version': 'latest'
+}
 
 BAKE_PROPERTIES = {
     KEY_REQUIRED: BAKE_REQUIRED_PROPERTIES,
@@ -113,14 +122,19 @@ BAKE_PROPERTIES = {
 
 IMAGE_PROPERTIES = {
     KEY_REQUIRED: IMAGE_REQUIRED_PROPERTIES,
-    KEY_ALLOWED: IMAGE_ALLOWED_PROPERTIES
+    KEY_ALLOWED: IMAGE_ALLOWED_PROPERTIES,
+    'install': IMAGE_INSTALL_PROPERTIES,
+    'base': IMAGE_BASE_PROPERTIES
 }
+
 
 PKR_DEFAULT_VARS = {
     'image': [
         'name',
         'version',
-        'replicaLocations'
+        'replicaLocations',
+        'os',
+        'base'
     ],
     'gallery': [
         'name',

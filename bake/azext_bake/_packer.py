@@ -144,8 +144,22 @@ def copy_packer_files(image_dir):
     '''Copies the packer files from the bake templates to the image directory'''
     logger.info(f'Copying packer files to {image_dir}')
     templates_dir = get_templates_path('packer')
-    shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
-    shutil.copy2(templates_dir / PKR_VARS_FILE, image_dir)
+
+    vars_file = image_dir / PKR_VARS_FILE
+    build_file = image_dir / PKR_BUILD_FILE
+
+    if vars_file.exists():
+        logger.warning(f'Packer variables file already exists at {vars_file}')
+    else:
+        shutil.copy2(templates_dir / PKR_VARS_FILE, image_dir)
+
+    if build_file.exists():
+        logger.warning(f'Packer build file already exists at {build_file}')
+        logger.warning(f'Provisioners will not be injected for the image.yaml install section')
+        return False
+    else:
+        shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
+        return True
 
 
 def inject_choco_provisioners(image_dir, config_xml):

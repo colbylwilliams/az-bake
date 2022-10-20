@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.33
+++++++
++ Bug fixes and minor improvements.
+
 0.0.32
 ++++++
 + Fix return code from packer

@@ -1,15 +1,3 @@
-variable "branch" {
-  type        = string
-  default     = ""
-  description = "The branch to use for the build"
-}
-
-variable "commit" {
-  type        = string
-  default     = ""
-  description = "The commit to use for the build"
-}
-
 variable "gallery" {
   type = object({
     name          = string
@@ -47,7 +35,7 @@ variable "sandbox" {
     storageAccount              = ""
     identityId                  = ""
   }
-  description = "The azure compute builder to use for the build"
+  description = "The sandbox to use for the build"
 }
 
 variable "image" {
@@ -55,13 +43,25 @@ variable "image" {
     name             = string
     version          = string
     replicaLocations = list(string)
-    // subscription  = string
+    os               = string
+    base = object({
+      publisher = string
+      offer     = string
+      sku       = string
+      version   = string
+    })
   })
   default = {
     name             = ""
     version          = ""
     replicaLocations = []
-    subscription     = ""
+    os               = "Windows"
+    base = {
+      publisher = "microsoftwindowsdesktop"
+      offer     = "windows-ent-cpc"
+      sku       = "win11-22h2-ent-cpc-m365"
+      version   = "latest"
+    }
   }
   description = "The azure compute image to publish"
 }

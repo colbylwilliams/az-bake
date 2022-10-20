@@ -52,6 +52,35 @@
                 "type": "string"
             }
         },
+        "base": {
+            "type": "object",
+            "description": "The base image to use for this image.",
+            "additionalProperties": false,
+            "required": [
+                "publisher",
+                "offer",
+                "sku"
+            ],
+            "properties": {
+                "publisher": {
+                    "type": "string",
+                    "description": "The name of the marketplace image publisher."
+                },
+                "offer": {
+                    "type": "string",
+                    "description": "The name of the marketplace image offer."
+                },
+                "sku": {
+                    "type": "string",
+                    "description": "The name of the marketplace image SKU."
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The name of the marketplace image version.",
+                    "default": "latest"
+                }
+            }
+        },
         "install": {
             "type": "object",
             "description": "The install section of the image definition",

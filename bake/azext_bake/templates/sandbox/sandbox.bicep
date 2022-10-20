@@ -11,6 +11,9 @@ param baseName string
 // @description('The principal id of a service principal used in the image build pipeline. It will be givin contributor role to the resource group, and the appropriate permissions on the key vault and storage account')
 // param builderPrincipalId string
 
+@description('The principal id of a service principal used in the CI pipeline. It will be givin contributor role to the resource group.')
+param ciPrincipalId string = ''
+
 param vnetAddressPrefixes array = [ '10.0.0.0/24' ] // 256 addresses
 
 param defaultSubnetName string = 'default'
@@ -50,11 +53,13 @@ var contributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefi
 // docs: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer
 var secretsOfficerRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
 
-// var builderGroupAssignmentId = guid('groupreader${resourceGroup().id}${baseName}${builderPrincipalId}')
+// var builderGroupAssignmentId = guid('groupcontributor${resourceGroup().id}${baseName}${builderPrincipalId}')
 // var builderSecretsAssignmentId = guid('kvsecretofficer${resourceGroup().id}${keyVaultName}${builderPrincipalId}')
 
-var builderGroupAssignmentId = guid('groupreader${resourceGroup().id}${baseName}${identityName}')
+var builderGroupAssignmentId = guid('groupcontributor${resourceGroup().id}${baseName}${identityName}')
 var builderSecretsAssignmentId = guid('kvsecretofficer${resourceGroup().id}${keyVaultName}${identityName}')
+
+var ciGroupAssignmentId = guid('groupcontributor${resourceGroup().id}${baseName}${ciPrincipalId}')
 
 // resource builderGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(builderPrincipalId)) {
 //   name: builderGroupAssignmentId
@@ -64,6 +69,15 @@ var builderSecretsAssignmentId = guid('kvsecretofficer${resourceGroup().id}${key
 //   }
 //   scope: resourceGroup()
 // }
+
+resource ciGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(ciPrincipalId)) {
+  name: ciGroupAssignmentId
+  properties: {
+    principalId: ciPrincipalId
+    roleDefinitionId: contributorRoleId
+  }
+  scope: resourceGroup()
+}
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
   name: identityName

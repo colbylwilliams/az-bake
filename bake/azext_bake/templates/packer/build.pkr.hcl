@@ -19,25 +19,20 @@ source "azure-arm" "vm" {
   winrm_username = "packer"
   winrm_insecure = true
   winrm_use_ssl  = true
-  os_type        = "Windows" # tells packer to create a certificate for WinRM connection
+  os_type        = var.image.os # default: "Windows" (tells packer to create a certificate for WinRM connection)
   # base image options (Azure Marketplace Images only)
-  image_publisher    = "microsoftwindowsdesktop"
-  image_offer        = "windows-ent-cpc"
-  image_sku          = "win11-22h2-ent-cpc-m365"
-
-  // image_publisher    = "microsoftvisualstudio"
-  // image_offer        = "visualstudioplustools"
-  // image_sku          = "vs-2022-ent-general-win11-m365-gen2"
-
-  image_version      = "latest"
+  image_publisher    = var.image.base.publisher # default: "microsoftwindowsdesktop"
+  image_offer        = var.image.base.offer     # default: "windows-ent-cpc"
+  image_sku          = var.image.base.sku       # default: "win11-22h2-ent-cpc-m365"
+  image_version      = var.image.base.version   # default: "latest"
   use_azure_cli_auth = true
   # managed image options
   managed_image_name                = var.image.name
   managed_image_resource_group_name = var.gallery.resourceGroup
   # packer creates a temporary resource group
   subscription_id = var.sandbox.subscription
-  // location                 = var.location
-  // temp_resource_group_name = var.tempResourceGroup
+  # location                 = var.location
+  # temp_resource_group_name = var.tempResourceGroup
   # OR use an existing resource group
   build_resource_group_name = var.sandbox.resourceGroup
   # optional use an existing key vault
@@ -80,15 +75,9 @@ build {
   }
 
   # https://github.com/rgl/packer-plugin-windows-update
-  // provisioner "windows-update" {
-  // }
+  # provisioner "windows-update" {
+  # }
   ###BAKE###
-
-  provisioner "windows-restart" {
-    # needed to get elevated script execution working
-    restart_timeout = "30m"
-    pause_before    = "2m"
-  }
 
   # Disable Auto-Logon that was enabled above
   provisioner "powershell" {

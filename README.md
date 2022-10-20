@@ -2,12 +2,16 @@
 
 Microsoft Azure CLI Custom Image Helper 'az' Extension adds useful "utilities" for common tasks.
 
+## Sandbox
+
+I
+
 ## Install
 
 To install the Azure CLI Custom Image Helper extension, simply run the following command:
 
 ```sh
-az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.32-py3-none-any.whl -y
+az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.33-py3-none-any.whl -y
 ```
 
 ### Update

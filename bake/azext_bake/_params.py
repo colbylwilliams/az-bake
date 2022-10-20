@@ -139,10 +139,7 @@ def load_arguments(self, _):
         c.ignore('images')
 
     with self.argument_context('bake _builder') as c:
-        c.ignore('in_builder')
         c.ignore('sandbox')
         c.ignore('gallery')
         c.ignore('image')
-        c.ignore('repo')
-        c.ignore('storage')
         c.ignore('suffix')

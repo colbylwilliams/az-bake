@@ -23,9 +23,9 @@ from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
 from ._completers import get_default_location_from_sandbox_resource_group
 from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER,
                          AZ_BAKE_IMAGE_BUILDER_VERSION, BAKE_PROPERTIES,
-                         IMAGE_PROPERTIES, IN_BUILDER, KEY_ALLOWED,
-                         KEY_REQUIRED, REPO_DIR, SANDBOX_PROPERTIES,
-                         STORAGE_DIR, tag_key)
+                         IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_PROPERTIES,
+                         IN_BUILDER, KEY_ALLOWED, KEY_REQUIRED, REPO_DIR,
+                         SANDBOX_PROPERTIES, STORAGE_DIR, tag_key)
 from ._github import (get_github_latest_release_version,
                       github_release_version_exists)
 from ._packer import check_packer_install
@@ -95,29 +95,18 @@ def process_bake_repo_validate_namespace(cmd, ns):
 
 
 def builder_validator(cmd, ns):
-    check_packer_install(raise_error=True)
-
-    ns.in_builder = IN_BUILDER
+    if not IN_BUILDER:
+        logger.warning('WARNING: Running outside of the builder container. This should only be done during testing.')
 
     builder_version = os.environ.get(AZ_BAKE_IMAGE_BUILDER_VERSION, 'unknown') if IN_BUILDER else 'local'
 
     logger.info(f'{AZ_BAKE_IMAGE_BUILDER}: {IN_BUILDER}')
     logger.info(f'{AZ_BAKE_IMAGE_BUILDER_VERSION}: {builder_version}')
 
-    if not IN_BUILDER:
-        logger.warning('WARNING: Running outside of the builder container. This should only be done during testing.')
-
-    # if not in_builder:
-    #     raise CLIError('Not in builder')
-
-    # repo = REPO_DIR
-    # storage = STORAGE_DIR
+    check_packer_install(raise_error=True)
 
     _validate_dir_path(REPO_DIR, 'repo')
     _validate_dir_path(STORAGE_DIR, 'storage')
-
-    ns.repo = REPO_DIR
-    ns.storage = STORAGE_DIR
 
     # check for required environment variables
     for env in [AZ_BAKE_BUILD_IMAGE_NAME]:
@@ -351,6 +340,16 @@ def image_yaml_validator(cmd, ns, image=None, common=None):
 
     logger.info(f'Validating image: {image["name"]}')
     _validate_object(image['file'], image, IMAGE_PROPERTIES)
+
+    for key in IMAGE_PROPERTIES:
+        if key not in [KEY_REQUIRED, KEY_ALLOWED] and key in image:
+            _validate_object(image['file'], image[key], IMAGE_PROPERTIES[key], parent_key=key)
+
+    if 'base' not in image:
+        if image['os'].lower() == 'windows':
+            image['base'] = IMAGE_DEFAULT_BASE_WINDOWS
+        else:
+            raise ValidationError(f'Image base is required for non-Windows images')
 
     if hasattr(ns, 'image'):
         ns.image = image
