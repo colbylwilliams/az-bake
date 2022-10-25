@@ -36,12 +36,10 @@ logger = get_logger(__name__)
 def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None):
     if IN_BUILDER:
         from azure.cli.command_modules.profile.custom import login
-        # from azure.cli.core._profile import Profile
         from azure.cli.core.auth.identity import (AZURE_CLIENT_ID,
                                                   AZURE_CLIENT_SECRET,
                                                   AZURE_TENANT_ID)
 
-        # profile = Profile(cli_ctx=cmd.cli_ctx)
         az_client_id = os.environ.get(AZURE_CLIENT_ID, None)
         az_client_secret = os.environ.get(AZURE_CLIENT_SECRET, None)
         az_tenant_id = os.environ.get(AZURE_TENANT_ID, None)

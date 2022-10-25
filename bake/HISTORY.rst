@@ -5,7 +5,8 @@ Release History
 
 0.0.33
 ++++++
-+ Bug fixes and minor improvements.
++ Add ability to use local pkr files
++ Allow user to specify base image in image.yaml
 
 0.0.32
 ++++++
