@@ -37,7 +37,7 @@ def load_arguments(self, _):
     gallery_resource_id_type = CLIArgumentType(
         options_list=['--gallery', '-r'], configured_default='bake-gallery',
         completer=get_resource_group_completion_list, validator=gallery_resource_id_validator,
-        help='Resource Id of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`'
+        help='Name or ID of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`'
     )
 
     # yaml_outfile_type validator also validates yaml_outdir_type and yaml_stdout_type

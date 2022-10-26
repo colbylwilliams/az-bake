@@ -22,6 +22,8 @@ param defaultSubnetAddressPrefix string = '10.0.0.0/25' // 123 + 5 Azure reserve
 param builderSubnetName string = 'builders'
 param builderSubnetAddressPrefix string = '10.0.0.128/25' // 123 + 5 Azure reserved addresses
 
+param galleryIds array = []
+
 @description('Tags to be applied to all created resources.')
 param tags object = {}
 
@@ -84,6 +86,15 @@ resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-
   location: location
   tags: tags
 }
+
+module galleryRoles 'groupRoles.bicep' = [for galleryId in galleryIds: if (!empty(galleryIds)) {
+  name: guid(builderIdentity.id, galleryId, 'Contributor')
+  params: {
+    role: 'Contributor'
+    principalId: builderIdentity.properties.principalId
+  }
+  scope: resourceGroup(first(split(last(split(replace(galleryId, 'resourceGroups', 'resourcegroups'), '/resourcegroups/')), '/')))
+}]
 
 resource builderGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: builderGroupAssignmentId
@@ -272,3 +283,5 @@ resource group_tags 'Microsoft.Resources/tags@2021-04-01' = {
       }, tags)
   }
 }
+
+output identityId string = builderIdentity.id

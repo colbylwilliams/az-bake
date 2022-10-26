@@ -15,6 +15,7 @@ from azure.cli.core.azclierror import (ArgumentUsageError,
                                        MutuallyExclusiveArgumentError,
                                        RequiredArgumentMissingError,
                                        ValidationError)
+from azure.cli.core.commands.parameters import get_resources_in_subscription
 from azure.cli.core.commands.validators import validate_tags
 from azure.cli.core.extension import get_extension
 from azure.cli.core.util import is_guid
@@ -96,7 +97,11 @@ def process_bake_repo_validate_namespace(cmd, ns):
 
 def builder_validator(cmd, ns):
     if not IN_BUILDER:
-        logger.warning('WARNING: Running outside of the builder container. This should only be done during testing.')
+        from azure.cli.core.extension.operations import show_extension
+        if not (ext := show_extension('bake')) or 'extensionType' not in ext or ext['extensionType'] != 'dev':
+            raise ValidationError('Running outside of the builder container.')
+        logger.warning('WARNING: Running outside of the builder container. This should only be done during testing. '
+                       'This will fail if the extension is not installed in dev mode.')
 
     builder_version = os.environ.get(AZ_BAKE_IMAGE_BUILDER_VERSION, 'unknown') if IN_BUILDER else 'local'
 
@@ -228,6 +233,7 @@ def process_sandbox_create_namespace(cmd, ns):
         validate_subnet(cmd, ns, subnet, [ns.vnet_address_prefix])
 
     validate_sandbox_tags(cmd, ns)
+    gallery_resource_id_validator(cmd, ns)
 
 
 def validate_subnet(cmd, ns, subnet, vnet_prefixes):
@@ -373,7 +379,15 @@ def sandbox_resource_group_name_validator(cmd, ns):
 def gallery_resource_id_validator(cmd, ns):
     if ns.gallery_resource_id:
         if not is_valid_resource_id(ns.gallery_resource_id):
-            raise InvalidArgumentValueError('usage error: --gallery/-r is not a valid resource id')
+            logger.info('gallery arg provided is not a valid resource id, attempting to find gallery by name')
+
+            galleries = get_resources_in_subscription(cmd.cli_ctx, resource_type='Microsoft.Compute/galleries')
+            gallery = next((g for g in galleries if g.name == ns.gallery_resource_id), None)
+
+            if gallery:
+                ns.gallery_resource_id = gallery.id
+            else:
+                raise InvalidArgumentValueError('usage error: --gallery/-r is not a valid resource id or gallery name')
 
         if hasattr(ns, 'gallery'):
             gallery_id = parse_resource_id(ns.gallery_resource_id)

@@ -86,6 +86,8 @@ def deploy_arm_template_at_resource_group(cmd, resource_group_name=None, templat
 
 
 def get_arm_output(outputs, key, raise_on_error=True):
+    if not outputs:
+        return None
     try:
         value = outputs[key]['value']
     except KeyError as e:

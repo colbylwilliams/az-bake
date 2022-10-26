@@ -15,6 +15,11 @@ type: group
 short-summary: Utilities for common or dev center tasks.
 """
 
+helps['bake version'] = """
+type: command
+short-summary: Show the version of the bake extension.
+"""
+
 helps['bake upgrade'] = """
 type: command
 short-summary: Update bake cli extension.
@@ -57,7 +62,7 @@ short-summary: Configure, validate, and bake images in a repo.
 
 helps['bake repo'] = """
 type: command
-short-summary: Bake all images in a repo.
+short-summary: Bake images defined in a repo.
 examples:
   - name: Build all the images in a repo.
     text: az bake repo -r .
@@ -97,6 +102,41 @@ helps['bake _builder'] = """
 type: group
 short-summary: Used by the builder container to execute packer.
 """
+
+
+# ----------------
+# bake validate
+# ----------------
+
+helps['bake validate'] = """
+type: group
+short-summary: Validate a sandbox, repo, or image.
+"""
+
+helps['bake validate sandbox'] = """
+type: command
+short-summary: Validate a sandbox. This is the same as 'az bake sandbox validate'.
+examples:
+  - name: Validate a sandbox.
+    text: az bake validate sandbox -sb mySandbox --gallery /My/Gallery/Resource/ID
+"""
+
+helps['bake validate repo'] = """
+type: command
+short-summary: Validate a repo. This is the same as running 'az bake repo validate'.
+examples:
+  - name: Validate a repo.
+    text: az bake validate repo -r .
+"""
+
+helps['bake validate yaml'] = """
+type: command
+short-summary: Validate a bake.yaml file. This is the same as running 'az bake yaml validate'.
+examples:
+  - name: Validate a bake.yaml file.
+    text: az bake validate yaml -f ./bake.yaml
+"""
+
 
 # ----------------
 # az bake repo

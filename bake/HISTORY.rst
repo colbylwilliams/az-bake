@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.0.34
+++++++
++ Bug fixes and minor improvements.
+
 0.0.33
 ++++++
 + Add ability to use local pkr files

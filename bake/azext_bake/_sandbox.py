@@ -42,7 +42,9 @@ def get_sandbox_from_group(cmd, resource_group_name):
     if not identity_id:
         identity = next((r for r in resources if r.type == 'Microsoft.ManagedIdentity/userAssignedIdentities'), None)
         if not identity:
-            raise ValidationError('No identity found in sandbox resource group')
+            raise ValidationError('No identity found in sandbox resource group.\n'
+                                  'If are moving from a previous version of the dev-box-images repo, '
+                                  'please run "az bake sandbox create" to create a new sandbox.')
         identity_id = identity.id
 
     if not is_valid_resource_id(identity_id):

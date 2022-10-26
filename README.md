@@ -1,8 +1,9 @@
 # az-bake
 
-Microsoft Azure CLI Custom Image Helper 'az' Extension adds useful "utilities" for common tasks.
+Microsoft Azure CLI Custom Image 'az bake' Extension adds support for creating (or _"baking"_) custom VM images.
 
 ## Quickstart
+
 
 #### 1. [Install](#install) the `az bake` Azure CLI extension
 
@@ -25,7 +26,7 @@ az bake sandbox create -g MySandbox -n MySandbox
 This will ensure the sandbox is configured correctly and, more importantly, grants the sandbox identity the appropriate permissions on your Azure Compute Gallery
 
 ```sh
-az bake sandbox validate -sb MySandbox --gallery  /subscriptions/<GUID>/resourceGroups/<GalleryRG>/providers/Microsoft.Compute/galleries/<GalleryName>
+az bake sandbox validate --sandbox MySandbox --gallery MyGallery
 ```
 
 #### 5. // TODO
@@ -48,9 +49,7 @@ az bake sandbox validate -sb MySandbox --gallery  /subscriptions/<GUID>/resource
 
 ## Sandbox
 
-In the context of `az bake` a _sandbox_ is a collection of resources in a resource group that are used to create (or "bake") custom VM images. Its a secure, self-contained environment where Packer will be executed.
-
-A sandbox is required to use az bake, and can be created using the `az bake sandbox create` command.
+In the context of `az bake`, a _sandbox_ is a collection of resources in a resource group that are used to create (or _"bake"_) custom VM images. It's a secure, self-contained environment where Packer will be executed from Azure Container Instance in a private virtual network. A sandbox is required to use `az bake`. You can be create a new sandbox using the `az bake sandbox create` command.
 
 Each sandbox includes a:
 
@@ -58,9 +57,9 @@ Each sandbox includes a:
 - [Storage Account][azure-storage-account]
 - [Azure Container Instance (ACI) group][azure-aci-groups] for each custom image
 - [Virtual Network][azure-vnet], with two subnets
-  - A `default` subnet to which the temporary VM will be joined. This also hosts a private endpoint for the Key Vault.
+  - A `default` subnet to which the temporary VMs will be joined. This also hosts a private endpoint for the Key Vault.
   - A `builders` subnet to which the ACI containers will be joined. This subnet must be set up to delegate access to ACI, and must only contain ACI container groups.
-- [User-assigned Managed Identity][azure-identities] that is assigned to the ACI containers executing Packer and the temporary VMs.  This identity will also require the [Contributor][azure-roles-contributor] role on the resource group that contains the [Azure Compute Gallery][azure-compute-gallery] where your custom images will be published.
+- [User-assigned Managed Identity][azure-identities] that is assigned to the ACI containers executing Packer and the temporary VMs. This identity will also require the [Contributor][azure-roles-contributor] role on the resource group that contains the [Azure Compute Gallery][azure-compute-gallery] where your custom images will be published.
 
 ![sandbox](docs/sandbox.png)
 
@@ -69,7 +68,7 @@ Each sandbox includes a:
 To install the Azure CLI Custom Image Helper extension, simply run the following command:
 
 ```sh
-az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.33-py3-none-any.whl -y
+az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.34-py3-none-any.whl -y
 ```
 
 ### Update
@@ -88,7 +87,7 @@ az bake upgrade --pre
 
 ## Commands
 
-This extension adds the following commands.  Use `az bake -h` for more information.
+This extension adds the following commands. Use `az bake -h` for more information.
 | Command | Description |
 | ------- | ----------- |
 | [az bake repo](#az-bake-repo) | // TODO |
@@ -120,3 +119,7 @@ az bake repo
 [azure-aci-groups]:https://learn.microsoft.com/en-us/azure/container-instances/container-instances-container-groups
 [azure-vnet]:https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
 [azure-roles-contributor]:https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor
+[azure-assign-rbac]:https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current
+[gh-repo-secret]:https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
+[gh-fork]:https://docs.github.com/en/get-started/quickstart/fork-a-repo
+[packer-arm]:https://www.packer.io/plugins/builders/azure/arm
