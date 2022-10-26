@@ -24,10 +24,12 @@ helps['bake upgrade'] = """
 type: command
 short-summary: Update bake cli extension.
 examples:
-  - name: Update bake cli extension.
+  - name: Update bake cli extension to the latest stable release.
     text: az bake upgrade
   - name: Update bake cli extension to the latest pre-release.
     text: az bake upgrade --pre
+  - name: Update bake cli extension a specific version.
+    text: az bake upgrade --version 0.1.0
 """
 
 # ----------------
@@ -45,6 +47,8 @@ short-summary: Create a sandbox.
 examples:
   - name: Create a sandbox.
     text: az bake sandbox create -sb mySandbox -n myPrefix
+  - name: Create a sandbox and ensure the correct permisinos on a gallery.
+    text: az bake sandbox create -sb mySandbox -n myPrefix -r myGallery
 """
 
 helps['bake sandbox validate'] = """
@@ -53,7 +57,14 @@ short-summary: Validate a sandbox.
 examples:
   - name: Validate a sandbox.
     text: az bake sandbox validate -sb mySandbox
+  - name: Validate a sandbox and ensure the correct permisinos on a gallery.
+    text: az bake sandbox validate -sb mySandbox -r myGallery
 """
+
+# ----------------
+# bake repo
+# ----------------
+
 
 helps['bake repo'] = """
 type: group
@@ -76,6 +87,10 @@ examples:
     text: az bake repo validate -r .
 """
 
+# ----------------
+# bake yaml
+# ----------------
+
 
 helps['bake yaml'] = """
 type: group
@@ -86,8 +101,12 @@ helps['bake yaml export'] = """
 type: command
 short-summary: Export a bake.yaml file.
 examples:
-  - name: Export a bake.yaml file.
-    text: az bake yaml export -sb MySandbox -g /My/Gallery/Resource/ID
+  - name: Export a bake.yaml file to a directory.
+    text: az bake yaml export -sb MySandbox -r myGallery --outdir ./myDir
+  - name: Export a bake.yaml file to a specific file.
+    text: az bake yaml export -sb MySandbox -r myGallery --outfile ./myDir/myFile.yaml
+  - name: Print the bake.yaml file output to the console.
+    text: az bake yaml export -sb MySandbox -r myGallery --stdout
 """
 
 helps['bake yaml validate'] = """
@@ -98,9 +117,13 @@ examples:
     text: az bake yaml validate -f ./bake.yaml
 """
 
+# ----------------
+# bake _builder
+# ----------------
+
 helps['bake _builder'] = """
 type: group
-short-summary: Used by the builder container to execute packer.
+short-summary: Should not be used directly (used by packer image).
 """
 
 
@@ -136,11 +159,3 @@ examples:
   - name: Validate a bake.yaml file.
     text: az bake validate yaml -f ./bake.yaml
 """
-
-
-# ----------------
-# az bake repo
-# az bake validate repo
-# az bake validate image
-# az bake validate sandbox
-# ----------------
