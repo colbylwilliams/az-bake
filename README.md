@@ -4,7 +4,6 @@ Microsoft Azure CLI Custom Image 'az bake' Extension adds support for creating (
 
 ## Quickstart
 
-
 #### 1. [Install](#install) the `az bake` Azure CLI extension
 
 _After [installing the Azure CLI][install-az] if you haven't already_
@@ -18,34 +17,17 @@ az group create -n MySandbox -l eastus
 #### 3. Create a new [sandbox](#sandbox)
 
 ```sh
-az bake sandbox create -g MySandbox -n MySandbox
+az bake sandbox create -g MySandbox -n MySandbox --gallery MyGallery
 ```
 
-#### 4. Validate the sandbox
-
-This will ensure the sandbox is configured correctly and, more importantly, grants the sandbox identity the appropriate permissions on your Azure Compute Gallery
+#### 4. Export the bake.yml file
 
 ```sh
-az bake sandbox validate --sandbox MySandbox --gallery MyGallery
+az bake yaml export --sandbox MySandbox --gallery MyGallery --outdir ./my/repo/root
 ```
 
-#### 5. // TODO
+#### 5. Commit and push your changes
 
-```sh
-
-```
-
-#### 6. // TODO
-
-```sh
-
-```
-
-#### 7. // TODO
-
-```sh
-
-```
 
 ## Sandbox
 
@@ -68,7 +50,7 @@ Each sandbox includes a:
 To install the Azure CLI Custom Image Helper extension, simply run the following command:
 
 ```sh
-az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.0.34-py3-none-any.whl -y
+az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.1.0-py3-none-any.whl -y
 ```
 
 ### Update

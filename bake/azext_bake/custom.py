@@ -168,7 +168,7 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
 
     hook.end(message=' ')
 
-    return True
+    return
 
 
 def bake_repo_validate(cmd, repository_path, sandbox=None, gallery=None, images=None):
@@ -229,6 +229,13 @@ def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
     return
 
 
+def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=None, sandbox=None, gallery=None):
+    logger.info('Validating gallery permissions')
+    ensure_gallery_permissions(cmd, gallery_resource_id, sandbox['identityId'])
+    print('Sandbox is valid')
+    return
+
+
 def bake_yaml_export(cmd, sandbox_resource_group_name, gallery_resource_id, sandbox=None, gallery=None, images=None,
                      outfile='./bake.yml', outdir=None, stdout=False):
     logger.info('Exporting bake.yaml file')
@@ -258,14 +265,8 @@ def bake_yaml_export(cmd, sandbox_resource_group_name, gallery_resource_id, sand
 
 def bake_yaml_validate(cmd):
     logger.info('Validating bake.yaml file')
-    return True
-    # raise CLIError('Not implemented')
-
-
-def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=None, sandbox=None, gallery=None):
-    logger.info('Validating gallery permissions')
-    ensure_gallery_permissions(cmd, gallery_resource_id, sandbox['identityId'])
-    return True
+    print('bake.yaml is valid')
+    return
 
 
 def bake_image(cmd, image_path, sandbox_resource_group_name=None, bake_yaml=None, gallery_resource_id=None,

@@ -96,11 +96,12 @@ def load_arguments(self, _):
         c.argument('templates_url', arg_group='Advanced', help='URL to custom templates.json file.')
         c.argument('template_file', arg_group='Advanced', type=file_type, help='Path to custom sandbox arm/bicep template.')
 
-    with self.argument_context('bake sandbox validate') as c:
-        c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
-        c.argument('gallery_resource_id', gallery_resource_id_type)
-        c.ignore('sandbox')
-        c.ignore('gallery')
+    for scope in ['bake sandbox validate', 'bake validate sandbox']:
+        with self.argument_context(scope) as c:
+            c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
+            c.argument('gallery_resource_id', gallery_resource_id_type)
+            c.ignore('sandbox')
+            c.ignore('gallery')
 
     # bake repo uses a command level validator, param validators will be ignored
     with self.argument_context('bake repo') as c:

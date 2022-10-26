@@ -55,6 +55,9 @@ def process_bake_image_namespace(cmd, ns):
 
 
 def process_bake_repo_namespace(cmd, ns):
+    # if hasattr(ns, 'sandbox_resource_group_name') and ns.sandbox_resource_group_name \
+    #     and hasattr(ns, 'gallery_resource_id') and ns.gallery_resource_id:
+
     repository_path_validator(cmd, ns)
     repository_images_validator(cmd, ns)
     bake_obj = bake_yaml_validator(cmd, ns)
