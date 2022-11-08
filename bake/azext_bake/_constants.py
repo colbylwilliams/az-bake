@@ -43,7 +43,7 @@ BAKE_REQUIRED_PROPERTIES = [
     'version',
     'sandbox',
     'gallery',
-    'images'
+    # 'images'
 ]
 
 # TODO: Add type and description to the properties for validaiton and hints
@@ -114,9 +114,9 @@ IMAGE_DEFAULT_BASE_WINDOWS = {
 BAKE_PROPERTIES = {
     KEY_REQUIRED: BAKE_REQUIRED_PROPERTIES,
     'sandbox': SANDBOX_PROPERTIES,
-    'images': {
-        KEY_ALLOWED: IMAGE_COMMON_ALLOWED_PROPERTIES
-    },
+    # 'images': {
+    #     KEY_ALLOWED: IMAGE_COMMON_ALLOWED_PROPERTIES
+    # },
     'gallery': GALLERY_PROPERTIES
 }
 

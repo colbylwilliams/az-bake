@@ -68,7 +68,7 @@ def load_arguments(self, _):
                    'will be named Contoso-Images-kv, contosoimagesstorage, and contoso-images-vent respectively.')
         c.argument('principal_id', options_list=['--principal-id', '--principal'],
                    help='The principal id of a service principal used to run az bake from a CI pipeline. '
-                   'It will be givin contributor role to sandbox resource group.')
+                   'It will be given contributor role to sandbox resource group.')
 
         # c.argument('virtual_network_name', required=False,
         #            options_list=['--vnet-name', '--vnet'],

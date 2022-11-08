@@ -37,12 +37,13 @@ logger = get_logger(__name__)
 
 
 def process_bake_image_namespace(cmd, ns):
-    common = None
+    # common = None
     if ns.bake_yaml:
         if ns.sandbox_resource_group_name or ns.gallery_resource_id:
             raise MutuallyExclusiveArgumentError('usage error: --bake-yaml can not be used with --sandbox or --gallery')
-        bakeobj = bake_yaml_validator(cmd, ns)
-        common = bakeobj['images']
+        bake_yaml_validator(cmd, ns)
+        # bakeobj = bake_yaml_validator(cmd, ns)
+        # common = bakeobj['images']
     elif not ns.sandbox_resource_group_name or not ns.gallery_resource_id:
         raise RequiredArgumentMissingError('usage error: --sandbox and --gallery OR --bake-yaml is required')
     else:
@@ -50,7 +51,8 @@ def process_bake_image_namespace(cmd, ns):
         gallery_resource_id_validator(cmd, ns)
 
     image_path_validator(cmd, ns)
-    image_yaml_validator(cmd, ns, common=common)
+    image_yaml_validator(cmd, ns)
+    # image_yaml_validator(cmd, ns, common=common)
 
 
 def process_bake_repo_namespace(cmd, ns):
@@ -59,9 +61,11 @@ def process_bake_repo_namespace(cmd, ns):
 
     repository_path_validator(cmd, ns)
     repository_images_validator(cmd, ns)
-    bake_obj = bake_yaml_validator(cmd, ns)
+    bake_yaml_validator(cmd, ns)
+    # bake_obj = bake_yaml_validator(cmd, ns)
     for i, image in enumerate(ns.images):
-        ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
+        # ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
+        ns.images[i] = image_yaml_validator(cmd, ns, image=image)
 
     ci = is_ci()
     ns.is_ci = ci
@@ -92,9 +96,11 @@ def process_bake_repo_namespace(cmd, ns):
 def process_bake_repo_validate_namespace(cmd, ns):
     repository_path_validator(cmd, ns)
     repository_images_validator(cmd, ns)
-    bake_obj = bake_yaml_validator(cmd, ns)
+    bake_yaml_validator(cmd, ns)
+    # bake_obj = bake_yaml_validator(cmd, ns)
     for i, image in enumerate(ns.images):
-        ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
+        # ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
+        ns.images[i] = image_yaml_validator(cmd, ns, image=image)
 
 
 # def process_bake_repo_setup_namespace(cmd, ns):
@@ -140,7 +146,8 @@ def builder_validator(cmd, ns):
 
     bake_yaml = get_yaml_file_path(REPO_DIR, 'bake', required=True)
 
-    bake_obj = bake_yaml_content_validator(cmd, ns, bake_yaml)
+    # bake_obj = bake_yaml_content_validator(cmd, ns, bake_yaml)
+    bake_yaml_content_validator(cmd, ns, bake_yaml)
 
     image_dir = image_path
     image_file = get_yaml_file_path(image_dir, 'image', required=True)
@@ -151,7 +158,8 @@ def builder_validator(cmd, ns):
         'file': image_file,
     }
 
-    image_yaml_validator(cmd, ns, common=bake_obj['images'])
+    # image_yaml_validator(cmd, ns, common=bake_obj['images'])
+    image_yaml_validator(cmd, ns)
 
 
 def repository_images_validator(cmd, ns):
@@ -337,7 +345,8 @@ def image_path_validator(cmd, ns):
         }
 
 
-def image_yaml_validator(cmd, ns, image=None, common=None):
+# def image_yaml_validator(cmd, ns, image=None, common=None):
+def image_yaml_validator(cmd, ns, image=None):
     if image is None and hasattr(ns, 'image') and ns.image is not None:
         image = ns.image
 
@@ -347,11 +356,11 @@ def image_yaml_validator(cmd, ns, image=None, common=None):
     temp.update(image)
     image = temp
 
-    if common:
-        img_common = common
-        temp = img_common.copy()
-        temp.update(image)
-        image = temp.copy()
+    # if common:
+    #     img_common = common
+    #     temp = img_common.copy()
+    #     temp.update(image)
+    #     image = temp.copy()
 
     logger.info(f'Validating image: {image["name"]}')
     _validate_object(image['file'], image, IMAGE_PROPERTIES)

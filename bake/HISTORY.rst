@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.1.2
+++++++
++ Remove common image props from bake.yml
+
 0.1.1
 ++++++
 + Fix bug in sandbox template

@@ -5,9 +5,12 @@
     "type": "object",
     "additionalProperties": false,
     "required": [
+        "publisher",
+        "offer",
         "sku",
         "version",
-        "os"
+        "os",
+        "replicaLocations"
     ],
     "properties": {
         "name": {

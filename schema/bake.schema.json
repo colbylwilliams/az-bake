@@ -96,32 +96,6 @@
                     "description:": "Subscription ID (GUID) of the subscription that contains the gallery. If not set, the builder will use the default subscription of the authenticated user or service principal."
                 }
             }
-        },
-        "images": {
-            "type": "object",
-            "description": "Common properties for the images to bake",
-            "additionalProperties": false,
-            "properties": {
-                "publisher": {
-                    "type": "string",
-                    "description": "The name of the gallery image definition publisher."
-                },
-                "offer": {
-                    "type": "string",
-                    "description": "The name of the gallery image definition offer."
-                },
-                "sku": {
-                    "type": "string",
-                    "description": "The name of the gallery image definition SKU."
-                },
-                "replicaLocations": {
-                    "type": "array",
-                    "description": "The list of replica locations for this image.",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
         }
     },
     "definitions": {}
