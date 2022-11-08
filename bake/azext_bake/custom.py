@@ -13,11 +13,13 @@ from azure.cli.core.extension.operations import (show_extension,
 from knack.util import CLIError
 from packaging.version import parse
 
-from ._arm import (create_image_definition,
+from ._arm import (create_image_definition, create_resource_group,
                    deploy_arm_template_at_resource_group,
                    ensure_gallery_permissions, get_arm_output, get_gallery,
-                   get_image_definition, image_version_exists)
-from ._constants import IN_BUILDER
+                   get_image_definition, get_resource_group_by_name,
+                   image_version_exists)
+from ._constants import (GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR,
+                         GITHUB_WORKFLOW_FILE, IN_BUILDER)
 from ._github import (get_github_latest_release_version, get_github_release,
                       get_release_templates, get_template_url)
 from ._packer import (check_packer_install, copy_packer_files,
@@ -34,6 +36,30 @@ logger = get_logger(__name__)
 #     from ._github import get_github_release
 #     foo = get_github_release(prerelease=True)
 #     return foo['tag_name']
+
+def _bake_yaml_export(sandbox=None, gallery=None, images=None, outfile=None, outdir=None, stdout=False):
+    logger.info('Exporting bake.yaml file')
+
+    bake_obj = {
+        'version': 1.0,
+        'sandbox': sandbox,
+        'gallery': gallery
+    }
+
+    if images:
+        bake_obj['images'] = images
+
+    yaml_schema = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json\n'
+    yaml_str = yaml_schema + yaml.safe_dump(bake_obj, default_flow_style=False, sort_keys=False)
+
+    if stdout:
+        print(yaml_str)
+    elif outfile:
+        with open(outfile, 'w') as f:
+            f.write(yaml_str)
+    elif outdir:
+        with open(outdir / 'bake.yml', 'w') as f:
+            f.write(yaml_str)
 
 
 def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None):
@@ -177,6 +203,26 @@ def bake_repo_validate(cmd, repository_path, sandbox=None, gallery=None, images=
     # raise CLIError('Not implemented')
 
 
+def bake_repo_setup(cmd, repository_path, sandbox_resource_group_name, gallery_resource_id, sandbox=None, gallery=None):
+    logger.info('Setting up repository')
+    _bake_yaml_export(sandbox=sandbox, gallery=gallery, outdir=repository_path)
+
+    # github_dir = repository_path / '.github'
+    workflows_dir = repository_path / GITHUB_WORKFLOW_DIR
+
+    # from pathlib import Path
+    if not workflows_dir.exists():
+        workflows_dir.mkdir(parents=True, exist_ok=True)
+
+    with open(workflows_dir / GITHUB_WORKFLOW_FILE, 'w') as f:
+        f.write(GITHUB_WORKFLOW_CONTENT)
+
+    # print(github_dir)
+    # print(yaml_str)
+    return
+    # raise CLIError('Not implemented')
+
+
 def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix, gallery_resource_id=None,
                         tags=None, principal_id=None, vnet_address_prefix='10.0.0.0/24',
                         default_subnet_name='default', default_subnet_address_prefix='10.0.0.0/25',
@@ -187,6 +233,17 @@ def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
 
     hook = cmd.cli_ctx.get_progress_controller()
     hook.begin()
+
+    hook.add(message=f'Getting resource group {sandbox_resource_group_name}')
+    rg, _ = get_resource_group_by_name(cmd.cli_ctx, sandbox_resource_group_name)
+    if rg is None:
+        if location is None:
+            raise CLIError(f"--location/-l is required if resource group '{sandbox_resource_group_name}' does not exist")
+        hook.add(message=f"Resource group '{sandbox_resource_group_name}' not found")
+        hook.add(message=f"Creating resource group '{sandbox_resource_group_name}'")
+        rg, _ = create_resource_group(cmd.cli_ctx, sandbox_resource_group_name, location)
+
+    location = rg.location
 
     if template_file:
         logger.warning('Deploying local version of template')
@@ -204,13 +261,15 @@ def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix,
     params = []
     params.append(f'location={location}')
     params.append(f'baseName={name_prefix}')
-    # params.append(f'builderPrincipalId={principal_id}')
     params.append('vnetAddressPrefixes={}'.format(json.dumps([vnet_address_prefix])))
     params.append(f'defaultSubnetName={default_subnet_name}')
     params.append(f'defaultSubnetAddressPrefix={default_subnet_address_prefix}')
     params.append(f'builderSubnetName={builders_subnet_name}')
     params.append(f'builderSubnetAddressPrefix={builders_subnet_address_prefix}')
     params.append(f'tags={json.dumps(tags)}')
+
+    if principal_id:
+        params.append(f'ciPrincipalId={principal_id}')
 
     if gallery_resource_id:
         params.append('galleryIds={}'.format(json.dumps([gallery_resource_id])))
@@ -238,28 +297,7 @@ def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=
 
 def bake_yaml_export(cmd, sandbox_resource_group_name, gallery_resource_id, sandbox=None, gallery=None, images=None,
                      outfile='./bake.yml', outdir=None, stdout=False):
-    logger.info('Exporting bake.yaml file')
-
-    bake_obj = {
-        'version': 1.0,
-        'sandbox': sandbox,
-        'gallery': gallery
-    }
-    if images:
-        bake_obj['images'] = images
-
-    yaml_schema = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json\n'
-    yaml_str = yaml_schema + yaml.safe_dump(bake_obj, default_flow_style=False, sort_keys=False)
-
-    if stdout:
-        print(yaml_str)
-    elif outfile:
-        with open(outfile, 'w') as f:
-            f.write(yaml_str)
-    elif outdir:
-        with open(outdir / 'bake.yml', 'w') as f:
-            f.write(yaml_str)
-
+    _bake_yaml_export(sandbox=sandbox, gallery=gallery, images=images, outfile=outfile, outdir=outdir, stdout=stdout)
     return
 
 
@@ -273,6 +311,51 @@ def bake_image(cmd, image_path, sandbox_resource_group_name=None, bake_yaml=None
                gallery=None, sandbox=None, image=None):
     check_packer_install(raise_error=True)
     raise CLIError('Not implemented')
+
+
+# def bake_image_create(cmd, repository_path, outfile='./image.yml', outdir=None, stdout=False):
+def bake_image_create(cmd, image_name, repository_path):
+    logger.info('Creating image.yml file')
+
+    image_obj = {
+        'name': image_name,
+        'version': '0.0.1',
+        'description': f'A description for {image_name}',
+        'publisher': 'MyCompany',
+        'offer': 'DevBox',
+        'sku': image_name.lower(),
+        'os': 'Windows',
+        'base': {
+            'publisher': 'microsoftwindowsdesktop',
+            'offer': 'windows-ent-cpc',
+            'sku': 'win11-22h2-ent-cpc-m365',
+            'version': 'latest'
+        },
+        'install': {
+            'choco': {
+                'packages': [
+                    'git',
+                    'googlechrome',
+                ]
+            }
+        }
+    }
+
+    yaml_schema = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/image.schema.json\n'
+    yaml_str = yaml_schema + yaml.safe_dump(image_obj, default_flow_style=False, sort_keys=False)
+
+    image_dir = repository_path / 'images' / image_name
+    if image_dir.exists():
+        raise CLIError(f'Image directory already exists: {image_dir}')
+    else:
+        image_dir.mkdir(parents=True, exist_ok=True)
+
+    image_file = image_dir / 'image.yml'
+
+    with open(image_file, 'w') as f:
+        f.write(yaml_str)
+
+    return
 
 
 def bake_version(cmd):

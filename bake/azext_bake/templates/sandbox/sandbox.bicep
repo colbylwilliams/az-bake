@@ -8,9 +8,6 @@ param location string = resourceGroup().location
 @description('The prefix to use in the name of all resources created. For example if Contoso-Images is provided, a key vault, storage account, and vnet will be created and named Contoso-Images-kv, contosoimagesstorage, and contoso-images-vent respectively.')
 param baseName string
 
-// @description('The principal id of a service principal used in the image build pipeline. It will be givin contributor role to the resource group, and the appropriate permissions on the key vault and storage account')
-// param builderPrincipalId string
-
 @description('The principal id of a service principal used in the CI pipeline. It will be givin contributor role to the resource group.')
 param ciPrincipalId string = ''
 
@@ -50,43 +47,23 @@ var vnetName = '${baseNameLowerNoSpace}-vnet'
 // req: (3-128) Alphanumerics, underscores, and hyphens. Start with alphanumeric. Resource Group unique.
 var identityName = '${baseNameLowerNoSpace}-id'
 
-// docs: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor
-var contributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
-// docs: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer
-var secretsOfficerRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
-
-// var builderGroupAssignmentId = guid('groupcontributor${resourceGroup().id}${baseName}${builderPrincipalId}')
-// var builderSecretsAssignmentId = guid('kvsecretofficer${resourceGroup().id}${keyVaultName}${builderPrincipalId}')
-
-var builderGroupAssignmentId = guid('groupcontributor${resourceGroup().id}${baseName}${identityName}')
-var builderSecretsAssignmentId = guid('kvsecretofficer${resourceGroup().id}${keyVaultName}${identityName}')
-
-var ciGroupAssignmentId = guid('groupcontributor${resourceGroup().id}${baseName}${ciPrincipalId}')
-
-// resource builderGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(builderPrincipalId)) {
-//   name: builderGroupAssignmentId
-//   properties: {
-//     principalId: builderPrincipalId
-//     roleDefinitionId: contributorRoleId
-//   }
-//   scope: resourceGroup()
-// }
-
-resource ciGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(ciPrincipalId)) {
-  name: ciGroupAssignmentId
-  properties: {
-    principalId: ciPrincipalId
-    roleDefinitionId: contributorRoleId
-  }
-  scope: resourceGroup()
-}
-
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
   name: identityName
   location: location
   tags: tags
 }
 
+// give builder Contributor on sandbox resoruce group
+module builderGroupRole 'groupRoles.bicep' = {
+  name: guid(builderIdentity.id, resourceGroup().id, 'Contributor')
+  params: {
+    role: 'Contributor'
+    principalId: builderIdentity.properties.principalId
+  }
+  scope: resourceGroup()
+}
+
+// give builder Contributor on gallery resoruce groups
 module galleryRoles 'groupRoles.bicep' = [for galleryId in galleryIds: if (!empty(galleryIds)) {
   name: guid(builderIdentity.id, galleryId, 'Contributor')
   params: {
@@ -96,12 +73,12 @@ module galleryRoles 'groupRoles.bicep' = [for galleryId in galleryIds: if (!empt
   scope: resourceGroup(first(split(last(split(replace(galleryId, 'resourceGroups', 'resourcegroups'), '/resourcegroups/')), '/')))
 }]
 
-resource builderGroupAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: builderGroupAssignmentId
-  properties: {
-    principalId: builderIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: contributorRoleId
+// give CI pricipal Contributor on sandbox resoruce group
+module ciGroupRole 'groupRoles.bicep' = if (!empty(ciPrincipalId)) {
+  name: guid(ciPrincipalId, resourceGroup().id, 'Contributor')
+  params: {
+    role: 'Contributor'
+    principalId: ciPrincipalId
   }
   scope: resourceGroup()
 }
@@ -171,21 +148,13 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
   tags: tags
 }
 
-// resource builderKeyVaultAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(builderPrincipalId)) {
-//   name: builderSecretsAssignmentId
-//   properties: {
-//     principalId: builderPrincipalId
-//     roleDefinitionId: secretsOfficerRoleId
-//   }
-//   scope: keyVault
-// }
-
 resource builderKeyVaultAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: builderSecretsAssignmentId
+  name: guid('kvsecretofficer${resourceGroup().id}${keyVaultName}${identityName}')
   properties: {
     principalId: builderIdentity.properties.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: secretsOfficerRoleId
+    // docs: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
   }
   scope: keyVault
 }

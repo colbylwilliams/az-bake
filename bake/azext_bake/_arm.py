@@ -146,6 +146,26 @@ def get_resource_group_tags(cmd, resource_group_name):
     return result.properties.tags
 
 
+def get_resource_group_by_name(cli_ctx, resource_group_name):
+    subscription_id = get_subscription_id(cli_ctx)
+    try:
+        resource_client = cf_resources(cli_ctx).resource_groups
+        return resource_client.get(resource_group_name), subscription_id
+    except Exception as ex:  # pylint: disable=broad-except
+        error = getattr(ex, 'Azure Error', ex)
+        if error != 'ResourceGroupNotFound':
+            return None, subscription_id
+        raise
+
+
+def create_resource_group(cli_ctx, resource_group_name, location, tags=None):
+    subscription_id = get_subscription_id(cli_ctx)
+    ResourceGroup = get_sdk(cli_ctx, ResourceType.MGMT_RESOURCE_RESOURCES, 'ResourceGroup', mod='models')
+    resource_client = cf_resources(cli_ctx).resource_groups
+    parameters = ResourceGroup(location=location.lower(), tags=tags)
+    return resource_client.create_or_update(resource_group_name, parameters), subscription_id
+
+
 # ----------------
 # Compute Gallery
 # ----------------

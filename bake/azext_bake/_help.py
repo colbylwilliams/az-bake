@@ -159,3 +159,6 @@ examples:
   - name: Validate a bake.yaml file.
     text: az bake validate yaml -f ./bake.yaml
 """
+
+
+# gh secret set AZURE_TENANT_ID -R colbylwilliams/az-bake-tests -b

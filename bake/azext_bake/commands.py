@@ -3,8 +3,8 @@
 # Licensed under the MIT License.
 # ------------------------------------
 
-from ._validators import builder_validator  # process_bake_image_namespace,
-from ._validators import (process_bake_repo_namespace,
+
+from ._validators import (builder_validator, process_bake_repo_namespace,
                           process_bake_repo_validate_namespace,
                           process_sandbox_create_namespace)
 
@@ -26,6 +26,7 @@ def load_command_table(self, _):  # pylint: disable=too-many-statements
 
     with self.command_group('bake repo') as g:
         g.custom_command('validate', 'bake_repo_validate', validator=process_bake_repo_validate_namespace)
+        g.custom_command('setup', 'bake_repo_setup')
 
     with self.command_group('bake yaml') as g:
         g.custom_command('export', 'bake_yaml_export')
@@ -36,6 +37,9 @@ def load_command_table(self, _):  # pylint: disable=too-many-statements
         g.custom_command('repo', 'bake_repo_validate', validator=process_bake_repo_validate_namespace)
         g.custom_command('sandbox', 'bake_sandbox_validate')
         g.custom_command('yaml', 'bake_yaml_validate')
+
+    with self.command_group('bake image') as g:
+        g.custom_command('create', 'bake_image_create')
 
     with self.command_group('bake _builder') as g:
         g.custom_command('build', 'bake_builder_build', validator=builder_validator)

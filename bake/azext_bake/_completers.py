@@ -43,12 +43,12 @@ def get_resource_name_completion_list(group_option='resource_group_name', resour
     return completer
 
 
-def get_default_location_from_sandbox_resource_group(cmd, ns):
-    if not ns.location:
-        # We don't use try catch here to let azure.cli.core.parser.AzCliCommandParser.validation_error
-        # handle exceptions, such as azure.core.exceptions.ResourceNotFoundError
-        resource_client = cf_resources(cmd.cli_ctx)
-        rg = resource_client.resource_groups.get(ns.sandbox_resource_group_name)
-        ns.location = rg.location  # pylint: disable=no-member
+# def get_default_location_from_sandbox_resource_group(cmd, ns):
+#     if not ns.location:
+#         # We don't use try catch here to let azure.cli.core.parser.AzCliCommandParser.validation_error
+#         # handle exceptions, such as azure.core.exceptions.ResourceNotFoundError
+#         resource_client = cf_resources(cmd.cli_ctx)
+#         rg = resource_client.resource_groups.get(ns.sandbox_resource_group_name)
+#         ns.location = rg.location  # pylint: disable=no-member
 
-        logger.debug("using location '%s' from sandbox resource group '%s'", ns.location, rg.name)
+#         logger.debug("using location '%s' from sandbox resource group '%s'", ns.location, rg.name)

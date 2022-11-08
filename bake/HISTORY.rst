@@ -3,6 +3,12 @@
 Release History
 ===============
 
+0.1.1
+++++++
++ Fix bug in sandbox template
+* Add image create command
+* Add repo setup command
+
 0.1.0
 ++++++
 + Bug fixes and minor improvements.

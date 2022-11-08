@@ -266,3 +266,47 @@ PKR_PROVISIONER_WINGET_INSTALL = f'''
     destination = "{WINGET_SETTINGS_PATH}"
   }}
 '''
+
+
+GITHUB_WORKFLOW_FILE = 'bake_images.yml'
+GITHUB_WORKFLOW_DIR = '.github/workflows'
+GITHUB_WORKFLOW_CONTENT = '''
+name: Bake Images
+
+concurrency: ${{ github.ref }}
+
+on:
+  workflow_dispatch: # allow workflow to be manually triggered
+  push:
+    branches: [main]
+    # uncomment to bake images only when a file in the images folder is changed
+    # paths:
+    # - 'images/**'
+
+jobs:
+  bake:
+    name: Bake Images
+    # runs-on: windows-latest
+    runs-on: ubuntu-latest
+
+    # uncomment to bake images only if '+bake' is in the commit message
+    # if: "contains(join(github.event.commits.*.message), '+bake')"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to Azure
+        run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Install az bake # get the latest version of az bake from the github releases and install it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download --dir ${{ runner.temp }} --repo github.com/colbylwilliams/az-bake --pattern index.json
+          az extension add --yes --source $(jq -r '.extensions.bake[0].downloadUrl' ${{ runner.temp }}/index.json)
+
+      - name: Run az bake
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: az bake repo -r . --verbose
+    '''

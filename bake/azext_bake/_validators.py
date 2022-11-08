@@ -21,7 +21,6 @@ from azure.cli.core.extension import get_extension
 from azure.cli.core.util import is_guid
 from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
 
-from ._completers import get_default_location_from_sandbox_resource_group
 from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER,
                          AZ_BAKE_IMAGE_BUILDER_VERSION, BAKE_PROPERTIES,
                          IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_PROPERTIES,
@@ -96,6 +95,11 @@ def process_bake_repo_validate_namespace(cmd, ns):
     bake_obj = bake_yaml_validator(cmd, ns)
     for i, image in enumerate(ns.images):
         ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
+
+
+# def process_bake_repo_setup_namespace(cmd, ns):
+#     repository_path_validator(cmd, ns)
+#     pass
 
 
 def builder_validator(cmd, ns):
@@ -195,6 +199,9 @@ def repository_path_validator(cmd, ns):
     repo_path = _validate_dir_path(ns.repository_path, name='repository')
     ns.repository_path = repo_path
 
+    # git_path = repo_path / '.git'
+    # git_path = _validate_dir_path(git_path, name='.git')
+
 
 def image_names_validator(cmd, ns):
     if ns.image_names:
@@ -226,8 +233,7 @@ def validate_sandbox_tags(cmd, ns):
 
 
 def process_sandbox_create_namespace(cmd, ns):
-    # validate_resource_prefix(cmd, ns)
-    get_default_location_from_sandbox_resource_group(cmd, ns)
+
     templates_version_validator(cmd, ns)
     if _none_or_empty(ns.vnet_address_prefix):
         raise InvalidArgumentValueError(f'--vnet-address-prefix/--vnet-prefix must be a valid CIDR prefix')
@@ -439,7 +445,7 @@ def templates_version_validator(cmd, ns):
 
 
 def yaml_out_validator(cmd, ns):
-    if ns.outfile:
+    if hasattr(ns, 'outfile') and ns.outfile:
         if getattr(ns.outfile, 'is_default', None) is None:
             if ns.outdir or ns.stdout:
                 raise MutuallyExclusiveArgumentError(
@@ -453,7 +459,8 @@ def yaml_out_validator(cmd, ns):
             recommendation='Remove all --outdir and --stdout to output a bake.yaml file '
             'in the current directory, or only specify --stdout to output to stdout.')
     else:
-        ns.outfile = None
+        if hasattr(ns, 'outfile'):
+            ns.outfile = None
         if ns.outdir:
             ns.outdir = _validate_dir_path(ns.outdir)
 

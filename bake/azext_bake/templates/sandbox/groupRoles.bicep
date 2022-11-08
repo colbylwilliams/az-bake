@@ -10,6 +10,10 @@ param principalId string
 @description('The Role to assign.')
 param role string = 'Reader'
 
+@allowed([ 'Device', 'ForeignGroup', 'Group', 'ServicePrincipal', 'User' ])
+@description('The principal type of the assigned principal ID.')
+param principalType string = 'ServicePrincipal'
+
 var assignmentId = guid('group${role}${resourceGroup().id}$${principalId}')
 
 // docs: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#reader
@@ -19,13 +23,14 @@ var contributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefi
 // docs: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner
 var ownerRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')
 
-var roleId = role == 'Owner' ? ownerRoleId : role == 'Contributor' ? contributorRoleId : readerRoleId
+var roleDefinitionId = role == 'Owner' ? ownerRoleId : role == 'Contributor' ? contributorRoleId : readerRoleId
 
 resource groupAssignmentId 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: assignmentId
   properties: {
-    roleDefinitionId: roleId
     principalId: principalId
+    principalType: principalType
+    roleDefinitionId: roleDefinitionId
   }
   scope: resourceGroup()
 }
