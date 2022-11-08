@@ -325,7 +325,7 @@ def bake_image_create(cmd, image_name, repository_path):
         'offer': 'DevBox',
         'sku': image_name.lower(),
         'os': 'Windows',
-        'replication': ['eastus', 'westus'],
+        'replicaLocations': ['eastus', 'westus'],
         'base': {
             'publisher': 'microsoftwindowsdesktop',
             'offer': 'windows-ent-cpc',

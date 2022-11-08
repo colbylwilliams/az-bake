@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.1.3
+++++++
++ Fix image create replicaLocations param
+
 0.1.2
 ++++++
 + Remove common image props from bake.yml
