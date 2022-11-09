@@ -157,5 +157,5 @@ resource group 'Microsoft.ContainerInstance/containerGroups@2021-10-01' = {
   }
 }
 
-output logs string = 'az container logs -g ${resourceGroup().name} -n ${validImageName}'
-output portal string = 'https://portal.azure.com/#@${tenant().tenantId}${group.id}/containers'
+output logs string = 'az container logs --subscription ${subscription().subscriptionId} -g ${resourceGroup().name} -n ${validImageName}'
+output portal string = 'https://portal.azure.com/#@${tenant().tenantId}/resource${group.id}/containers'
