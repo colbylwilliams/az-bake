@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.1.5
+++++++
++ Fix generated bake.yml
+
 0.1.4
 ++++++
 + Use sandbox name as RG for sandbox create

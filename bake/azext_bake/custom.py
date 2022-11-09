@@ -3,6 +3,7 @@
 # Licensed under the MIT License.
 # ------------------------------------
 # pylint: disable=logging-fstring-interpolation
+# pylint: disable=unused-argument
 
 import json
 import os
@@ -49,8 +50,7 @@ def _bake_yaml_export(sandbox=None, gallery=None, images=None, outfile=None, out
     if images:
         bake_obj['images'] = images
 
-    yaml_schema = '# yaml-language-server: '
-    '$schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json\n'
+    yaml_schema = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json\n'
 
     yaml_str = yaml_schema + yaml.safe_dump(bake_obj, default_flow_style=False, sort_keys=False)
 
@@ -227,10 +227,7 @@ def bake_repo_setup(cmd, repository_path, sandbox_resource_group_name, gallery_r
     with open(workflows_dir / GITHUB_WORKFLOW_FILE, 'w') as f:
         f.write(GITHUB_WORKFLOW_CONTENT)
 
-    # print(github_dir)
-    # print(yaml_str)
     return
-    # raise CLIError('Not implemented')
 
 
 def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=None, gallery_resource_id=None,
@@ -365,6 +362,9 @@ def bake_image_create(cmd, image_name, repository_path):
 
     with open(image_file, 'w') as f:
         f.write(yaml_str)
+
+    logger.warning(f'Created image.yml file: {image_file}')
+    logger.warning(f'The image was generated with default values. You should review the file and make any necessary changes.')
 
     return
 
