@@ -270,8 +270,7 @@ PKR_PROVISIONER_WINGET_INSTALL = f'''
 
 GITHUB_WORKFLOW_FILE = 'bake_images.yml'
 GITHUB_WORKFLOW_DIR = '.github/workflows'
-GITHUB_WORKFLOW_CONTENT = '''
-name: Bake Images
+GITHUB_WORKFLOW_CONTENT = '''name: Bake Images
 
 concurrency: ${{ github.ref }}
 

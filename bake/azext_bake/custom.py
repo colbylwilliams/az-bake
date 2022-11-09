@@ -196,8 +196,9 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
                 summary = [
                     f'## Building {image["name"]}',
                     f'You can check the progress of the packer build:',
-                    f'- Azure CLI: {logs}',
+                    f'- Azure CLI: `{logs}`',
                     f'- Azure Portal: {portal}',
+                    ''
                 ]
                 with open(github_step_summary, 'a+') as f:
                     f.write('\n'.join(summary))
