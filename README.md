@@ -50,7 +50,7 @@ Each sandbox includes a:
 To install the Azure CLI Custom Image Helper extension, simply run the following command:
 
 ```sh
-az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.1.3-py3-none-any.whl -y
+az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.1.4-py3-none-any.whl -y
 ```
 
 ### Update

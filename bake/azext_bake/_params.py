@@ -41,7 +41,7 @@ def load_arguments(self, _):
     )
 
     # repository_path_type = CLIArgumentType(
-    #     options_list=['--repository', '-repo'], type=file_type, validator=repository_path_validator,
+    #     options_list=['--repository', '--repo'], type=file_type, validator=repository_path_validator,
     #     help='Path to the locally cloned repository.')
 
     # yaml_outfile_type validator also validates yaml_outdir_type and yaml_stdout_type
@@ -55,8 +55,7 @@ def load_arguments(self, _):
         c.argument('prerelease', options_list=['--pre'], action='store_true',
                    help='Update to the latest template prerelease version.')
 
-    # sandbox create uses a command level validator, param validators will be ignored
-    with self.argument_context('bake sandbox create') as c:
+    with self.argument_context('bake sandbox create') as c:  # uses command level validator, param validators are ignored
         c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
         c.argument('gallery_resource_id', gallery_resource_id_type)
         c.argument('location', get_location_type(self.cli_ctx))
@@ -66,13 +65,11 @@ def load_arguments(self, _):
                    help='The prefix to use in the name of all resources created in the build sandbox. '
                    'For example if Contoso-Images is provided, the key vault, storage account, and vnet '
                    'will be named Contoso-Images-kv, contosoimagesstorage, and contoso-images-vent respectively.')
+
         c.argument('principal_id', options_list=['--principal-id', '--principal'],
                    help='The principal id of a service principal used to run az bake from a CI pipeline. '
                    'It will be given contributor role to sandbox resource group.')
 
-        # c.argument('virtual_network_name', required=False,
-        #            options_list=['--vnet-name', '--vnet'],
-        #            help='The name to use when creating the sandbox virtual network. Defaults to use the name prefix.')
         c.argument('vnet_address_prefix', default='10.0.0.0/24', arg_group='Network',
                    options_list=['--vnet-address-prefix', '--vnet-prefix'],
                    help='The CIDR prefix to use when creating a new VNet.')
@@ -106,9 +103,8 @@ def load_arguments(self, _):
             c.ignore('sandbox')
             c.ignore('gallery')
 
-    # bake repo uses a command level validator, param validators will be ignored
-    with self.argument_context('bake repo') as c:
-        c.argument('repository_path', options_list=['--repo-path', '-r'], type=file_type,
+    with self.argument_context('bake repo') as c:  # uses command level validator, param validators are ignored
+        c.argument('repository_path', options_list=['--repo-path', '--repo', '-r'], type=file_type,
                    help='Path to the locally cloned repository.')
         c.argument('image_names', options_list=['--images', '-i'], nargs='*',
                    help='Space separated list of images to bake.  Default: all images in repository.')
@@ -130,8 +126,7 @@ def load_arguments(self, _):
         c.ignore('sandbox')
         c.ignore('gallery')
 
-    # bake image uses a command level validator, param validators will be ignored
-    # with self.argument_context('bake image') as c:
+    # with self.argument_context('bake image') as c: # uses command level validator, param validators are ignored
     #     c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
     #     c.argument('gallery_resource_id', gallery_resource_id_type)
     #     c.argument('image_path', options_list=['--image-path', '-i'], type=file_type, help='Path to image to bake.')
@@ -142,7 +137,7 @@ def load_arguments(self, _):
 
     with self.argument_context('bake image create') as c:
         c.argument('image_name', options_list=['--name', '-n'], help='Name of the image to create.')
-        c.argument('repository_path', options_list=['--repo-path', '-r'], type=file_type,
+        c.argument('repository_path', options_list=['--repo-path', '--repo', '-r'], type=file_type,
                    validator=repository_path_validator, help='Path to the locally cloned repository.')
         # c.argument('outfile', yaml_outfile_type, default='./images/image.yml')
         # c.argument('outdir', yaml_outdir_type)
@@ -158,7 +153,7 @@ def load_arguments(self, _):
         c.ignore('gallery')
         c.ignore('images')
 
-    with self.argument_context('bake _builder') as c:
+    with self.argument_context('bake _builder') as c:  # uses command level validator, param validators are ignored
         c.ignore('sandbox')
         c.ignore('gallery')
         c.ignore('image')

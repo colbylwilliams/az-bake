@@ -49,7 +49,9 @@ def _bake_yaml_export(sandbox=None, gallery=None, images=None, outfile=None, out
     if images:
         bake_obj['images'] = images
 
-    yaml_schema = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json\n'
+    yaml_schema = '# yaml-language-server: '
+    '$schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json\n'
+
     yaml_str = yaml_schema + yaml.safe_dump(bake_obj, default_flow_style=False, sort_keys=False)
 
     if stdout:
@@ -90,8 +92,8 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
     definition = get_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'])
     if not definition:
         logger.info(f'Image definition {image["name"]} does not exist. Creating...')
-        definition = create_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'], image['publisher'],
-                                             image['offer'], image['sku'], gallery_res.location)
+        definition = create_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'],
+                                             image['publisher'], image['offer'], image['sku'], gallery_res.location)
     elif image_version_exists(cmd, gallery['resourceGroup'], gallery['name'], image['name'], image['version']):
         raise CLIError('Image version already exists')
 
@@ -118,14 +120,12 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
 
     return success
 
-# sandbox, gallery, and images come from validator
-
 
 def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None, gallery=None, images=None,
               repository_url=None, repository_token=None, repository_revision=None, repo=None):
-    from azure.cli.command_modules.resource._bicep import \
-        ensure_bicep_installation
-    ensure_bicep_installation()
+    # from azure.cli.command_modules.resource._bicep import \
+    #     ensure_bicep_installation
+    # ensure_bicep_installation()
 
     hook = cmd.cli_ctx.get_progress_controller()
     hook.begin()
@@ -190,6 +190,18 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
         logger.warning(f'  - Azure Portal: {portal}')
         logger.warning(f'')
 
+        if repo and 'provider' in repo and repo['provider'] == 'github':
+            github_step_summary = os.environ.get('GITHUB_STEP_SUMMARY', None)
+            if github_step_summary:
+                summary = [
+                    f'## Building {image["name"]}',
+                    f'You can check the progress of the packer build:',
+                    f'- Azure CLI: {logs}',
+                    f'- Azure Portal: {portal}',
+                ]
+                with open(github_step_summary, 'a+') as f:
+                    f.write('\n'.join(summary))
+
         deployments.append(deployment)
 
     hook.end(message=' ')
@@ -199,8 +211,7 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
 
 def bake_repo_validate(cmd, repository_path, sandbox=None, gallery=None, images=None):
     logger.info('Validating repository')
-    return True
-    # raise CLIError('Not implemented')
+    return
 
 
 def bake_repo_setup(cmd, repository_path, sandbox_resource_group_name, gallery_resource_id, sandbox=None, gallery=None):
@@ -210,7 +221,6 @@ def bake_repo_setup(cmd, repository_path, sandbox_resource_group_name, gallery_r
     # github_dir = repository_path / '.github'
     workflows_dir = repository_path / GITHUB_WORKFLOW_DIR
 
-    # from pathlib import Path
     if not workflows_dir.exists():
         workflows_dir.mkdir(parents=True, exist_ok=True)
 
@@ -223,7 +233,7 @@ def bake_repo_setup(cmd, repository_path, sandbox_resource_group_name, gallery_r
     # raise CLIError('Not implemented')
 
 
-def bake_sandbox_create(cmd, location, sandbox_resource_group_name, name_prefix, gallery_resource_id=None,
+def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=None, gallery_resource_id=None,
                         tags=None, principal_id=None, vnet_address_prefix='10.0.0.0/24',
                         default_subnet_name='default', default_subnet_address_prefix='10.0.0.0/25',
                         builders_subnet_name='builders', builders_subnet_address_prefix='10.0.0.128/25',

@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.1.4
+++++++
++ Use sandbox name as RG for sandbox create
+* Print step summary in GitHub Actions
+
 0.1.3
 ++++++
 + Fix image create replicaLocations param

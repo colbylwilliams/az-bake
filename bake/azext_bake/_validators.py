@@ -36,6 +36,23 @@ from ._utils import get_logger, get_yaml_file_contents, get_yaml_file_path
 logger = get_logger(__name__)
 
 
+def process_sandbox_create_namespace(cmd, ns):
+
+    if not ns.sandbox_resource_group_name:
+        logger.info('No sandbox resource group name provided, using sandbox name')
+        ns.sandbox_resource_group_name = ns.name_prefix
+
+    templates_version_validator(cmd, ns)
+    if _none_or_empty(ns.vnet_address_prefix):
+        raise InvalidArgumentValueError(f'--vnet-address-prefix/--vnet-prefix must be a valid CIDR prefix')
+
+    for subnet in ['default', 'builders']:
+        validate_subnet(cmd, ns, subnet, [ns.vnet_address_prefix])
+
+    validate_sandbox_tags(cmd, ns)
+    gallery_resource_id_validator(cmd, ns)
+
+
 def process_bake_image_namespace(cmd, ns):
     # common = None
     if ns.bake_yaml:
@@ -101,11 +118,6 @@ def process_bake_repo_validate_namespace(cmd, ns):
     for i, image in enumerate(ns.images):
         # ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
         ns.images[i] = image_yaml_validator(cmd, ns, image=image)
-
-
-# def process_bake_repo_setup_namespace(cmd, ns):
-#     repository_path_validator(cmd, ns)
-#     pass
 
 
 def builder_validator(cmd, ns):
@@ -240,19 +252,6 @@ def validate_sandbox_tags(cmd, ns):
     ns.tags = tags_dict
 
 
-def process_sandbox_create_namespace(cmd, ns):
-
-    templates_version_validator(cmd, ns)
-    if _none_or_empty(ns.vnet_address_prefix):
-        raise InvalidArgumentValueError(f'--vnet-address-prefix/--vnet-prefix must be a valid CIDR prefix')
-
-    for subnet in ['default', 'builders']:
-        validate_subnet(cmd, ns, subnet, [ns.vnet_address_prefix])
-
-    validate_sandbox_tags(cmd, ns)
-    gallery_resource_id_validator(cmd, ns)
-
-
 def validate_subnet(cmd, ns, subnet, vnet_prefixes):
     subnet_name_option = f'--{subnet}-subnet-name/--{subnet}-subnet'
     subnet_prefix_option = f'--{subnet}-subnet-prefix/--{subnet}-prefix'
@@ -282,7 +281,7 @@ def bake_yaml_validator(cmd, ns):
     if hasattr(ns, 'repository_path') and ns.repository_path:
         # should have already run the repository_path_validator
         path = get_yaml_file_path(ns.repository_path, 'bake', required=True)
-    elif hasattr(ns, 'bake_yaml') and ns.bake_yaml:
+    elif _has_bake_yaml(ns):
         bake_yaml = Path(ns.bake_yaml).resolve()
         bake_yaml = get_yaml_file_path(bake_yaml.parent, 'bake', required=True)
         ns.bake_yaml = bake_yaml
@@ -382,8 +381,7 @@ def image_yaml_validator(cmd, ns, image=None):
 
 
 def sandbox_resource_group_name_validator(cmd, ns):
-    has_bake_yaml = hasattr(ns, 'bake_yaml') and ns.bake_yaml is not None
-    if ns.sandbox_resource_group_name and has_bake_yaml:
+    if ns.sandbox_resource_group_name and _has_bake_yaml(ns):
         raise MutuallyExclusiveArgumentError('usage error: --bake-yaml and --sandbox are mutually exclusive')
 
     sandbox = get_sandbox_from_group(cmd, ns.sandbox_resource_group_name)
@@ -472,6 +470,10 @@ def yaml_out_validator(cmd, ns):
             ns.outfile = None
         if ns.outdir:
             ns.outdir = _validate_dir_path(ns.outdir)
+
+
+def _has_bake_yaml(ns):
+    return hasattr(ns, 'bake_yaml') and ns.bake_yaml is not None
 
 
 def _validate_object(path, obj, properties, parent_key=None):
