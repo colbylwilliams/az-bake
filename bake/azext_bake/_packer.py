@@ -8,15 +8,14 @@ import os
 import shutil
 import subprocess
 import sys
+
 from pathlib import Path
 
 from azure.cli.core.azclierror import ValidationError
 
-from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE,
-                         PKR_AUTO_VARS_FILE, PKR_BUILD_FILE, PKR_DEFAULT_VARS,
-                         PKR_PROVISIONER_CHOCO, PKR_PROVISIONER_WINGET_INSTALL,
-                         PKR_VARS_FILE, WINGET_SETTINGS_FILE,
-                         WINGET_SETTINGS_JSON)
+from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
+                         PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO, PKR_PROVISIONER_WINGET_INSTALL, PKR_VARS_FILE,
+                         WINGET_SETTINGS_FILE, WINGET_SETTINGS_JSON)
 from ._utils import get_logger, get_templates_path
 
 logger = get_logger(__name__)

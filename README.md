@@ -8,26 +8,25 @@ Microsoft Azure CLI Custom Image 'az bake' Extension adds support for creating (
 
 _After [installing the Azure CLI][install-az] if you haven't already_
 
-#### 2. Create a [sandbox](#sandbox) resource group
+#### 2. Create a new [sandbox](#sandbox)
 
 ```sh
-az group create -n MySandbox -l eastus
+az bake sandbox create --name MySandbox --gallery MyGallery
 ```
 
-#### 3. Create a new [sandbox](#sandbox)
+#### 3. Setup the repo
 
 ```sh
-az bake sandbox create -g MySandbox -n MySandbox --gallery MyGallery
+az bake repo setup --sandbox MySandbox --gallery MyGallery
 ```
 
-#### 4. Export the bake.yml file
+#### 4. Create an image
 
 ```sh
-az bake yaml export --sandbox MySandbox --gallery MyGallery --outdir ./my/repo/root
+az bake image create --name vscode-image
 ```
 
 #### 5. Commit and push your changes
-
 
 ## Sandbox
 

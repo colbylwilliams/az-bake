@@ -4,8 +4,7 @@
 # ------------------------------------
 
 
-from ._validators import (builder_validator, process_bake_repo_namespace,
-                          process_bake_repo_validate_namespace,
+from ._validators import (builder_validator, process_bake_repo_namespace, process_bake_repo_validate_namespace,
                           process_sandbox_create_namespace)
 
 

@@ -4,6 +4,7 @@
 # ------------------------------------
 
 import json
+
 from time import sleep
 
 from azure.cli.command_modules.role.custom import create_role_assignment
@@ -37,8 +38,7 @@ def is_bicep_file(file_path):
 def deploy_arm_template_at_resource_group(cmd, resource_group_name=None, template_file=None,
                                           template_uri=None, parameters=None, no_wait=False):
 
-    from azure.cli.command_modules.resource.custom import (
-        JsonCTemplatePolicy, _prepare_deployment_properties_unmodified)
+    from azure.cli.command_modules.resource.custom import JsonCTemplatePolicy, _prepare_deployment_properties_unmodified
 
     properties = _prepare_deployment_properties_unmodified(cmd, 'resourceGroup', template_file=template_file,
                                                            template_uri=template_uri, parameters=parameters,

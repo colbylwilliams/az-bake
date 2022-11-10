@@ -5,11 +5,13 @@
 
 import json
 import os
+
 from pathlib import Path
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
 
 import yaml
+
 from azure.cli.core.azclierror import FileOperationError, ValidationError
 from knack.log import get_logger as knack_get_logger
 

@@ -4,8 +4,8 @@
 # ------------------------------------
 
 import requests
-from azure.cli.core.commands.parameters import (
-    get_resources_in_resource_group, get_resources_in_subscription)
+
+from azure.cli.core.commands.parameters import get_resources_in_resource_group, get_resources_in_subscription
 from azure.cli.core.decorators import Completer
 
 from ._client_factory import cf_network, cf_resources

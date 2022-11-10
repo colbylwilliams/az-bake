@@ -6,28 +6,23 @@
 
 import ipaddress
 import os
+
 from datetime import datetime, timezone
 from pathlib import Path
 from re import match
 
-from azure.cli.core.azclierror import (ArgumentUsageError,
-                                       InvalidArgumentValueError,
-                                       MutuallyExclusiveArgumentError,
-                                       RequiredArgumentMissingError,
-                                       ValidationError)
+from azure.cli.core.azclierror import (ArgumentUsageError, InvalidArgumentValueError, MutuallyExclusiveArgumentError,
+                                       RequiredArgumentMissingError, ValidationError)
 from azure.cli.core.commands.parameters import get_resources_in_subscription
 from azure.cli.core.commands.validators import validate_tags
 from azure.cli.core.extension import get_extension
 from azure.cli.core.util import is_guid
 from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
 
-from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER,
-                         AZ_BAKE_IMAGE_BUILDER_VERSION, BAKE_PROPERTIES,
-                         IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_PROPERTIES,
-                         IN_BUILDER, KEY_ALLOWED, KEY_REQUIRED, REPO_DIR,
-                         SANDBOX_PROPERTIES, STORAGE_DIR, tag_key)
-from ._github import (get_github_latest_release_version,
-                      github_release_version_exists)
+from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER, AZ_BAKE_IMAGE_BUILDER_VERSION,
+                         BAKE_PROPERTIES, IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_PROPERTIES, IN_BUILDER, KEY_ALLOWED,
+                         KEY_REQUIRED, REPO_DIR, SANDBOX_PROPERTIES, STORAGE_DIR, tag_key)
+from ._github import get_github_latest_release_version, github_release_version_exists
 from ._packer import check_packer_install
 from ._repos import get_repo, is_ci, parse_repo_url
 from ._sandbox import get_sandbox_from_group

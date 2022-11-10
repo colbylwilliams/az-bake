@@ -5,9 +5,8 @@
 # pylint: disable=too-many-statements, too-many-locals, too-many-lines
 
 import requests
-from azure.cli.core.azclierror import (ClientRequestError,
-                                       MutuallyExclusiveArgumentError,
-                                       ResourceNotFoundError)
+
+from azure.cli.core.azclierror import ClientRequestError, MutuallyExclusiveArgumentError, ResourceNotFoundError
 from azure.cli.core.util import should_disable_connection_verify
 
 from ._utils import get_logger

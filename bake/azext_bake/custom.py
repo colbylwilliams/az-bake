@@ -9,26 +9,20 @@ import json
 import os
 
 import yaml
-from azure.cli.core.extension.operations import (show_extension,
-                                                 update_extension)
+
+from azure.cli.core.extension.operations import show_extension, update_extension
 from knack.util import CLIError
 from packaging.version import parse
 
-from ._arm import (create_image_definition, create_resource_group,
-                   deploy_arm_template_at_resource_group,
-                   ensure_gallery_permissions, get_arm_output, get_gallery,
-                   get_image_definition, get_resource_group_by_name,
-                   image_version_exists)
-from ._constants import (GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR,
-                         GITHUB_WORKFLOW_FILE, IN_BUILDER)
-from ._github import (get_github_latest_release_version, get_github_release,
-                      get_release_templates, get_template_url)
-from ._packer import (check_packer_install, copy_packer_files,
-                      inject_choco_provisioners, inject_winget_provisioners,
+from ._arm import (create_image_definition, create_resource_group, deploy_arm_template_at_resource_group,
+                   ensure_gallery_permissions, get_arm_output, get_gallery, get_image_definition,
+                   get_resource_group_by_name, image_version_exists)
+from ._constants import GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR, GITHUB_WORKFLOW_FILE, IN_BUILDER
+from ._github import get_github_latest_release_version, get_github_release, get_release_templates, get_template_url
+from ._packer import (check_packer_install, copy_packer_files, inject_choco_provisioners, inject_winget_provisioners,
                       packer_execute, save_packer_vars_file)
 from ._sandbox import get_builder_subnet_id, get_sandbox_resource_names
-from ._utils import (get_choco_package_config, get_install_choco_dict,
-                     get_install_winget, get_logger)
+from ._utils import get_choco_package_config, get_install_choco_dict, get_install_winget, get_logger
 
 logger = get_logger(__name__)
 
@@ -67,9 +61,7 @@ def _bake_yaml_export(sandbox=None, gallery=None, images=None, outfile=None, out
 def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None):
     if IN_BUILDER:
         from azure.cli.command_modules.profile.custom import login
-        from azure.cli.core.auth.identity import (AZURE_CLIENT_ID,
-                                                  AZURE_CLIENT_SECRET,
-                                                  AZURE_TENANT_ID)
+        from azure.cli.core.auth.identity import AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
 
         az_client_id = os.environ.get(AZURE_CLIENT_ID, None)
         az_client_secret = os.environ.get(AZURE_CLIENT_SECRET, None)
