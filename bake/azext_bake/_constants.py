@@ -307,5 +307,5 @@ jobs:
       - name: Run az bake
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: az bake repo -r . --verbose
+        run: az bake repo --verbose --repo .
     '''
