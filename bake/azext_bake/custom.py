@@ -22,7 +22,7 @@ from ._github import get_github_latest_release_version, get_github_release, get_
 from ._packer import (check_packer_install, copy_packer_files, inject_choco_provisioners, inject_winget_provisioners,
                       packer_execute, save_packer_vars_file)
 from ._sandbox import get_builder_subnet_id, get_sandbox_resource_names
-from ._utils import get_choco_package_config, get_install_choco_dict, get_install_winget, get_logger
+from ._utils import get_choco_package_config, get_install_choco_dict, get_install_winget, get_logger, get_templates_path
 
 logger = get_logger(__name__)
 
@@ -50,15 +50,13 @@ def _bake_yaml_export(sandbox=None, gallery=None, images=None, outfile=None, out
 
     if stdout:
         print(yaml_str)
-    elif outfile:
-        with open(outfile, 'w') as f:
-            f.write(yaml_str)
-    elif outdir:
-        with open(outdir / 'bake.yml', 'w') as f:
+    elif outfile or outdir:
+        with open(outfile if outfile else outdir / 'bake.yml', 'w') as f:
             f.write(yaml_str)
 
 
 def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None):
+
     if IN_BUILDER:
         from azure.cli.command_modules.profile.custom import login
         from azure.cli.core.auth.identity import AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
@@ -137,39 +135,35 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
 
     deployments = []
 
-    params = []
+    params = [
+        f'subnetId={get_builder_subnet_id(sandbox)}',
+        f'storageAccount={sandbox["storageAccount"]}',
+        f'identityId={sandbox["identityId"]}'
+    ]
 
     if repository_token:
-        if repo['provider'] == 'github':
-            logger.info('Adding GitHub token to repository url')
-            params.append(f'repository={repository_url.replace("https://", f"https://gituser:{repository_token}@")}')
-        elif repo['provider'] == 'azuredevops':
-            logger.info('Adding DevOps token to repository url')
-            params.append(f'repository={repository_url.replace("https://", f"https://azurereposuser:{repository_token}@")}')
-        else:
-            logger.info('Adding token to repository url')
-            params.append(f'repository={repository_url.replace("https://", f"https://{repository_token}@")}')
+        p = repo['provider']
+        p_user = 'gituser:' if p == 'github' else 'azurereposuser:' if p == 'azuredevops' else ''
+        p_name = ' GitHub' if p == 'github' else ' DevOps' if p == 'azuredevops' else ''
+        logger.info(f'Adding {p_name} token to repository url')
+        params.append(f'repository={repository_url.replace("https://", f"https://{p_user}{repository_token}@")}')
     else:
         params.append(f'repository={repository_url}')
 
     if repository_revision:
         params.append(f'revision={repository_revision}')
 
-    params.append(f'subnetId={get_builder_subnet_id(sandbox)}')
-    params.append(f'storageAccount={sandbox["storageAccount"]}')
-    params.append(f'identityId={sandbox["identityId"]}')
-
     for image in images:
         logger.info(f'Getting deployment params for {image["name"]} builder')
+
         image_params = params.copy()
         image_params.append(f'image={image["name"]}')
         image_params.append(f'version={image["version"]}')
-        # logger.info(json.dumps(image_params, indent=2))
+
         hook.add(message=f'Deploying {image["name"]} builder')
         logger.info(f'Deploying {image["name"]} builder...')
-        deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox['resourceGroup'],
-                                                                    template_file=template_file, template_uri=template_uri,
-                                                                    parameters=[image_params])
+        deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox['resourceGroup'], template_file=template_file,
+                                                                    template_uri=template_uri, parameters=[image_params])
         logs = get_arm_output(outputs, 'logs')
         portal = get_arm_output(outputs, 'portal')
 
@@ -208,7 +202,6 @@ def bake_repo_setup(cmd, sandbox_resource_group_name, gallery_resource_id, repos
     logger.info('Setting up repository')
     _bake_yaml_export(sandbox=sandbox, gallery=gallery, outdir=repository_path)
 
-    # github_dir = repository_path / '.github'
     workflows_dir = repository_path / GITHUB_WORKFLOW_DIR
 
     if not workflows_dir.exists():
@@ -224,7 +217,7 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
                         tags=None, principal_id=None, vnet_address_prefix='10.0.0.0/24',
                         default_subnet_name='default', default_subnet_address_prefix='10.0.0.0/25',
                         builders_subnet_name='builders', builders_subnet_address_prefix='10.0.0.128/25',
-                        version=None, prerelease=False, templates_url=None, template_file=None):
+                        version=None, prerelease=False, local_templates=False, templates_url=None, template_file=None):
 
     # TODO: check if principal_id is provided, if not create and use msi
 
@@ -244,8 +237,12 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
 
     location = rg.location
 
-    if template_file:
-        logger.warning('Deploying local version of template')
+    if local_templates:
+        logger.warning('Using local template')
+        template_file = str(get_templates_path('sandbox') / 'sandbox.bicep')
+        template_uri = None
+    elif template_file:
+        logger.warning(f'Deploying user specified template: {template_file}')
         template_uri = None
     else:
         hook.add(message='Getting templates from GitHub')
@@ -256,20 +253,19 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
         template_uri = get_template_url(templates, 'sandbox', 'sandbox.json')
 
     logger.info(f'Getting deployment params')
-
-    params = []
-    params.append(f'location={location}')
-    params.append(f'keyVaultName={sb_names["keyvault"]}')
-    params.append(f'storageName={sb_names["storage"]}')
-    params.append(f'vnetName={sb_names["vnet"]}')
-    params.append(f'identityName={sb_names["identity"]}')
-
-    params.append('vnetAddressPrefixes={}'.format(json.dumps([vnet_address_prefix])))
-    params.append(f'defaultSubnetName={default_subnet_name}')
-    params.append(f'defaultSubnetAddressPrefix={default_subnet_address_prefix}')
-    params.append(f'builderSubnetName={builders_subnet_name}')
-    params.append(f'builderSubnetAddressPrefix={builders_subnet_address_prefix}')
-    params.append(f'tags={json.dumps(tags)}')
+    params = [
+        f'location={location}',
+        f'keyVaultName={sb_names["keyvault"]}',
+        f'storageName={sb_names["storage"]}',
+        f'vnetName={sb_names["vnet"]}',
+        f'identityName={sb_names["identity"]}',
+        f'vnetAddressPrefixes={json.dumps([vnet_address_prefix])}',
+        f'defaultSubnetName={default_subnet_name}',
+        f'defaultSubnetAddressPrefix={default_subnet_address_prefix}',
+        f'builderSubnetName={builders_subnet_name}',
+        f'builderSubnetAddressPrefix={builders_subnet_address_prefix}',
+        f'tags={json.dumps(tags)}',
+    ]
 
     if principal_id:
         params.append(f'ciPrincipalId={principal_id}')
@@ -279,9 +275,8 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
 
     hook.add(message='Creating sandbox environment')
     logger.info(f'Deploying sandbox...')
-    deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox_resource_group_name,
-                                                                template_file=template_file, template_uri=template_uri,
-                                                                parameters=[params])
+    deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox_resource_group_name, template_file=template_file,
+                                                                template_uri=template_uri, parameters=[params])
     logger.info(f'Finished deploying sandbox')
     print(f'Successfully deployed sandbox environment')
     print(f'You can configure it as your default sandbox using `az configure --defaults bake-sandbox={sandbox_resource_group_name}`')

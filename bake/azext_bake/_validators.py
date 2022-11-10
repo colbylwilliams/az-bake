@@ -421,7 +421,13 @@ def bake_source_version_validator(cmd, ns):
 
 
 def templates_version_validator(cmd, ns):
-    if ns.template_file:
+    if ns.local_templates:
+        if sum(1 for ct in [ns.template_file, ns.version, ns.prerelease, ns.templates_url] if ct) > 1:
+            raise MutuallyExclusiveArgumentError(
+                '--local-template cannot be used with --templates-file | --templates-url | --version/-v | --pre',
+                recommendation='Remove all templates-file, --templates-url, --version/-v, and --pre to use the latest'
+                'stable release, or only specify --local to use templates packaged with the CLI')
+    elif ns.template_file:
         if ns.version or ns.prerelease or ns.templates_url:
             raise MutuallyExclusiveArgumentError(
                 '--template-file cannont be used with --templates-url | --version/-v | --pre',
