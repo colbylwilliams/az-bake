@@ -119,7 +119,7 @@ def load_arguments(self, _):
         c.ignore('repo')
 
     with self.argument_context('bake repo setup') as c:
-        c.argument('repository_path', options_list=['--repo-path', '--repo'], type=file_type,
+        c.argument('repository_path', options_list=['--repo-path', '--repo'], type=file_type, default='./',
                    validator=repository_path_validator, help='Path to the locally cloned repository.')
         c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
         c.argument('gallery_resource_id', gallery_resource_id_type)
@@ -137,7 +137,7 @@ def load_arguments(self, _):
 
     with self.argument_context('bake image create') as c:
         c.argument('image_name', options_list=['--name', '-n'], help='Name of the image to create.')
-        c.argument('repository_path', options_list=['--repo-path', '--repo', '-r'], type=file_type,
+        c.argument('repository_path', options_list=['--repo-path', '--repo', '-r'], type=file_type, default='./',
                    validator=repository_path_validator, help='Path to the locally cloned repository.')
         # c.argument('outfile', yaml_outfile_type, default='./images/image.yml')
         # c.argument('outdir', yaml_outdir_type)

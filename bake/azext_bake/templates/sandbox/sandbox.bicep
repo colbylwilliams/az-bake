@@ -4,9 +4,17 @@
 @description('Location for the resources. If none is provided, the resource group location is used.')
 param location string = resourceGroup().location
 
-// ex. contoso-images
-@description('The prefix to use in the name of all resources created. For example if Contoso-Images is provided, a key vault, storage account, and vnet will be created and named Contoso-Images-kv, contosoimagesstorage, and contoso-images-vent respectively.')
-param baseName string
+@description('Name for the created KeyVault')
+param keyVaultName string
+
+@description('Name for the created Storage Account')
+param storageName string
+
+@description('Name for the created Virtual Network')
+param vnetName string
+
+@description('Name for the created Managed Identity')
+param identityName string
 
 @description('The principal id of a service principal used in the CI pipeline. It will be givin contributor role to the resource group.')
 param ciPrincipalId string = ''
@@ -23,29 +31,6 @@ param galleryIds array = []
 
 @description('Tags to be applied to all created resources.')
 param tags object = {}
-
-var baseNameLower = toLower(trim(baseName)) // ex. 'Contoso Images' -> 'contoso images'
-var baseNameLowerNoSpace = replace(baseNameLower, ' ', '-') // ex. 'contoso images' -> 'contoso-images'
-var baseNameLowerNoSpaceHyphen = replace(baseNameLowerNoSpace, '_', '-') // ex. 'contoso-images' or 'contoso_images' -> 'contoso-images'
-var baseNameLowerAlphaNum = replace(baseNameLowerNoSpaceHyphen, '-', '') // ex. 'contoso-images' -> 'contosoimages'
-
-// ex. contoso-images-kv
-// req: (3-24) Alphanumerics and hyphens. Start with letter. End with letter or digit. Can't contain consecutive hyphens. Globally unique.
-var baseNameLowerNoSpaceHyphenLength = length(baseNameLowerNoSpaceHyphen)
-var keyVaultName = baseNameLowerNoSpaceHyphenLength <= 21 ? '${baseNameLowerNoSpaceHyphen}-kv' : baseNameLowerNoSpaceHyphenLength <= 24 ? baseNameLowerNoSpaceHyphen : take(baseNameLowerNoSpaceHyphen, 24)
-
-// ex. contosoimagesstorage
-// req: (3-24) Lowercase letters and numbers only. Globally unique.
-var baseNameLowerAlphaNumLength = length(baseNameLowerAlphaNum)
-var storageName = baseNameLowerAlphaNumLength <= 17 ? '${baseNameLowerAlphaNum}store' : baseNameLowerAlphaNumLength <= 20 ? '${baseNameLowerAlphaNum}stor' : baseNameLowerAlphaNumLength <= 24 ? baseNameLowerAlphaNum : take(baseNameLowerAlphaNum, 24)
-
-// ex. contoso-images-vnet
-// req: (2-64) Alphanumerics, underscores, periods, and hyphens. Start with alphanumeric. End alphanumeric or underscore. Resource Group unique.
-var vnetName = '${baseNameLowerNoSpace}-vnet'
-
-// ex. contoso-images
-// req: (3-128) Alphanumerics, underscores, and hyphens. Start with alphanumeric. Resource Group unique.
-var identityName = '${baseNameLowerNoSpace}-id'
 
 resource builderIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2022-01-31-preview' = {
   name: identityName
@@ -130,10 +115,11 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     enabledForDeployment: true
     enabledForTemplateDeployment: true
     enabledForDiskEncryption: false
-    enablePurgeProtection: true
     enableRbacAuthorization: true
-    enableSoftDelete: true
-    softDeleteRetentionInDays: 90
+    // TODO: uncomment this
+    // enablePurgeProtection: true
+    // enableSoftDelete: true
+    // softDeleteRetentionInDays: 90
     publicNetworkAccess: 'Disabled'
     networkAcls: {
       bypass: 'AzureServices'
@@ -237,7 +223,6 @@ resource group_tags 'Microsoft.Resources/tags@2021-04-01' = {
   properties: {
     tags: union({
         'hidden-bake:location': location
-        'hidden-bake:baseName': baseName
         'hidden-bake:resourceGroup': resourceGroup().name
         'hidden-bake:subscription': az.subscription().subscriptionId
         'hidden-bake:virtualNetwork': vnet.name
@@ -246,9 +231,7 @@ resource group_tags 'Microsoft.Resources/tags@2021-04-01' = {
         'hidden-bake:builderSubnet': builderSubnetName
         'hidden-bake:keyVault': keyVault.name
         'hidden-bake:storageAccount': storage.name
-        // 'hidden-bake:subnetId': '${vnet.id}/subnets/${builderSubnetName}'
         'hidden-bake:identityId': builderIdentity.id
-        // 'hidden-bake:sandbox:builderPrincipalId': builderPrincipalId
       }, tags)
   }
 }

@@ -219,8 +219,8 @@ def repository_path_validator(cmd, ns):
     repo_path = _validate_dir_path(ns.repository_path, name='repository')
     ns.repository_path = repo_path
 
-    # git_path = repo_path / '.git'
-    # git_path = _validate_dir_path(git_path, name='.git')
+    git_path = repo_path / '.git'
+    git_path = _validate_dir_path(git_path, name='.git')
 
 
 def image_names_validator(cmd, ns):

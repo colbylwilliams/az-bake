@@ -6,10 +6,11 @@
 from azure.cli.core.azclierror import ValidationError
 from azure.cli.core.commands.client_factory import get_subscription_id
 from azure.cli.core.commands.parameters import get_resources_in_resource_group
+from azure.cli.core.profiles import ResourceType
 from azure.mgmt.core.tools import is_valid_resource_id, resource_id
 
 from ._arm import get_resource_group_tags
-from ._client_factory import cf_msi, cf_network
+from ._client_factory import cf_keyvault, cf_network, cf_storage
 from ._constants import tag_key
 from ._utils import get_logger
 
@@ -123,3 +124,170 @@ def get_builder_subnet_id(sandbox):
     return resource_id(subscription=sandbox['subscription'], resource_group=sandbox['virtualNetworkResourceGroup'],
                        namespace='Microsoft.Network', type='virtualNetworks', name=sandbox['virtualNetwork'],
                        child_type_1='subnets', child_name_1=sandbox['builderSubnet'])
+
+
+def _check_keyvault_name_availability(cmd, keyvault_name):
+    kv_name = keyvault_name
+    vaults_client = cf_keyvault(cli_ctx=cmd.cli_ctx).vaults
+    VaultCheckNameAvailabilityParameters = cmd.get_models('VaultCheckNameAvailabilityParameters',
+                                                          resource_type=ResourceType.MGMT_KEYVAULT,
+                                                          operation_group='vaults')
+
+    logger.info(f'Checking availability of KeyVault name: {kv_name}')
+    name_availability = vaults_client.check_name_availability(VaultCheckNameAvailabilityParameters(name=kv_name))
+
+    counter = 0
+    while name_availability.name_available is False:
+        logger.info(f'KeyVault name not available: {kv_name}')
+        if counter > 9:
+            raise ValidationError(f'Could not find available KeyVault name for: {keyvault_name}')
+        kv_name = f'{keyvault_name}{counter}' if len(keyvault_name) <= 23 else f"{keyvault_name[:23]}{counter}"
+        counter = counter + 1
+        logger.info(f'Checking availability of KeyVault name: {kv_name}')
+        name_availability = vaults_client.check_name_availability(
+            VaultCheckNameAvailabilityParameters(name=kv_name))
+
+    return kv_name
+
+
+def _check_storage_account_name_availability(cmd, storage_account_name):
+    storage_name = storage_account_name
+    storage_client = cf_storage(cli_ctx=cmd.cli_ctx).storage_accounts
+    StorageAccountCheckNameAvailabilityParameters = cmd.get_models('StorageAccountCheckNameAvailabilityParameters',
+                                                                   resource_type=ResourceType.MGMT_STORAGE,
+                                                                   operation_group='storage_accounts')
+
+    logger.info(f'Checking availability of Storage Account name: {storage_name}')
+    name_availability = storage_client.check_name_availability(
+        StorageAccountCheckNameAvailabilityParameters(name=storage_name))
+
+    counter = 0
+    while name_availability.name_available is False:
+        logger.info(f'Storage Account name not available: {storage_name}')
+        if counter > 9:
+            raise ValidationError(f'Could not find available Storage Account name for: {storage_account_name}')
+        storage_name = f'{storage_account_name}{counter}' if len(storage_account_name) <= 23 \
+            else f"{storage_account_name[:23]}{counter}"
+        counter = counter + 1
+        logger.info(f'Checking availability of Storage Account name: {storage_name}')
+        name_availability = storage_client.check_name_availability(
+            StorageAccountCheckNameAvailabilityParameters(name=storage_name))
+
+    return storage_name
+
+
+def _get_sandbox_keyvault_name(cmd, name_prefix):
+    # ex. contoso-images-kv
+    # req: (3-24) Alphanumerics and hyphens. Start with letter. End with letter or digit.
+    #             Can't contain consecutive hyphens. Globally unique.
+    kv_name = ''
+
+    # only allow alphanumeric and hyphens
+    for l in name_prefix.strip().strip('-'):
+        if l.isalnum() or l == '-':
+            kv_name = kv_name + l
+
+    # ensure first char is alpha
+    while not kv_name[0].isalpha():
+        kv_name = kv_name[1:]
+
+    # ensure no consecutive hyphens
+    while '--' in kv_name:
+        kv_name = kv_name.replace('--', '-')
+
+    kv_name_len = len(kv_name)
+    kv_name = f'{kv_name}-kv' if kv_name_len <= 21 \
+        else f'{kv_name}kv' if kv_name_len <= 22 \
+        else kv_name if kv_name_len <= 24 \
+        else kv_name[:24]
+
+    # ensure last char is alpha or num
+    while not kv_name[-1].isalnum():
+        kv_name = kv_name[:-1]
+
+    return _check_keyvault_name_availability(cmd, kv_name)
+
+
+def _get_sandbox_storage_name(cmd, name_prefix):
+    # ex. contosoimagesstorage
+    # req: (3-24) Lowercase letters and numbers only. Globally unique.
+    storage_name = ''
+
+    # only allow lowercase alphanumeric
+    for l in name_prefix.strip().lower():
+        if l.isalnum():
+            storage_name = storage_name + l
+
+    storage_name_len = len(storage_name)
+    storage_name = f'{storage_name}storage' if storage_name_len <= 17 \
+        else f'{storage_name}store' if storage_name_len <= 19 \
+        else f'{storage_name}stor' if storage_name_len <= 20 \
+        else storage_name if storage_name_len <= 24 \
+        else storage_name[:24]
+
+    return _check_storage_account_name_availability(cmd, storage_name)
+
+
+def _get_sandbox_vnet_name(cmd, name_prefix):
+    # ex. contoso-images-vnet
+    # req: (2-64) Alphanumerics, underscores, periods, and hyphens. Start with alphanumeric.
+    #             End alphanumeric or underscore. Resource Group unique.
+    vnet_name = ''
+
+    # only allow alphanumeric, underscore, period, and hyphen
+    for l in name_prefix.strip():
+        if l.isalnum() or l == '_' or l == '.' or l == '-':
+            vnet_name = vnet_name + l
+
+    # ensure first char is alphanumeric
+    while not vnet_name[0].isalpha():
+        vnet_name = vnet_name[1:]
+
+    vnet_name_len = len(vnet_name)
+
+    vnet_name = f'{vnet_name}-vnet' if vnet_name_len <= 59 \
+        else vnet_name if vnet_name_len <= 64 \
+        else vnet_name[:64]
+
+    # ensure last char is alphanumeric or underscore
+    while not vnet_name[-1].isalnum() and vnet_name[-1] != '_':
+        vnet_name = vnet_name[:-1]
+
+    return vnet_name
+
+
+def _get_sandbox_identity_name(cmd, name_prefix):
+    # ex. contoso-images-id
+    # req: (3-128) Alphanumerics, underscores, and hyphens. Start with alphanumeric. Resource Group unique.
+    identity_name = ''
+
+    # only allow alphanumeric, underscore, and hyphen
+    for l in name_prefix.strip():
+        if l.isalnum() or l == '_' or l == '-':
+            identity_name = identity_name + l
+
+    # ensure first char is alphanumeric
+    while not identity_name[0].isalpha():
+        identity_name = identity_name[1:]
+
+    identity_name_len = len(identity_name)
+
+    identity_name = f'{identity_name}-id' if identity_name_len <= 125 \
+        else identity_name if identity_name_len <= 128 \
+        else identity_name[:128]
+
+    return identity_name
+
+
+def get_sandbox_resource_names(cmd, name_prefix):
+    kv_name = _get_sandbox_keyvault_name(cmd, name_prefix)
+    storage_name = _get_sandbox_storage_name(cmd, name_prefix)
+    vnet_name = _get_sandbox_vnet_name(cmd, name_prefix)
+    identity_name = _get_sandbox_identity_name(cmd, name_prefix)
+
+    return {
+        'keyvault': kv_name,
+        'storage': storage_name,
+        'vnet': vnet_name,
+        'identity': identity_name
+    }

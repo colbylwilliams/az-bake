@@ -26,7 +26,7 @@ from ._github import (get_github_latest_release_version, get_github_release,
 from ._packer import (check_packer_install, copy_packer_files,
                       inject_choco_provisioners, inject_winget_provisioners,
                       packer_execute, save_packer_vars_file)
-from ._sandbox import get_builder_subnet_id
+from ._sandbox import get_builder_subnet_id, get_sandbox_resource_names
 from ._utils import (get_choco_package_config, get_install_choco_dict,
                      get_install_winget, get_logger)
 
@@ -123,9 +123,6 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
 
 def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None, gallery=None, images=None,
               repository_url=None, repository_token=None, repository_revision=None, repo=None):
-    # from azure.cli.command_modules.resource._bicep import \
-    #     ensure_bicep_installation
-    # ensure_bicep_installation()
 
     hook = cmd.cli_ctx.get_progress_controller()
     hook.begin()
@@ -215,7 +212,7 @@ def bake_repo_validate(cmd, repository_path, sandbox=None, gallery=None, images=
     return
 
 
-def bake_repo_setup(cmd, repository_path, sandbox_resource_group_name, gallery_resource_id, sandbox=None, gallery=None):
+def bake_repo_setup(cmd, sandbox_resource_group_name, gallery_resource_id, repository_path='./', sandbox=None, gallery=None):
     logger.info('Setting up repository')
     _bake_yaml_export(sandbox=sandbox, gallery=gallery, outdir=repository_path)
 
@@ -238,6 +235,8 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
                         version=None, prerelease=False, templates_url=None, template_file=None):
 
     # TODO: check if principal_id is provided, if not create and use msi
+
+    sb_names = get_sandbox_resource_names(cmd, name_prefix)
 
     hook = cmd.cli_ctx.get_progress_controller()
     hook.begin()
@@ -268,7 +267,11 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
 
     params = []
     params.append(f'location={location}')
-    params.append(f'baseName={name_prefix}')
+    params.append(f'keyVaultName={sb_names["keyvault"]}')
+    params.append(f'storageName={sb_names["storage"]}')
+    params.append(f'vnetName={sb_names["vnet"]}')
+    params.append(f'identityName={sb_names["identity"]}')
+
     params.append('vnetAddressPrefixes={}'.format(json.dumps([vnet_address_prefix])))
     params.append(f'defaultSubnetName={default_subnet_name}')
     params.append(f'defaultSubnetAddressPrefix={default_subnet_address_prefix}')
@@ -288,8 +291,8 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
                                                                 template_file=template_file, template_uri=template_uri,
                                                                 parameters=[params])
     logger.info(f'Finished deploying sandbox')
-    logger.warning(f'Successfully deployed sandbox environment')
-    logger.warning(f'You can configure it as your default sandbox using `az configure --defaults bake-sandbox={sandbox_resource_group_name}`')
+    print(f'Successfully deployed sandbox environment')
+    print(f'You can configure it as your default sandbox using `az configure --defaults bake-sandbox={sandbox_resource_group_name}`')
 
     hook.end(message=' ')
 
@@ -322,7 +325,7 @@ def bake_image(cmd, image_path, sandbox_resource_group_name=None, bake_yaml=None
 
 
 # def bake_image_create(cmd, repository_path, outfile='./image.yml', outdir=None, stdout=False):
-def bake_image_create(cmd, image_name, repository_path):
+def bake_image_create(cmd, image_name, repository_path='./'):
     logger.info('Creating image.yml file')
 
     image_obj = {

@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.1.8
+++++++
++ Generate sandbox resource names in CLI
+
 0.1.7
 ++++++
 + Bug fixes and minor improvements.

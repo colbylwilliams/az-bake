@@ -167,7 +167,6 @@ DEFAULT_TAGS = {
     tag_key('cli-version'),
     tag_key('sandbox-version'),
     tag_key('sandbox-prerelease'),
-    tag_key('baseName'),
     tag_key('buildResourceGroup'),
     tag_key('keyVault'),
     tag_key('virtualNetwork'),
@@ -278,14 +277,13 @@ on:
   workflow_dispatch: # allow workflow to be manually triggered
   push:
     branches: [main]
-    # uncomment to bake images only when a file in the images folder is changed
-    # paths:
-    # - 'images/**'
+    paths: # only run when bake.yml or image definitions change
+    - 'bake.yml'
+    - 'images/**'
 
 jobs:
   bake:
     name: Bake Images
-    # runs-on: windows-latest
     runs-on: ubuntu-latest
 
     # uncomment to bake images only if '+bake' is in the commit message
