@@ -308,3 +308,30 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: az bake repo --verbose --repo .
     '''
+
+
+BAKE_YAML_SCHEMA = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json'
+IMAGE_YAML_SCHEMA = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/image.schema.json'
+
+
+IMAGE_YAML_COMMENTS = '''#  Required properties: (some may also be set in the images section of the bake.yaml file)
+#
+# - publisher: (string)
+#       The name of the gallery image definition publisher.
+# - offer: (string)
+#       The name of the gallery image definition offer
+# - replicaLocations: (array using - notation)
+#       The target regions where the Image Version is going to be replicated to
+# - sku: (string)
+#       The name of the gallery image definition SKU
+# - version: (string)
+#       Version number for the image (ex. 1.0.0)
+# - os: (string)
+#       Windows or Linux.  For Dev Box, only Windows is supported
+
+#  Optional properties: (may also be set in the images section of the bake.yaml file)
+#
+# - description: (string)
+#       The description of this gallery image definition resource
+
+'''

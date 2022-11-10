@@ -17,7 +17,8 @@ from packaging.version import parse
 from ._arm import (create_image_definition, create_resource_group, deploy_arm_template_at_resource_group,
                    ensure_gallery_permissions, get_arm_output, get_gallery, get_image_definition,
                    get_resource_group_by_name, image_version_exists)
-from ._constants import GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR, GITHUB_WORKFLOW_FILE, IN_BUILDER
+from ._constants import (BAKE_YAML_SCHEMA, GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR, GITHUB_WORKFLOW_FILE,
+                         IMAGE_YAML_SCHEMA, IN_BUILDER)
 from ._github import get_github_latest_release_version, get_github_release, get_release_templates, get_template_url
 from ._packer import (check_packer_install, copy_packer_files, inject_choco_provisioners, inject_winget_provisioners,
                       packer_execute, save_packer_vars_file)
@@ -27,26 +28,15 @@ from ._utils import get_choco_package_config, get_install_choco_dict, get_instal
 logger = get_logger(__name__)
 
 
-# def bake_test(cmd):
-#     from ._github import get_github_release
-#     foo = get_github_release(prerelease=True)
-#     return foo['tag_name']
-
 def _bake_yaml_export(sandbox=None, gallery=None, images=None, outfile=None, outdir=None, stdout=False):
     logger.info('Exporting bake.yaml file')
 
-    bake_obj = {
-        'version': 1.0,
-        'sandbox': sandbox,
-        'gallery': gallery
-    }
+    bake_obj = {'version': 1.0, 'sandbox': sandbox, 'gallery': gallery}
 
     if images:
         bake_obj['images'] = images
 
-    yaml_schema = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json\n'
-
-    yaml_str = yaml_schema + yaml.safe_dump(bake_obj, default_flow_style=False, sort_keys=False)
+    yaml_str = f'{BAKE_YAML_SCHEMA}\n' + yaml.safe_dump(bake_obj, default_flow_style=False, sort_keys=False)
 
     if stdout:
         print(yaml_str)
@@ -179,9 +169,7 @@ def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None,
                 summary = [
                     f'## Building {image["name"]}',
                     f'You can check the progress of the packer build:',
-                    f'- Azure CLI: `{logs}`',
-                    f'- Azure Portal: {portal}',
-                    ''
+                    f'- Azure CLI: `{logs}`', f'- Azure Portal: {portal}', ''
                 ]
                 with open(github_step_summary, 'a+') as f:
                     f.write('\n'.join(summary))
@@ -332,16 +320,12 @@ def bake_image_create(cmd, image_name, repository_path='./'):
         },
         'install': {
             'choco': {
-                'packages': [
-                    'git',
-                    'googlechrome',
-                ]
+                'packages': ['git', 'googlechrome', ]
             }
         }
     }
 
-    yaml_schema = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/image.schema.json\n'
-    yaml_str = yaml_schema + yaml.safe_dump(image_obj, default_flow_style=False, sort_keys=False)
+    yaml_str = f'{IMAGE_YAML_SCHEMA}\n' + yaml.safe_dump(image_obj, default_flow_style=False, sort_keys=False)
 
     image_dir = repository_path / 'images' / image_name
     if image_dir.exists():
