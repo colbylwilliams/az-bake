@@ -2,6 +2,28 @@
 
 Microsoft Azure CLI Custom Image 'az bake' Extension adds support for creating (or _"baking"_) custom VM images.
 
+## Install
+
+To install the Azure CLI Custom Image Helper extension, simply run the following command:
+
+```sh
+az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.1.9-py3-none-any.whl -y
+```
+
+### Update
+
+To update Azure CLI DevCenter Helper extension to the latest version:
+
+```sh
+az bake upgrade
+```
+
+or for the latest pre-release version:
+
+```sh
+az bake upgrade --pre
+```
+
 ## Quickstart
 
 #### 1. [Install](#install) the `az bake` Azure CLI extension
@@ -43,28 +65,6 @@ Each sandbox includes a:
 - [User-assigned Managed Identity][azure-identities] that is assigned to the ACI containers executing Packer and the temporary VMs. This identity will also require the [Contributor][azure-roles-contributor] role on the resource group that contains the [Azure Compute Gallery][azure-compute-gallery] where your custom images will be published.
 
 ![sandbox](docs/sandbox.png)
-
-## Install
-
-To install the Azure CLI Custom Image Helper extension, simply run the following command:
-
-```sh
-az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.1.9-py3-none-any.whl -y
-```
-
-### Update
-
-To update Azure CLI DevCenter Helper extension to the latest version:
-
-```sh
-az bake upgrade
-```
-
-or for the latest pre-release version:
-
-```sh
-az bake upgrade --pre
-```
 
 ## Commands
 

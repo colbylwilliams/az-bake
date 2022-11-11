@@ -2,8 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
-# pylint: disable=logging-fstring-interpolation
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, logging-fstring-interpolation
 
 import json
 import os
@@ -299,7 +298,6 @@ def bake_image(cmd, image_path, sandbox_resource_group_name=None, bake_yaml=None
     raise CLIError('Not implemented')
 
 
-# def bake_image_create(cmd, repository_path, outfile='./image.yml', outdir=None, stdout=False):
 def bake_image_create(cmd, image_name, repository_path='./'):
     logger.info('Creating image.yml file')
 
@@ -347,9 +345,10 @@ def bake_image_create(cmd, image_name, repository_path='./'):
 def bake_version(cmd):
     ext = show_extension('bake')
     current_version = 'v' + ext['version']
+    is_dev = 'extensionType' in ext and ext['extensionType'] == 'dev'
     logger.info(f'Current version: {current_version}')
     current_version_parsed = parse(current_version)
-    print(f'az bake version: {current_version}')
+    print(f'az bake version: {current_version}{" (dev)" if is_dev else ""}')
 
     latest_version = get_github_latest_release_version()
     logger.info(f'Latest version: {latest_version}')
