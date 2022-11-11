@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.1.11
+++++++
++ Add update param  to image.yml
+
 0.1.10
 ++++++
 + Add image logs command

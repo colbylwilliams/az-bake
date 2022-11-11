@@ -55,6 +55,11 @@
                 "type": "string"
             }
         },
+        "update": {
+            "type": "boolean",
+            "description": "Whether or not to run os updates.",
+            "default": true
+        },
         "base": {
             "type": "object",
             "description": "The base image to use for this image.",

@@ -369,6 +369,9 @@ def image_yaml_validator(cmd, ns, image=None):
         else:
             raise ValidationError(f'Image base is required for non-Windows images')
 
+    if 'update' not in image:
+        image['update'] = True
+
     if hasattr(ns, 'image'):
         ns.image = image
 

@@ -14,8 +14,8 @@ from pathlib import Path
 from azure.cli.core.azclierror import ValidationError
 
 from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
-                         PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO, PKR_PROVISIONER_WINGET_INSTALL, PKR_VARS_FILE,
-                         WINGET_SETTINGS_FILE, WINGET_SETTINGS_JSON)
+                         PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO, PKR_PROVISIONER_UPDATE,
+                         PKR_PROVISIONER_WINGET_INSTALL, PKR_VARS_FILE, WINGET_SETTINGS_FILE, WINGET_SETTINGS_JSON)
 from ._utils import get_logger, get_templates_path
 
 logger = get_logger(__name__)
@@ -159,6 +159,11 @@ def copy_packer_files(image_dir):
     else:
         shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
         return True
+
+
+def inject_update_provisioner(image_dir):
+    '''Injects the update provisioner into the packer build file'''
+    _inject_provisioner(image_dir, PKR_PROVISIONER_UPDATE)
 
 
 def inject_choco_provisioners(image_dir, config_xml):

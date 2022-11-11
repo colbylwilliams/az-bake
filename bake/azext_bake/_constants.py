@@ -94,7 +94,8 @@ IMAGE_REQUIRED_PROPERTIES = IMAGE_COMMON_ALLOWED_PROPERTIES + [
 IMAGE_ALLOWED_PROPERTIES = IMAGE_REQUIRED_PROPERTIES + [
     'description',
     'install',
-    'base'
+    'base',
+    'update'
 ]
 
 IMAGE_INSTALL_PROPERTIES = {
@@ -180,6 +181,13 @@ DEFAULT_TAGS = {
 }
 
 CHOCO_PACKAGES_CONFIG_FILE = 'packages.config'
+
+PKR_PROVISIONER_UPDATE = f'''
+  # Injected by az bake
+  # https://github.com/rgl/packer-plugin-windows-update
+  provisioner "windows-update" {{
+  }}
+  {BAKE_PLACEHOLDER}'''
 
 PKR_PROVISIONER_CHOCO = f'''
   # Injected by az bake

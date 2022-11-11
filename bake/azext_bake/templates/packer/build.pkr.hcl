@@ -1,12 +1,12 @@
-// packer {
-//   required_plugins {
-//     # https://github.com/rgl/packer-plugin-windows-update
-//     windows-update = {
-//       version = "0.14.1"
-//       source  = "github.com/rgl/windows-update"
-//     }
-//   }
-// }
+packer {
+  required_plugins {
+    # https://github.com/rgl/packer-plugin-windows-update
+    windows-update = {
+      version = "0.14.1"
+      source  = "github.com/rgl/windows-update"
+    }
+  }
+}
 
 # https://www.packer.io/plugins/builders/azure/arm
 source "azure-arm" "vm" {
@@ -73,10 +73,6 @@ build {
     restart_timeout = "30m"
     pause_before    = "2m"
   }
-
-  # https://github.com/rgl/packer-plugin-windows-update
-  # provisioner "windows-update" {
-  # }
   ###BAKE###
 
   # Disable Auto-Logon that was enabled above
