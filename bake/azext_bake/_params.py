@@ -141,6 +141,11 @@ def load_arguments(self, _):
         # c.argument('outdir', yaml_outdir_type)
         # c.argument('stdout', yaml_stdout_type)
 
+    with self.argument_context('bake image logs') as c:
+        c.argument('image_name', options_list=['--name', '-n'], help='Name of the image to create.')
+        c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
+        c.ignore('sandbox')
+
     with self.argument_context('bake yaml export') as c:
         c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
         c.argument('gallery_resource_id', gallery_resource_id_type)

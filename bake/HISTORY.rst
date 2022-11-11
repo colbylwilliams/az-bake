@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.1.10
+++++++
++ Add image logs command
+
 0.1.9
 ++++++
 + Bug fixes and minor improvements.

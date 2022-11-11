@@ -72,6 +72,16 @@ def cf_user_identities(cli_ctx, _):
     return cf_msi(cli_ctx).user_assigned_identities
 
 
+def cf_container(cli_ctx, *_):
+    from azure.mgmt.containerinstance import ContainerInstanceManagementClient
+    return get_mgmt_service_client(cli_ctx, ContainerInstanceManagementClient).containers
+
+
+def cf_container_groups(cli_ctx, *_):
+    from azure.mgmt.containerinstance import ContainerInstanceManagementClient
+    return get_mgmt_service_client(cli_ctx, ContainerInstanceManagementClient).container_groups
+
+
 # def _msi_operations_operations(cli_ctx, _):
 #     return cf_msi(cli_ctx).operations
 

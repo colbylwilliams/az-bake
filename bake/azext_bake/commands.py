@@ -39,6 +39,7 @@ def load_command_table(self, _):  # pylint: disable=too-many-statements
 
     with self.command_group('bake image') as g:
         g.custom_command('create', 'bake_image_create')
+        g.custom_command('logs', 'bake_image_logs')
 
     with self.command_group('bake _builder') as g:
         g.custom_command('build', 'bake_builder_build', validator=builder_validator)

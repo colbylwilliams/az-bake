@@ -16,6 +16,7 @@ from packaging.version import parse
 from ._arm import (create_image_definition, create_resource_group, deploy_arm_template_at_resource_group,
                    ensure_gallery_permissions, get_arm_output, get_gallery, get_image_definition,
                    get_resource_group_by_name, image_version_exists)
+from ._client_factory import cf_container, cf_container_groups
 from ._constants import (BAKE_YAML_SCHEMA, GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR, GITHUB_WORKFLOW_FILE,
                          IMAGE_YAML_SCHEMA, IN_BUILDER)
 from ._github import get_github_latest_release_version, get_github_release, get_release_templates, get_template_url
@@ -340,6 +341,17 @@ def bake_image_create(cmd, image_name, repository_path='./'):
     logger.warning(f'The image was generated with default values. You should review the file and make any necessary changes.')
 
     return
+
+
+def bake_image_logs(cmd, sandbox_resource_group_name, image_name, sandbox=None):
+    container_client = cf_container(cmd.cli_ctx)
+    container_group_client = cf_container_groups(cmd.cli_ctx)
+    container_group = container_group_client.get(sandbox['resourceGroup'], image_name)
+
+    # we only have one container in the group
+    container_name = container_group.containers[0].name
+    log = container_client.list_logs(sandbox['resourceGroup'], image_name, container_name)
+    print(log.content)
 
 
 def bake_version(cmd):

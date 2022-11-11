@@ -7,7 +7,7 @@ Microsoft Azure CLI Custom Image 'az bake' Extension adds support for creating (
 To install the Azure CLI Custom Image Helper extension, simply run the following command:
 
 ```sh
-az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.1.9-py3-none-any.whl -y
+az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.1.10-py3-none-any.whl -y
 ```
 
 ### Update
