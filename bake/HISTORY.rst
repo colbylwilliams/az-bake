@@ -3,6 +3,12 @@
 Release History
 ===============
 
+0.1.12
+++++++
++ Style and linter fixes
+* Removed bake yaml validate for now
+* Added help for several commands
+
 0.1.11
 ++++++
 + Add update param  to image.yml

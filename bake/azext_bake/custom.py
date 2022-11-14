@@ -114,8 +114,8 @@ def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=
 # bake repo
 # ----------------
 
-def bake_repo(cmd, repository_path, is_ci=False, image_names=None, sandbox=None, gallery=None, images=None,
-              repository_url=None, repository_token=None, repository_revision=None, repo=None):
+def bake_repo_build(cmd, repository_path, is_ci=False, image_names=None, sandbox=None, gallery=None, images=None,
+                    repository_url=None, repository_token=None, repository_revision=None, repo=None):
 
     hook = cmd.cli_ctx.get_progress_controller()
     hook.begin()
@@ -282,9 +282,9 @@ def bake_yaml_export(cmd, sandbox_resource_group_name, gallery_resource_id, sand
     _bake_yaml_export(sandbox=sandbox, gallery=gallery, images=images, outfile=outfile, outdir=outdir, stdout=stdout)
 
 
-def bake_yaml_validate(cmd):
-    logger.info('Validating bake.yaml file')
-    print('bake.yaml is valid')
+# def bake_yaml_validate(cmd):
+#     logger.info('Validating bake.yaml file')
+#     print('bake.yaml is valid')
 
 
 # ----------------

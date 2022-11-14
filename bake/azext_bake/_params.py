@@ -26,7 +26,7 @@ def load_arguments(self, _):
     # )
 
     sandbox_resource_group_name_type = CLIArgumentType(
-        options_list=['--sandbox', '-sb', '-g'], configured_default='bake-sandbox',
+        options_list=['--sandbox', '-s', '-g'], configured_default='bake-sandbox',
         completer=get_resource_group_completion_list, validator=sandbox_resource_group_name_validator,
         help='Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`'
     )
@@ -102,7 +102,15 @@ def load_arguments(self, _):
             c.ignore('sandbox')
             c.ignore('gallery')
 
-    with self.argument_context('bake repo') as c:  # uses command level validator, param validators are ignored
+    for scope in ['bake repo validate', 'bake validate repo']:
+        with self.argument_context(scope) as c:
+            c.argument('repository_path', options_list=['--repo-path', '--repo'], type=file_type, default='./',
+                       validator=repository_path_validator, help='Path to the locally cloned repository.')
+            c.ignore('sandbox')
+            c.ignore('gallery')
+            c.ignore('images')
+
+    with self.argument_context('bake repo build') as c:  # uses command level validator, param validators are ignored
         c.argument('repository_path', options_list=['--repo-path', '--repo', '-r'], type=file_type,
                    help='Path to the locally cloned repository.')
         c.argument('image_names', options_list=['--images', '-i'], nargs='*',

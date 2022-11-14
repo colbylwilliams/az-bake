@@ -7,34 +7,6 @@
 from knack.help_files import helps  # pylint: disable=unused-import
 
 # ----------------
-# bake version
-# bake upgrade
-# ----------------
-
-helps['bake'] = """
-type: group
-short-summary: Utilities for common or dev center tasks.
-"""
-
-helps['bake version'] = """
-type: command
-short-summary: Show the version of the bake extension.
-"""
-
-helps['bake upgrade'] = """
-type: command
-short-summary: Update bake cli extension.
-examples:
-  - name: Update bake cli extension to the latest stable release.
-    text: az bake upgrade
-  - name: Update bake cli extension to the latest pre-release.
-    text: az bake upgrade --pre
-  - name: Update bake cli extension a specific version.
-    text: az bake upgrade --version 0.1.0
-"""
-
-
-# ----------------
 # bake sandbox
 # ----------------
 
@@ -73,12 +45,12 @@ type: group
 short-summary: Configure, validate, and bake images in a repo.
 """
 
-helps['bake repo'] = """
+helps['bake repo build'] = """
 type: command
 short-summary: Bake images defined in a repo (usually run in CI).
 examples:
   - name: Build all the images in a repo.
-    text: az bake repo --repo .
+    text: az bake repo build --repo .
 """
 
 helps['bake repo setup'] = """
@@ -112,7 +84,15 @@ type: command
 short-summary: Create an image.
 examples:
   - name: Create an image.yml file.
-    text: az bake image create ---nameame myImage
+    text: az bake image create --name myImage
+"""
+
+helps['bake image logs'] = """
+type: command
+short-summary: Get the logs for an image.
+examples:
+  - name: Get the logs for an image.
+    text: az bake image logs --sandbox mySandbox --name myImage
 """
 
 
@@ -137,13 +117,13 @@ examples:
     text: az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
 """
 
-helps['bake yaml validate'] = """
-type: command
-short-summary: Validate a bake.yaml file.
-examples:
-  - name: Validate a bake.yaml file.
-    text: az bake yaml validate -f ./bake.yaml
-"""
+# helps['bake yaml validate'] = """
+# type: command
+# short-summary: Validate a bake.yaml file.
+# examples:
+#   - name: Validate a bake.yaml file.
+#     text: az bake yaml validate -f ./bake.yaml
+# """
 
 
 # ----------------
@@ -155,6 +135,10 @@ type: group
 short-summary: Should not be used directly (used by packer image).
 """
 
+helps['bake _builder build'] = """
+type: command
+short-summary: Should not be used directly (used by packer image).
+"""
 
 # ----------------
 # bake validate
@@ -181,13 +165,38 @@ examples:
     text: az bake validate repo --repo .
 """
 
-helps['bake validate yaml'] = """
-type: command
-short-summary: Validate a bake.yaml file. This is the same as running 'az bake yaml validate'.
-examples:
-  - name: Validate a bake.yaml file.
-    text: az bake validate yaml -f ./bake.yaml
+# helps['bake validate yaml'] = """
+# type: command
+# short-summary: Validate a bake.yaml file. This is the same as running 'az bake yaml validate'.
+# examples:
+#   - name: Validate a bake.yaml file.
+#     text: az bake validate yaml -f ./bake.yaml
+# """
+
+
+# ----------------
+# bake version
+# bake upgrade
+# ----------------
+
+helps['bake'] = """
+type: group
+short-summary: Utilities for common or dev center tasks.
 """
 
+helps['bake version'] = """
+type: command
+short-summary: Show the version of the bake extension.
+"""
 
-# gh secret set AZURE_TENANT_ID -R colbylwilliams/az-bake-tests -b
+helps['bake upgrade'] = """
+type: command
+short-summary: Update bake cli extension.
+examples:
+  - name: Update bake cli extension to the latest stable release.
+    text: az bake upgrade
+  - name: Update bake cli extension to the latest pre-release.
+    text: az bake upgrade --pre
+  - name: Update bake cli extension a specific version.
+    text: az bake upgrade --version 0.1.0
+"""

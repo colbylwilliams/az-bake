@@ -67,7 +67,7 @@ def process_bake_image_namespace(cmd, ns):
     # image_yaml_validator(cmd, ns, common=common)
 
 
-def process_bake_repo_namespace(cmd, ns):
+def process_bake_repo_build_namespace(cmd, ns):
     # if hasattr(ns, 'sandbox_resource_group_name') and ns.sandbox_resource_group_name \
     #     and hasattr(ns, 'gallery_resource_id') and ns.gallery_resource_id:
 

@@ -27,11 +27,11 @@ pushd $tcdir > /dev/null
     echo ""
 
     echo "Running Linter on bake extension source"
-    # azdev linter bake
+    azdev linter bake
     echo ""
 
     echo "Running Style Checks on bake extension source"
-    # azdev style bake
+    azdev style bake
     echo ""
 
     echo "Building bake extension"
