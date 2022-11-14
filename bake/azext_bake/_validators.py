@@ -208,6 +208,7 @@ def repository_images_validator(cmd, ns):
 
 
 def repository_path_validator(cmd, ns):
+    '''Ensure the repository path is valid, transforms to a path object, and validates a .git directory exists'''
     if not ns.repository_path:
         raise RequiredArgumentMissingError('--repository-path/-r is required')
 

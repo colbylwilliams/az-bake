@@ -141,7 +141,7 @@ def packer_execute(image):
 
 
 def copy_packer_files(image_dir):
-    '''Copies the packer files from the bake templates to the image directory'''
+    '''Copies the packer files from the bake templates to the image directory unless they already exist'''
     logger.info(f'Copying packer files to {image_dir}')
     templates_dir = get_templates_path('packer')
 

@@ -375,6 +375,8 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
         logger.info('Not in builder. Skipping login.')
 
     gallery_res = get_gallery(cmd, gallery['resourceGroup'], gallery['name'])
+    if not gallery_res:
+        raise CLIError(f'Could not find gallery {gallery["name"]} in resource group {gallery["resourceGroup"]}')
 
     definition = get_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'])
     if not definition:
@@ -386,10 +388,10 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
 
     logger.info(f'Image version {image["version"]} does not exist.')
 
-    if 'update' in image and image['update']:
-        inject_update_provisioner(image['dir'])
-
     if copy_packer_files(image['dir']):
+        if 'update' in image and image['update']:
+            inject_update_provisioner(image['dir'])
+
         choco_install = get_install_choco_dict(image)
         if choco_install:
             choco_config = get_choco_package_config(choco_install)

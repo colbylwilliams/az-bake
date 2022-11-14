@@ -318,6 +318,40 @@ jobs:
         run: az bake repo build --verbose --repo .
     '''
 
+DEVOPS_PIPELINE_FILE = 'azure-pipelines.yml'
+DEVOPS_PIPELINE_DIR = '.azure'
+DEVOPS_PIPELINE_CONTENT = '''name: Bake Images
+
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+# stages:
+#   - stage: Bake Images
+#     jobs:
+#     - job: bakeImages
+#       displayName: Bake Images
+steps:
+  - displayName: Login to Azure
+    env:
+      AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+      AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+      AZURE_TENANT_ID: $(AZURE_TENANT_ID)
+    bash: az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+
+  - displayName: Install az bake # get the latest version of az bake from the github releases and install it
+    bash: |
+      gh release download --dir $AGENT_TEMPDIRECTORY --repo github.com/colbylwilliams/az-bake --pattern index.json
+      az extension add --yes --source $(jq -r '.extensions.bake[0].downloadUrl' $AGENT_TEMPDIRECTORY/index.json)
+
+  - displayName: Run az bake
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    bash: az bake repo build --verbose --repo .
+'''
+
 
 BAKE_YAML_SCHEMA = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/bake.schema.json'
 IMAGE_YAML_SCHEMA = '# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/image.schema.json'
