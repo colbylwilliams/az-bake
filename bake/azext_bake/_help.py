@@ -117,14 +117,6 @@ examples:
     text: az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
 """
 
-# helps['bake yaml validate'] = """
-# type: command
-# short-summary: Validate a bake.yaml file.
-# examples:
-#   - name: Validate a bake.yaml file.
-#     text: az bake yaml validate -f ./bake.yaml
-# """
-
 
 # ----------------
 # bake _builder
@@ -164,14 +156,6 @@ examples:
   - name: Validate a repo.
     text: az bake validate repo --repo .
 """
-
-# helps['bake validate yaml'] = """
-# type: command
-# short-summary: Validate a bake.yaml file. This is the same as running 'az bake yaml validate'.
-# examples:
-#   - name: Validate a bake.yaml file.
-#     text: az bake validate yaml -f ./bake.yaml
-# """
 
 
 # ----------------

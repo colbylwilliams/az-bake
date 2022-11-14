@@ -173,7 +173,7 @@ def repository_images_validator(cmd, ns):
     if not ns.repository_path:
         raise RequiredArgumentMissingError('--repository-path/-r is required')
 
-    images_path = _validate_dir_path(ns.repository_path/'images', name='images')
+    images_path = _validate_dir_path(ns.repository_path / 'images', name='images')
 
     image_dirs = []
     image_names = []

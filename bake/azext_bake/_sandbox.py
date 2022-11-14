@@ -185,9 +185,9 @@ def _get_sandbox_keyvault_name(cmd, name_prefix):
     kv_name = ''
 
     # only allow alphanumeric and hyphens
-    for l in name_prefix.strip().strip('-'):
-        if l.isalnum() or l == '-':
-            kv_name = kv_name + l
+    for char in name_prefix.strip().strip('-'):
+        if char.isalnum() or char == '-':
+            kv_name = kv_name + char
 
     # ensure first char is alpha
     while not kv_name[0].isalpha():
@@ -216,9 +216,9 @@ def _get_sandbox_storage_name(cmd, name_prefix):
     storage_name = ''
 
     # only allow lowercase alphanumeric
-    for l in name_prefix.strip().lower():
-        if l.isalnum():
-            storage_name = storage_name + l
+    for char in name_prefix.strip().lower():
+        if char.isalnum():
+            storage_name = storage_name + char
 
     storage_name_len = len(storage_name)
     storage_name = f'{storage_name}storage' if storage_name_len <= 17 \
@@ -237,9 +237,9 @@ def _get_sandbox_vnet_name(cmd, name_prefix):  # pylint: disable=unused-argument
     vnet_name = ''
 
     # only allow alphanumeric, underscore, period, and hyphen
-    for l in name_prefix.strip():
-        if l.isalnum() or l == '_' or l == '.' or l == '-':
-            vnet_name = vnet_name + l
+    for char in name_prefix.strip():
+        if char.isalnum() or char == '_' or char == '.' or char == '-':
+            vnet_name = vnet_name + char
 
     # ensure first char is alphanumeric
     while not vnet_name[0].isalpha():
@@ -264,9 +264,9 @@ def _get_sandbox_identity_name(cmd, name_prefix):  # pylint: disable=unused-argu
     identity_name = ''
 
     # only allow alphanumeric, underscore, and hyphen
-    for l in name_prefix.strip():
-        if l.isalnum() or l == '_' or l == '-':
-            identity_name = identity_name + l
+    for char in name_prefix.strip():
+        if char.isalnum() or char == '_' or char == '-':
+            identity_name = identity_name + char
 
     # ensure first char is alphanumeric
     while not identity_name[0].isalpha():

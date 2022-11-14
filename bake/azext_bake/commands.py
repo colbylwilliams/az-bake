@@ -14,6 +14,7 @@ def load_command_table(self, _):  # pylint: disable=too-many-statements
         pass
 
     with self.command_group('bake') as g:
+        # g.custom_command('test', 'bake_tests')
         g.custom_command('version', 'bake_version')
         g.custom_command('upgrade', 'bake_upgrade')
         # g.custom_command('image', 'bake_image', validator=process_bake_image_namespace)

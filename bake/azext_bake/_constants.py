@@ -233,15 +233,14 @@ WINGET_SOURCE_DEST = 'C:/Windows/Temp/source.msix'
 WINGET_SETTINGS_PATH = 'C:/Users/packer/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json'
 
 # pylint: disable=f-string-without-interpolation
-WINGET_SETTINGS_JSON = f'''
-{{
+WINGET_SETTINGS_JSON = '''{
     "$schema": "https://aka.ms/winget-settings.schema.json",
-    "installBehavior": {{
-        "preferences": {{
+    "installBehavior": {
+        "preferences": {
             "scope": "machine"
-        }}
-    }}
-}}
+        }
+    }
+}
 '''
 
 PKR_PROVISIONER_WINGET_INSTALL = f'''

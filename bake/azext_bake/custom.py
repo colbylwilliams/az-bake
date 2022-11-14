@@ -28,6 +28,9 @@ from ._utils import get_choco_package_config, get_install_choco_dict, get_instal
 logger = get_logger(__name__)
 
 
+# def bake_tests(cmd):
+
+
 # ----------------
 # bake sandbox
 # ----------------
