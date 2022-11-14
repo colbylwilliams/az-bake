@@ -20,9 +20,9 @@ type: command
 short-summary: Create a sandbox.
 examples:
   - name: Create a sandbox.
-    text: az bake sandbox create --name mySandbox --gallery myGallery --principal ci-sp-id
+    text: az bake sandbox create -l eastus --name mySandbox --gallery myGallery --principal ci-sp-id
   - name: Create a sandbox with an existing resource group.
-    text: az bake sandbox create --sandbox mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
+    text: az bake sandbox create -l eastus --sandbox mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
 """
 
 helps['bake sandbox validate'] = """
