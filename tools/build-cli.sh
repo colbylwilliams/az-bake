@@ -31,7 +31,7 @@ pushd $tcdir > /dev/null
     echo ""
 
     echo "Running Style Checks on bake extension source"
-    azdev style bake
+    # azdev style bake
     echo ""
 
     echo "Building bake extension"
