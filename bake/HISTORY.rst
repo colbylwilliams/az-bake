@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.1.19
+++++++
++ Bug fixes and minor improvements.
+
 0.1.18
 ++++++
 + Add support for powershell scripts

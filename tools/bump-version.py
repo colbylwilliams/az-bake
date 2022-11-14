@@ -4,6 +4,7 @@
 # ------------------------------------
 
 import argparse
+
 from pathlib import Path
 from re import search
 
@@ -56,6 +57,7 @@ print('bumping version: {} -> {}'.format(version_old.public, version_new.public)
 fmt_setup = 'VERSION = \'{}\''
 fmt_readme = 'https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-{}-py3-none-any.whl'
 fmt_docker = 'https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-{}-py3-none-any.whl'
+fmt_consts = 'https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-{}-py3-none-any.whl'
 fmt_history = '{}\n++++++\n{}\n\n{}'
 
 
@@ -113,3 +115,17 @@ readme = readme.replace(fmt_readme.format(version_old.public), fmt_readme.format
 
 with open(path_root / 'README.md', 'w') as f:
     f.write(readme)
+
+
+print('..updating _constants.py')
+
+with open(path_bake / 'azext_bake' / '_constants.py', 'r') as f:
+    constants = f.read()
+
+if fmt_consts.format(version_old.public) not in constants:
+    raise ValueError('version string not found in _constants.py')
+
+constants = constants.replace(fmt_consts.format(version_old.public), fmt_consts.format(version_new.public))
+
+with open(path_bake / 'azext_bake' / '_constants.py', 'w') as f:
+    f.write(constants)
