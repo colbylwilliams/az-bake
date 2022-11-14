@@ -21,13 +21,20 @@ IN_BUILDER = os.environ.get(AZ_BAKE_IMAGE_BUILDER)
 IN_BUILDER = bool(IN_BUILDER)
 
 REPO_DIR = Path(AZ_BAKE_REPO_VOLUME) if IN_BUILDER else Path(__file__).resolve().parent.parent.parent
+# for dev
+# REPO_DIR = Path(AZ_BAKE_REPO_VOLUME) if IN_BUILDER else Path(os.getcwd()).resolve()
 STORAGE_DIR = Path(AZ_BAKE_STORAGE_VOLUME) if IN_BUILDER else REPO_DIR / '.local' / 'storage'
 
-OUTPUT_DIR = STORAGE_DIR / timestamp
+OUTPUT_DIR = STORAGE_DIR / (timestamp if IN_BUILDER else 'lastrun')
 
 if IN_BUILDER:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# for dev
+# if not IN_BUILDER and OUTPUT_DIR.exists():
+#     shutil.rmtree(OUTPUT_DIR)
+
+# OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 BAKE_PLACEHOLDER = '###BAKE###'
 

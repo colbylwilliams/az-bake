@@ -5,7 +5,6 @@
 # pylint: disable=logging-fstring-interpolation
 
 import json
-import os
 
 from pathlib import Path
 from xml.dom import minidom
@@ -23,7 +22,7 @@ def get_logger(name):
     '''Get the logger for the extension'''
     _logger = knack_get_logger(name)
 
-    if IN_BUILDER and os.path.isdir(STORAGE_DIR):
+    if IN_BUILDER and STORAGE_DIR.is_dir():
         import logging
         log_file = OUTPUT_DIR / 'builder.txt'
         formatter = logging.Formatter('{asctime} [{name:^28}] {levelname:<8}: {message}',

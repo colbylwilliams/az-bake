@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.1.17
+++++++
++ Bug fixes and minor improvements.
+
 0.1.16
 ++++++
 + Fix update inject bug
