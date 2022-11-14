@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
-# pylint: disable=unused-argument,
+# pylint: disable=line-too-long, logging-fstring-interpolation, unused-argument
 
 import ipaddress
 import os
@@ -39,7 +39,7 @@ def process_sandbox_create_namespace(cmd, ns):
 
     templates_version_validator(cmd, ns)
     if _none_or_empty(ns.vnet_address_prefix):
-        raise InvalidArgumentValueError(f'--vnet-address-prefix/--vnet-prefix must be a valid CIDR prefix')
+        raise InvalidArgumentValueError('--vnet-address-prefix/--vnet-prefix must be a valid CIDR prefix')
 
     for subnet in ['default', 'builders']:
         validate_subnet(cmd, ns, subnet, [ns.vnet_address_prefix])
@@ -183,7 +183,7 @@ def repository_images_validator(cmd, ns):
     all_images = not images or not isinstance(images, list) or len(images) == 0
 
     # walk the images directory and find all the child directories
-    for dirpath, dirnames, files in os.walk(images_path):
+    for dirpath, _, _ in os.walk(images_path):
         # os.walk includes the root directory (i.e. repo/images) so we need to skip it
         if not images_path.samefile(dirpath) and Path(dirpath).parent.samefile(images_path):
             image_dirs.append(Path(dirpath))
@@ -267,8 +267,8 @@ def validate_subnet(cmd, ns, subnet, vnet_prefixes):
     vnet_networks = [ipaddress.ip_network(p) for p in vnet_prefixes]
     if not all(any(h in n for n in vnet_networks) for h in ipaddress.ip_network(subnet_prefix_val).hosts()):
         raise InvalidArgumentValueError(
-            '{} {} is not within the vnet address space (prefixed: {})'.format(
-                subnet_prefix_option, subnet_prefix_val, ', '.join(vnet_prefixes)))
+            f'{subnet_prefix_option} {subnet_prefix_val} is not within the vnet address space '
+            f'(prefixed: {", ".join(vnet_prefixes)})')
 
 
 def bake_yaml_validator(cmd, ns):
@@ -295,15 +295,15 @@ def bake_yaml_content_validator(cmd, ns, path):
 
     _validate_object(bake_obj['file'], bake_obj, BAKE_PROPERTIES)
 
-    for key in BAKE_PROPERTIES:
+    for key, prop in BAKE_PROPERTIES.items():
         if key not in [KEY_REQUIRED, KEY_ALLOWED]:
-            _validate_object(bake_obj['file'], bake_obj[key], BAKE_PROPERTIES[key], parent_key=key)
+            _validate_object(bake_obj['file'], bake_obj[key], prop, parent_key=key)
 
     if not is_guid(bake_obj['sandbox']['subscription']):
-        raise ValidationError(f'sandbox.subscription is not a valid GUID')
+        raise ValidationError('sandbox.subscription is not a valid GUID')
 
     if not is_valid_resource_id(bake_obj['sandbox']['identityId']):
-        raise ValidationError(f'sandbox.identityId is not a valid resource ID')
+        raise ValidationError('sandbox.identityId is not a valid resource ID')
 
     if hasattr(ns, 'bake_obj'):
         ns.bake_obj = bake_obj
@@ -359,15 +359,15 @@ def image_yaml_validator(cmd, ns, image=None):
     logger.info(f'Validating image: {image["name"]}')
     _validate_object(image['file'], image, IMAGE_PROPERTIES)
 
-    for key in IMAGE_PROPERTIES:
+    for key, prop in IMAGE_PROPERTIES.items():
         if key not in [KEY_REQUIRED, KEY_ALLOWED] and key in image:
-            _validate_object(image['file'], image[key], IMAGE_PROPERTIES[key], parent_key=key)
+            _validate_object(image['file'], image[key], prop, parent_key=key)
 
     if 'base' not in image:
         if image['os'].lower() == 'windows':
             image['base'] = IMAGE_DEFAULT_BASE_WINDOWS
         else:
-            raise ValidationError(f'Image base is required for non-Windows images')
+            raise ValidationError('Image base is required for non-Windows images')
 
     if 'update' not in image:
         image['update'] = True

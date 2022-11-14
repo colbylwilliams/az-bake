@@ -7,7 +7,8 @@
 from knack.help_files import helps  # pylint: disable=unused-import
 
 # ----------------
-# bake
+# bake version
+# bake upgrade
 # ----------------
 
 helps['bake'] = """
@@ -32,6 +33,7 @@ examples:
     text: az bake upgrade --version 0.1.0
 """
 
+
 # ----------------
 # bake sandbox
 # ----------------
@@ -46,9 +48,9 @@ type: command
 short-summary: Create a sandbox.
 examples:
   - name: Create a sandbox.
-    text: az bake sandbox create -sb mySandbox -n myPrefix
-  - name: Create a sandbox and ensure the correct permisinos on a gallery.
-    text: az bake sandbox create -sb mySandbox -n myPrefix -r myGallery
+    text: az bake sandbox create --name mySandbox --gallery myGallery --principal ci-sp-id
+  - name: Create a sandbox with an existing resource group.
+    text: az bake sandbox create --sandbox mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
 """
 
 helps['bake sandbox validate'] = """
@@ -56,15 +58,15 @@ type: command
 short-summary: Validate a sandbox.
 examples:
   - name: Validate a sandbox.
-    text: az bake sandbox validate -sb mySandbox
-  - name: Validate a sandbox and ensure the correct permisinos on a gallery.
-    text: az bake sandbox validate -sb mySandbox -r myGallery
+    text: az bake sandbox validate --sandbox mySandbox
+  - name: Validate a sandbox and ensure the correct permissions on a gallery.
+    text: az bake sandbox validate --sandbox mySandbox --gallery myGallery
 """
+
 
 # ----------------
 # bake repo
 # ----------------
-
 
 helps['bake repo'] = """
 type: group
@@ -73,10 +75,18 @@ short-summary: Configure, validate, and bake images in a repo.
 
 helps['bake repo'] = """
 type: command
-short-summary: Bake images defined in a repo.
+short-summary: Bake images defined in a repo (usually run in CI).
 examples:
   - name: Build all the images in a repo.
-    text: az bake repo -r .
+    text: az bake repo --repo .
+"""
+
+helps['bake repo setup'] = """
+type: command
+short-summary: Setup a repo for baking.
+examples:
+  - name: Setup a repo for baking.
+    text: az bake repo setup --sandbox mySandbox --gallery myGallery
 """
 
 helps['bake repo validate'] = """
@@ -84,13 +94,31 @@ type: command
 short-summary: Validate a repo.
 examples:
   - name: Validate a repo.
-    text: az bake repo validate -r .
+    text: az bake repo validate --repo .
 """
+
+
+# ----------------
+# bake image
+# ----------------
+
+helps['bake image'] = """
+type: group
+short-summary: Create and manage images.
+"""
+
+helps['bake image create'] = """
+type: command
+short-summary: Create an image.
+examples:
+  - name: Create an image.yml file.
+    text: az bake image create ---nameame myImage
+"""
+
 
 # ----------------
 # bake yaml
 # ----------------
-
 
 helps['bake yaml'] = """
 type: group
@@ -102,11 +130,11 @@ type: command
 short-summary: Export a bake.yaml file.
 examples:
   - name: Export a bake.yaml file to a directory.
-    text: az bake yaml export -sb MySandbox -r myGallery --outdir ./myDir
+    text: az bake yaml export --sandbox MySandbox --gallery myGallery --outdir ./myDir
   - name: Export a bake.yaml file to a specific file.
-    text: az bake yaml export -sb MySandbox -r myGallery --outfile ./myDir/myFile.yaml
+    text: az bake yaml export --sandbox MySandbox --gallery myGallery --outfile ./myDir/myFile.yaml
   - name: Print the bake.yaml file output to the console.
-    text: az bake yaml export -sb MySandbox -r myGallery --stdout
+    text: az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
 """
 
 helps['bake yaml validate'] = """
@@ -116,6 +144,7 @@ examples:
   - name: Validate a bake.yaml file.
     text: az bake yaml validate -f ./bake.yaml
 """
+
 
 # ----------------
 # bake _builder
@@ -141,7 +170,7 @@ type: command
 short-summary: Validate a sandbox. This is the same as 'az bake sandbox validate'.
 examples:
   - name: Validate a sandbox.
-    text: az bake validate sandbox -sb mySandbox --gallery /My/Gallery/Resource/ID
+    text: az bake validate sandbox --sandbox mySandbox --gallery /My/Gallery/Resource/ID
 """
 
 helps['bake validate repo'] = """
@@ -149,7 +178,7 @@ type: command
 short-summary: Validate a repo. This is the same as running 'az bake repo validate'.
 examples:
   - name: Validate a repo.
-    text: az bake validate repo -r .
+    text: az bake validate repo --repo .
 """
 
 helps['bake validate yaml'] = """

@@ -171,7 +171,8 @@ def _get_devops_repo_url():
 def _get_devops_token():
     token = os.environ.get('SYSTEM_ACCESSTOKEN', None)
     if not token:
-        logger.warning('WARNING: SYSTEM_ACCESSTOKEN environment variable not set. This is required for private repositories.')
+        logger.warning('WARNING: SYSTEM_ACCESSTOKEN environment variable not set. '
+                       'This is required for private repositories.')
         # raise CLIError('SYSTEM_ACCESSTOKEN environment variable not set')
     return token
 
@@ -216,7 +217,8 @@ def get_repo():
         repo['ref'] = _get_devops_ref()
         repo['sha'] = _get_devops_sha()
     else:
-        raise CLIError('Could not determine CI environment. Currently only support GitHub Actions and Azure DevOps Pipelines')
+        raise CLIError('Could not determine CI environment. '
+                       'Currently only support GitHub Actions and Azure DevOps Pipelines')
 
     return repo
 
@@ -236,17 +238,17 @@ if __name__ == '__main__':
 
     print('')
     for test in test_urls:
-        repo = parse_repo_url(test)
-        if repo['provider'] not in ['github', 'devops']:
-            raise CLIError(f'{repo["provider"]} is not a valid provider')
-        if repo['org'] != 'colbylwilliams':
-            raise CLIError(f'{repo["org"]} is not a valid organization')
-        if repo['provider'] == 'devops' and repo['project'] != 'myproject':
-            raise CLIError(f'{repo["project"]} is not a valid project')
-        if repo['repo'] != 'az-bake':
-            raise CLIError(f'{repo["repo"]} is not a valid repository')
-        if '@' in repo['url']:
-            raise CLIError(f'{repo["url"]} should not contain an @ symbol')
+        repository = parse_repo_url(test)
+        if repository['provider'] not in ['github', 'devops']:
+            raise CLIError(f'{repository["provider"]} is not a valid provider')
+        if repository['org'] != 'colbylwilliams':
+            raise CLIError(f'{repository["org"]} is not a valid organization')
+        if repository['provider'] == 'devops' and repository['project'] != 'myproject':
+            raise CLIError(f'{repository["project"]} is not a valid project')
+        if repository['repo'] != 'az-bake':
+            raise CLIError(f'{repository["repo"]} is not a valid repository')
+        if '@' in repository['url']:
+            raise CLIError(f'{repository["url"]} should not contain an @ symbol')
         print(test)
-        print(json.dumps(repo, indent=4))
+        print(json.dumps(repository, indent=4))
     print('')

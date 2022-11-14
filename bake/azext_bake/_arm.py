@@ -2,16 +2,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+# pylint: disable=logging-fstring-interpolation, protected-access, inconsistent-return-statements, raise-missing-from
 
 import json
 
 from time import sleep
 
 from azure.cli.command_modules.role.custom import create_role_assignment
-from azure.cli.core.commands import LongRunningOperation, upsert_to_collection
+from azure.cli.core.commands import LongRunningOperation
 from azure.cli.core.commands.client_factory import get_subscription_id
 from azure.cli.core.profiles import ResourceType, get_sdk
-from azure.cli.core.util import find_child_item, random_string, sdk_no_wait
+from azure.cli.core.util import random_string, sdk_no_wait
 from azure.core.exceptions import ResourceNotFoundError
 from knack.util import CLIError
 from msrestazure.tools import parse_resource_id, resource_id
@@ -22,8 +23,6 @@ from ._utils import get_logger
 TRIES = 3
 
 logger = get_logger(__name__)
-
-# pylint: disable=inconsistent-return-statements
 
 
 # ----------------
@@ -232,7 +231,8 @@ def get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name
     logger.info(f'Getting version {gallery_image_version_name} of {gallery_image_name} in gallery {gallery_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
-        version = client.gallery_image_versions.get(resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name)
+        version = client.gallery_image_versions.get(resource_group_name, gallery_name,
+                                                    gallery_image_name, gallery_image_version_name)
         return version
     except ResourceNotFoundError:
         logger.info(f'Version {gallery_image_version_name} of {gallery_image_name} not found.')
@@ -240,19 +240,30 @@ def get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name
 
 
 def image_version_exists(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name):
-    return get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name) is not None
+    version = get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name)
+    return version is not None
+
+# pylint: disable=unused-argument, unused-variable
 
 
-def create_image_definition(cmd, resource_group_name, gallery_name, gallery_image_name, publisher, offer, sku, location=None, os_type='Windows', os_state='Generalized', end_of_life_date=None, description=None, tags=None):
+def create_image_definition(cmd, resource_group_name, gallery_name, gallery_image_name, publisher, offer, sku,
+                            location=None, os_type='Windows', os_state='Generalized', end_of_life_date=None,
+                            description=None, tags=None):
     logger.info(f'Creating image definition {gallery_image_name} in gallery {gallery_name} ...')
 
     if location is None:
         location = get_gallery(cmd, resource_group_name, gallery_name).location
 
     client = cf_compute(cmd.cli_ctx)
-    GalleryImage, GalleryImageIdentifier, RecommendedMachineConfiguration, ResourceRange, Disallowed, ImagePurchasePlan, GalleryImageFeature = cmd.get_models(
-        'GalleryImage', 'GalleryImageIdentifier', 'RecommendedMachineConfiguration', 'ResourceRange', 'Disallowed', 'ImagePurchasePlan', 'GalleryImageFeature',
+    # GalleryImage, GalleryImageIdentifier, RecommendedMachineConfiguration, ResourceRange, Disallowed, \
+    # ImagePurchasePlan, GalleryImageFeature = cmd.get_models(
+    #     'GalleryImage', 'GalleryImageIdentifier', 'RecommendedMachineConfiguration', 'ResourceRange',
+    #     'Disallowed', 'ImagePurchasePlan', 'GalleryImageFeature',
+    #     resource_type=ResourceType.MGMT_COMPUTE, operation_group='galleries')
+    GalleryImage, GalleryImageIdentifier, Disallowed, GalleryImageFeature = cmd.get_models(
+        'GalleryImage', 'GalleryImageIdentifier', 'Disallowed', 'GalleryImageFeature',
         resource_type=ResourceType.MGMT_COMPUTE, operation_group='galleries')
+
     purchase_plan = None
     # if any([plan_name, plan_publisher, plan_product]):
     #     purchase_plan = ImagePurchasePlan(name=plan_name, publisher=plan_publisher, product=plan_product)
@@ -261,7 +272,7 @@ def create_image_definition(cmd, resource_group_name, gallery_name, gallery_imag
     ]
 
     image = GalleryImage(identifier=GalleryImageIdentifier(publisher=publisher, offer=offer, sku=sku),
-                         os_type='Windows', os_state='Generalized', end_of_life_date=None,
+                         os_type=os_type, os_state=os_state, end_of_life_date=end_of_life_date,
                          recommended=None, disallowed=Disallowed(disk_types=None),
                          purchase_plan=purchase_plan, location=location, eula=None, tags=(tags or {}),
                          hyper_v_generation='V2', features=feature_list, architecture=None)

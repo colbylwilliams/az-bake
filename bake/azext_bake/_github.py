@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
-# pylint: disable=too-many-statements, too-many-locals, too-many-lines
+# pylint: disable=logging-fstring-interpolation, too-many-statements, too-many-locals, too-many-lines
 
 import requests
 

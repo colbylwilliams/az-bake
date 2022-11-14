@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+# pylint: disable=logging-fstring-interpolation
 
 from azure.cli.core.azclierror import ValidationError
 from azure.cli.core.commands.client_factory import get_subscription_id
@@ -17,7 +18,7 @@ from ._utils import get_logger
 logger = get_logger(__name__)
 
 
-def get_sandbox_from_group(cmd, resource_group_name):
+def get_sandbox_from_group(cmd, resource_group_name):  # pylint: disable=too-many-statements
     tags = get_resource_group_tags(cmd, resource_group_name)
 
     sub = tags.get(tag_key('subscription'))
@@ -83,7 +84,8 @@ def get_sandbox_from_group(cmd, resource_group_name):
 
         # check for builders subnet
         delegated_subnets = [s for s in vnet.subnets if s.delegations and
-                             any([d for d in s.delegations if d.service_name == 'Microsoft.ContainerInstance/containerGroups'])]
+                             any(d for d in s.delegations
+                                 if d.service_name == 'Microsoft.ContainerInstance/containerGroups')]
         if not delegated_subnets:
             raise ValidationError('Could not find builders subnet (delegated to ACI) in vnet')
         if len(delegated_subnets) > 1:
@@ -228,7 +230,7 @@ def _get_sandbox_storage_name(cmd, name_prefix):
     return _check_storage_account_name_availability(cmd, storage_name)
 
 
-def _get_sandbox_vnet_name(cmd, name_prefix):
+def _get_sandbox_vnet_name(cmd, name_prefix):  # pylint: disable=unused-argument
     # ex. contoso-images-vnet
     # req: (2-64) Alphanumerics, underscores, periods, and hyphens. Start with alphanumeric.
     #             End alphanumeric or underscore. Resource Group unique.
@@ -256,7 +258,7 @@ def _get_sandbox_vnet_name(cmd, name_prefix):
     return vnet_name
 
 
-def _get_sandbox_identity_name(cmd, name_prefix):
+def _get_sandbox_identity_name(cmd, name_prefix):  # pylint: disable=unused-argument
     # ex. contoso-images-id
     # req: (3-128) Alphanumerics, underscores, and hyphens. Start with alphanumeric. Resource Group unique.
     identity_name = ''

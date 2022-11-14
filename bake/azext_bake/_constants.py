@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+# pylint: disable=line-too-long
 
 import os
 
@@ -17,7 +18,7 @@ AZ_BAKE_REPO_VOLUME = '/mnt/repo'
 AZ_BAKE_STORAGE_VOLUME = '/mnt/storage'
 
 IN_BUILDER = os.environ.get(AZ_BAKE_IMAGE_BUILDER)
-IN_BUILDER = True if IN_BUILDER else False
+IN_BUILDER = bool(IN_BUILDER)
 
 REPO_DIR = Path(AZ_BAKE_REPO_VOLUME) if IN_BUILDER else Path(__file__).resolve().parent.parent.parent
 STORAGE_DIR = Path(AZ_BAKE_STORAGE_VOLUME) if IN_BUILDER else REPO_DIR / '.local' / 'storage'
@@ -231,6 +232,7 @@ WINGET_SOURCE_DEST = 'C:/Windows/Temp/source.msix'
 
 WINGET_SETTINGS_PATH = 'C:/Users/packer/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json'
 
+# pylint: disable=f-string-without-interpolation
 WINGET_SETTINGS_JSON = f'''
 {{
     "$schema": "https://aka.ms/winget-settings.schema.json",

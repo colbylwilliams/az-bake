@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+# pylint: disable=line-too-long, too-many-statements
 
 from argcomplete.completers import DirectoriesCompleter, FilesCompleter
 from azure.cli.core.commands.parameters import (file_type, get_location_type, get_resource_group_completion_list,
@@ -9,8 +10,8 @@ from azure.cli.core.commands.parameters import (file_type, get_location_type, ge
 from knack.arguments import CLIArgumentType
 
 from ._completers import get_version_completion_list
-from ._validators import (bake_source_version_validator, gallery_resource_id_validator, image_names_validator,
-                          repository_path_validator, sandbox_resource_group_name_validator, yaml_out_validator)
+from ._validators import (bake_source_version_validator, gallery_resource_id_validator, repository_path_validator,
+                          sandbox_resource_group_name_validator, yaml_out_validator)
 
 # get_resource_group_completion_list,)
 

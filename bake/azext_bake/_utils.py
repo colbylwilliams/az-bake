@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+# pylint: disable=logging-fstring-interpolation
 
 import json
 import os
@@ -24,8 +25,9 @@ def get_logger(name):
 
     if IN_BUILDER and os.path.isdir(STORAGE_DIR):
         import logging
-        log_file = OUTPUT_DIR / f'builder.txt'
-        formatter = logging.Formatter('{asctime} [{name:^28}] {levelname:<8}: {message}', datefmt='%m/%d/%Y %I:%M:%S %p', style='{',)
+        log_file = OUTPUT_DIR / 'builder.txt'
+        formatter = logging.Formatter('{asctime} [{name:^28}] {levelname:<8}: {message}',
+                                      datefmt='%m/%d/%Y %I:%M:%S %p', style='{',)
         fh = logging.FileHandler(log_file)
         fh.setLevel(level=_logger.level)
         fh.setFormatter(formatter)
@@ -43,13 +45,13 @@ def get_templates_path(folder=None):
     return path / folder if folder else path
 
 
-def get_yaml_file_path(dir, file, required=True):
+def get_yaml_file_path(dirpath, file, required=True):
     '''Get the path to a yaml or yml file in a directory'''
-    dir_path = (dir if isinstance(dir, Path) else Path(dir)).resolve()
+    dir_path = (dirpath if isinstance(dirpath, Path) else Path(dirpath)).resolve()
 
     if not dir_path.is_dir():
         if required:
-            raise ValidationError(f'Directory for yaml/yml {file} not found at {dir}')
+            raise ValidationError(f'Directory for yaml/yml {file} not found at {dirpath}')
         return None
 
     yaml_path = dir_path / f'{file}.yaml'
@@ -60,10 +62,12 @@ def get_yaml_file_path(dir, file, required=True):
 
     if not yaml_isfile and not yml_isfile:
         if required:
-            raise ValidationError(f'File {file}.yaml or {file}.yml not found in {dir}')
+            raise ValidationError(f'File {file}.yaml or {file}.yml not found in {dirpath}')
         return None
-    elif yaml_isfile and yml_isfile:
-        raise ValidationError(f'Found both {file}.yaml and {file}.yml in {dir} of repository. Only one {file} yaml file allowed')
+
+    if yaml_isfile and yml_isfile:
+        raise ValidationError(f'Found both {file}.yaml and {file}.yml in {dirpath} of repository. '
+                              f'Only one {file} yaml file allowed')
 
     file_path = yaml_path if yaml_path.is_file() else yml_path
 
@@ -76,12 +80,12 @@ def get_yaml_file_contents(path):
     if not path.is_file():
         raise FileOperationError(f'Could not find yaml file at {path}')
     try:
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             obj = yaml.safe_load(f)
     except OSError:  # FileNotFoundError introduced in Python 3
-        raise FileOperationError(f'No such file or directory: {path}')
+        raise FileOperationError(f'No such file or directory: {path}')  # pylint: disable=raise-missing-from
     except yaml.YAMLError as e:
-        raise FileOperationError(f'Error while parsing yaml file:\n\n' + str(e))
+        raise FileOperationError('Error while parsing yaml file:\n\n' + str(e))  # pylint: disable=raise-missing-from
     if obj is None:
         raise FileOperationError(f'Yaml file cannot be empty: {path}')
     return obj
@@ -89,17 +93,17 @@ def get_yaml_file_contents(path):
 
 def get_install_choco_dict(image):
     '''Get the dict for the install choco section supplemented by the index'''
-    logger.info(f'Getting choco install dictionary from image.yaml')
+    logger.info('Getting choco install dictionary from image.yaml')
     if 'install' not in image or 'choco' not in image['install']:
         return None
 
     if 'packages' not in image['install']['choco']:
-        raise ValidationError(f'No packages found in install.choco in image.yaml')
+        raise ValidationError('No packages found in install.choco in image.yaml')
 
     install_path = get_templates_path('install')
     choco_index_path = install_path / 'choco.json'
     choco_index = {}
-    with open(choco_index_path, 'r') as f:
+    with open(choco_index_path, 'r', encoding='utf-8') as f:
         choco_index = json.load(f)
 
     choco = []
@@ -130,7 +134,7 @@ def get_install_choco_dict(image):
 
 def get_choco_package_config(packages, indent=2):
     '''Get the chocolatey package config file'''
-    logger.info(f'Getting choco package config contents from install dict')
+    logger.info('Getting choco package config contents from install dict')
     elem = Element('packages')
     for package in packages:
         child = Element('package', package)
@@ -146,17 +150,17 @@ def get_choco_package_config(packages, indent=2):
 
 def get_install_winget(image):
     '''Get the dict for the install winget section supplemented by the index'''
-    logger.info(f'Getting wingit install dictionary from image.yaml')
+    logger.info('Getting wingit install dictionary from image.yaml')
     if 'install' not in image or 'winget' not in image['install']:
         return None
 
     if 'packages' not in image['install']['winget']:
-        raise ValidationError(f'No packages found in install.winget in image.yaml')
+        raise ValidationError('No packages found in install.winget in image.yaml')
 
     install_path = get_templates_path('install')
     winget_index_path = install_path / 'winget.json'
     winget_index = {}
-    with open(winget_index_path, 'r') as f:
+    with open(winget_index_path, 'r', encoding='utf-8') as f:
         winget_index = json.load(f)
 
     winget = []

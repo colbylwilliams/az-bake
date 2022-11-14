@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+# pylint: disable=logging-fstring-interpolation
 
 import json
 import os
@@ -28,7 +29,7 @@ def check_packer_install(raise_error=True):
     '''Checks if packer is installed'''
     logger.info('Checking if packer is installed')
     packer = shutil.which('packer')
-    installed = True if packer else False
+    installed = bool(packer)
     if not installed and raise_error:
         raise ValidationError('Packer is not installed. Please install packer and try again.')
     return installed
@@ -101,7 +102,7 @@ def save_packer_vars_file(sandbox, gallery, image, additonal_vars=None):
     for line in json.dumps(auto_vars, indent=4).splitlines():
         logger.info(line)
 
-    with open(image['dir'] / PKR_AUTO_VARS_FILE, 'w') as f:
+    with open(image['dir'] / PKR_AUTO_VARS_FILE, 'w', encoding='utf-8') as f:
         json.dump(auto_vars, f, ensure_ascii=False, indent=4, sort_keys=True)
 
 
@@ -154,11 +155,11 @@ def copy_packer_files(image_dir):
 
     if build_file.exists():
         logger.warning(f'Packer build file already exists at {build_file}')
-        logger.warning(f'Provisioners will not be injected for the image.yaml install section')
+        logger.warning('Provisioners will not be injected for the image.yaml install section')
         return False
-    else:
-        shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
-        return True
+
+    shutil.copy2(templates_dir / PKR_BUILD_FILE, image_dir)
+    return True
 
 
 def inject_update_provisioner(image_dir):
@@ -170,7 +171,7 @@ def inject_choco_provisioners(image_dir, config_xml):
     '''Injects the chocolatey provisioners into the packer build file'''
     # create the choco packages config file
     logger.info(f'Creating file: {image_dir / CHOCO_PACKAGES_CONFIG_FILE}')
-    with open(image_dir / CHOCO_PACKAGES_CONFIG_FILE, 'w') as f:
+    with open(image_dir / CHOCO_PACKAGES_CONFIG_FILE, 'w', encoding='utf-8') as f:
         f.write(config_xml)
 
     _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO)
@@ -180,7 +181,7 @@ def inject_winget_provisioners(image_dir, winget_packages):
     '''Injects the winget provisioners into the packer build file'''
 
     logger.info(f'Creating file: {image_dir / WINGET_SETTINGS_FILE}')
-    with open(image_dir / WINGET_SETTINGS_FILE, 'w') as f:
+    with open(image_dir / WINGET_SETTINGS_FILE, 'w', encoding='utf-8') as f:
         f.write(WINGET_SETTINGS_JSON)
 
     winget_install = f'''
@@ -194,7 +195,7 @@ def inject_winget_provisioners(image_dir, winget_packages):
 '''
 
     for i, p in enumerate(winget_packages):
-        winget_cmd = f'winget install '
+        winget_cmd = 'winget install '
 
         if 'ANY' in p:  # user just specified a string, it could be a the moniker, name or id
             winget_cmd += f'{p["ANY"]} '
@@ -235,7 +236,7 @@ def _inject_provisioner(image_dir, provisioner):
     # inject provisioner into build.pkr.hcl
     logger.info(f'Injecting provisioner into {build_file_path}')
 
-    with open(build_file_path, 'r') as f:
+    with open(build_file_path, 'r', encoding='utf-8') as f:
         pkr_build = f.read()
 
     if BAKE_PLACEHOLDER not in pkr_build:
@@ -243,5 +244,5 @@ def _inject_provisioner(image_dir, provisioner):
 
     pkr_build = pkr_build.replace(BAKE_PLACEHOLDER, provisioner)
 
-    with open(build_file_path, 'w') as f:
+    with open(build_file_path, 'w', encoding='utf-8') as f:
         f.write(pkr_build)
