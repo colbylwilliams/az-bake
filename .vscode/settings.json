@@ -26,6 +26,15 @@
         ".venv/lib/python3.10/site-packages/a[^z]*": true,
         ".venv/lib/python3.10/site-packages/az[^u]*": true,
     },
+    "python.formatting.autopep8Args": [
+        "--max-line-length=200"
+    ],
+    "isort.args": [
+        "-l",
+        "120",
+        "--lbt",
+        "1"
+    ],
     "restructuredtext.languageServer.disabled": true,
     "restructuredtext.confPath": "",
     "restructuredtext.linter.disabled": true
