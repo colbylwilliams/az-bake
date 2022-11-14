@@ -107,7 +107,7 @@ IMAGE_ALLOWED_PROPERTIES = IMAGE_REQUIRED_PROPERTIES + [
 ]
 
 IMAGE_INSTALL_PROPERTIES = {
-    KEY_ALLOWED: ['script', 'choco', 'winget']
+    KEY_ALLOWED: ['scripts', 'choco', 'winget']
 }
 
 IMAGE_BASE_PROPERTIES = {

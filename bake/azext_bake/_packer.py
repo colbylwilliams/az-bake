@@ -167,6 +167,34 @@ def inject_update_provisioner(image_dir):
     _inject_provisioner(image_dir, PKR_PROVISIONER_UPDATE)
 
 
+def inject_powershell_provisioner(image_dir, powershell_scripts):
+    '''Injects the powershell provisioner into the packer build file'''
+    scripts = []
+    img_dir = image_dir.resolve()
+    for script in powershell_scripts:
+        scripts.append(str(img_dir / script).replace(str(img_dir), '${path.root}'))
+
+    powershell_provisioner = '''
+  # Injected by az bake
+  provisioner "powershell" {
+    elevated_user     = build.User
+    elevated_password = build.Password
+    scripts = [
+'''
+
+    for i, script in enumerate(scripts):
+        powershell_provisioner += f'      "{script}"'
+        if i < len(scripts) - 1:
+            powershell_provisioner += ',\n'
+
+    powershell_provisioner += f'''
+    ]
+  }}
+  {BAKE_PLACEHOLDER}'''
+
+    _inject_provisioner(image_dir, powershell_provisioner)
+
+
 def inject_choco_provisioners(image_dir, config_xml):
     '''Injects the chocolatey provisioners into the packer build file'''
     # create the choco packages config file

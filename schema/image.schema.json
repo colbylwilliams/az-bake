@@ -251,6 +251,24 @@
                             }
                         }
                     }
+                },
+                "scripts": {
+                    "type": "object",
+                    "description": "The scripts section of the image definition",
+                    "additionalProperties": false,
+                    "required": [
+                        "powershell"
+                    ],
+                    "properties": {
+                        "powershell": {
+                            "type": "array",
+                            "description": "Powershell scripts to run to install tools on the image",
+                            "items": {
+                                "type": "string",
+                                "description": "The path to a powershell script file"
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -20,8 +20,8 @@ from ._client_factory import cf_container, cf_container_groups
 from ._constants import (BAKE_YAML_SCHEMA, GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR, GITHUB_WORKFLOW_FILE,
                          IMAGE_YAML_SCHEMA, IN_BUILDER)
 from ._github import get_github_latest_release_version, get_github_release, get_release_templates, get_template_url
-from ._packer import (check_packer_install, copy_packer_files, inject_choco_provisioners, inject_update_provisioner,
-                      inject_winget_provisioners, packer_execute, save_packer_vars_file)
+from ._packer import (check_packer_install, copy_packer_files, inject_choco_provisioners, inject_powershell_provisioner,
+                      inject_update_provisioner, inject_winget_provisioners, packer_execute, save_packer_vars_file)
 from ._sandbox import get_builder_subnet_id, get_sandbox_resource_names
 from ._utils import get_choco_package_config, get_install_choco_dict, get_install_winget, get_logger, get_templates_path
 
@@ -391,6 +391,9 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
     if copy_packer_files(image['dir']):
         if 'update' in image and image['update']:
             inject_update_provisioner(image['dir'])
+
+        if 'install' in image and 'scripts' in image['install']:
+            inject_powershell_provisioner(image['dir'], image['install']['scripts']['powershell'])
 
         choco_install = get_install_choco_dict(image)
         if choco_install:

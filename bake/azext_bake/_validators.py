@@ -373,6 +373,13 @@ def image_yaml_validator(cmd, ns, image=None):
     if 'update' not in image:
         image['update'] = True
 
+    if 'install' in image and 'scripts' in image['install']:
+        if 'powershell' not in image['install']['scripts']:
+            raise ValidationError('Image install.scripts must include a powershell section')
+
+        for script in image['install']['scripts']['powershell']:
+            _validate_file_path(image['dir'] / script)
+
     if hasattr(ns, 'image'):
         ns.image = image
 
