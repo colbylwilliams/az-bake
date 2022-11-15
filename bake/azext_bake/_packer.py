@@ -15,7 +15,7 @@ from pathlib import Path
 from azure.cli.core.azclierror import ValidationError
 
 from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
-                         PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO, PKR_PROVISIONER_UPDATE,
+                         PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO, PKR_PROVISIONER_RESTART, PKR_PROVISIONER_UPDATE,
                          PKR_PROVISIONER_WINGET_INSTALL, PKR_VARS_FILE, WINGET_SETTINGS_FILE, WINGET_SETTINGS_JSON)
 from ._utils import get_logger, get_templates_path
 
@@ -167,12 +167,16 @@ def inject_update_provisioner(image_dir):
     _inject_provisioner(image_dir, PKR_PROVISIONER_UPDATE)
 
 
+def inject_restart_provisioner(image_dir):
+    '''Injects the restart provisioner into the packer build file'''
+    _inject_provisioner(image_dir, PKR_PROVISIONER_RESTART)
+
+
 def inject_powershell_provisioner(image_dir, powershell_scripts):
     '''Injects the powershell provisioner into the packer build file'''
-    scripts = []
-    img_dir = image_dir.resolve()
-    for script in powershell_scripts:
-        scripts.append(str(img_dir / script).replace(str(img_dir), '${path.root}'))
+
+    current_index = 0
+    inject_restart = False
 
     powershell_provisioner = '''
   # Injected by az bake
@@ -182,9 +186,16 @@ def inject_powershell_provisioner(image_dir, powershell_scripts):
     scripts = [
 '''
 
-    for i, script in enumerate(scripts):
-        powershell_provisioner += f'      "{script}"'
-        if i < len(scripts) - 1:
+    for i, script in enumerate(powershell_scripts):
+        current_index = i
+        script_path = script['path']
+        powershell_provisioner += f'      "{script_path}"'
+
+        if script['restart'] is True:
+            inject_restart = True
+            break
+
+        if i < len(powershell_scripts) - 1:
             powershell_provisioner += ',\n'
 
     powershell_provisioner += f'''
@@ -193,6 +204,12 @@ def inject_powershell_provisioner(image_dir, powershell_scripts):
   {BAKE_PLACEHOLDER}'''
 
     _inject_provisioner(image_dir, powershell_provisioner)
+
+    if inject_restart:
+        inject_restart_provisioner(image_dir)
+
+        if current_index < len(powershell_scripts) - 1:
+            inject_powershell_provisioner(image_dir, powershell_scripts[current_index + 1:])
 
 
 def inject_choco_provisioners(image_dir, config_xml):

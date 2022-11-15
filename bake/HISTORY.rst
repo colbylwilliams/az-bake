@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.2.1
+++++++
++ Powershell scripts can require a restart
+
 0.2.0
 ++++++
 + Add image rebuild command

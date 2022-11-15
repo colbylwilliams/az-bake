@@ -264,8 +264,25 @@
                             "type": "array",
                             "description": "Powershell scripts to run to install tools on the image",
                             "items": {
-                                "type": "string",
-                                "description": "The path to a powershell script file"
+                                "oneOf": [
+                                    {
+                                        "type": "string",
+                                        "description": "The path to a powershell script file relative to the image.yml file."
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "path": {
+                                                "type": "string",
+                                                "description": "The path to a powershell script file relative to the image.yml file."
+                                            },
+                                            "restart": {
+                                                "type": "boolean",
+                                                "description": "A restart is required after this script is run."
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         }
                     }

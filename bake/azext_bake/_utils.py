@@ -187,6 +187,45 @@ def get_install_winget(image):
 
     return winget
 
+
+def get_install_powershell_scripts(image):
+    logger.info('Getting powershell scripts install dictionary from image.yaml')
+    if 'install' not in image or 'scripts' not in image['install']:
+        return None
+
+    if 'powershell' not in image['install']['scripts']:
+        raise ValidationError('Image install.scripts must include a powershell section')
+
+    img_dir = image['dir'].resolve()
+
+    scripts = []
+
+    for script in image['install']['scripts']['powershell']:
+        logger.info(f'Getting powershell script config for {script} type {type(script)}')
+        if isinstance(script, str):
+            # if only the path was givin add it to the list
+            _validate_file_path(image['dir'] / script)
+            script_path = str(img_dir / script).replace(str(img_dir), '${path.root}')
+            scripts.append({'path': script_path, 'restart': False})
+        elif isinstance(script, dict):
+            # if the full object was given, use it
+            _validate_file_path(image['dir'] / script['path'])
+            script_path = str(img_dir / script['path']).replace(str(img_dir), '${path.root}')
+            scripts.append({'path': script_path, 'restart': script['restart'] if 'restart' in script else False})
+        else:
+            raise ValidationError(f'Invalid powershell script config {script} in image {image["name"]}')
+
+    return scripts
+
+
+def _validate_file_path(path, name=None):
+    file_path = (path if isinstance(path, Path) else Path(path)).resolve()
+    not_exists = f'Could not find {name} file at {file_path}' if name else f'{file_path} is not a file or directory'
+    if not file_path.exists():
+        raise ValidationError(not_exists)
+    if not file_path.is_file():
+        raise ValidationError(f'{file_path} is not a file')
+    return file_path
 # def _get_current_user_object_id(graph_client):
 #     try:
 #         current_user = graph_client.signed_in_user.get()

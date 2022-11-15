@@ -23,7 +23,8 @@ from ._github import get_github_latest_release_version, get_github_release, get_
 from ._packer import (check_packer_install, copy_packer_files, inject_choco_provisioners, inject_powershell_provisioner,
                       inject_update_provisioner, inject_winget_provisioners, packer_execute, save_packer_vars_file)
 from ._sandbox import get_builder_subnet_id, get_sandbox_resource_names
-from ._utils import get_choco_package_config, get_install_choco_dict, get_install_winget, get_logger, get_templates_path
+from ._utils import (get_choco_package_config, get_install_choco_dict, get_install_powershell_scripts,
+                     get_install_winget, get_logger, get_templates_path)
 
 logger = get_logger(__name__)
 
@@ -171,11 +172,13 @@ def bake_repo_build(cmd, repository_path, is_ci=False, image_names=None, sandbox
         deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox['resourceGroup'], template_file=template_file,
                                                                     template_uri=template_uri, parameters=[image_params])
         logs = get_arm_output(outputs, 'logs')
+        bake_logs = get_arm_output(outputs, 'bake')
         portal = get_arm_output(outputs, 'portal')
 
         logger.warning(f'Finished deploying builder for {image["name"]} but packer is still running.')
         logger.warning('You can check the progress of the packer build:')
         logger.warning(f'  - Azure CLI: {logs}')
+        logger.warning(f'  - Az Bake CLI: {bake_logs}')
         logger.warning(f'  - Azure Portal: {portal}')
         logger.warning('')
 
@@ -185,7 +188,7 @@ def bake_repo_build(cmd, repository_path, is_ci=False, image_names=None, sandbox
                 summary = [
                     f'## Building {image["name"]}',
                     'You can check the progress of the packer build:',
-                    f'- Azure CLI: `{logs}`', f'- Azure Portal: {portal}', ''
+                    f'- Azure CLI: `{logs}`', f'- Az Bake CLI: `{bake_logs}`', f'- Azure Portal: {portal}', ''
                 ]
                 with open(github_step_summary, 'a+', encoding='utf-8') as f:
                     f.write('\n'.join(summary))
@@ -392,8 +395,9 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
         if 'update' in image and image['update']:
             inject_update_provisioner(image['dir'])
 
-        if 'install' in image and 'scripts' in image['install']:
-            inject_powershell_provisioner(image['dir'], image['install']['scripts']['powershell'])
+        powershell_scripts = get_install_powershell_scripts(image)
+        if powershell_scripts:
+            inject_powershell_provisioner(image['dir'], powershell_scripts)
 
         choco_install = get_install_choco_dict(image)
         if choco_install:

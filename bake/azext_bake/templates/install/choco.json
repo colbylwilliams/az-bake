@@ -2,5 +2,9 @@
     "git": {
         "id": "git",
         "installArguments": "/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /o:PathOption=CmdTools /o:BashTerminalOption=ConHost /o:EnableSymlinks=Enabled /COMPONENTS=gitlfs"
+    },
+    "postman": {
+        "id": "postman",
+        "user": "true"
     }
 }
