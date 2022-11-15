@@ -151,7 +151,7 @@ def load_arguments(self, _):
         # c.argument('stdout', yaml_stdout_type)
 
     with self.argument_context('bake image rebuild') as c:
-        c.argument('resource_group_name', arg_type=sandbox_resource_group_name_type)
+        c.argument('resource_group_name', sandbox_resource_group_name_type)
         c.argument('container_group_name', options_list=['--name', '-n'], help='Name of the image to rebuild.')
         c.argument('location', arg_type=get_location_type(self.cli_ctx))
 

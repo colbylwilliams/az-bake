@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.2.5
+++++++
++ Fix bake image rebuild
+
 0.2.4
 ++++++
 + Bug fixes and minor improvements.

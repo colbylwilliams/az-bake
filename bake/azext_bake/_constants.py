@@ -376,7 +376,7 @@ steps:
 
   - displayName: Install az bake # get the latest version of az bake from the github releases and install it
     bash: |
-      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.2.4-py3-none-any.whl -y
+      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.2.5-py3-none-any.whl -y
       az bake upgrade
 
   - displayName: Run az bake

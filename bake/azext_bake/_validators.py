@@ -11,8 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from re import match
 
-from azure.cli.core.azclierror import (ArgumentUsageError, InvalidArgumentValueError, MutuallyExclusiveArgumentError,
-                                       RequiredArgumentMissingError, ValidationError)
+from azure.cli.core.azclierror import (ArgumentUsageError, CLIError, InvalidArgumentValueError,
+                                       MutuallyExclusiveArgumentError, RequiredArgumentMissingError, ValidationError)
 from azure.cli.core.commands.parameters import get_resources_in_subscription
 from azure.cli.core.commands.validators import validate_tags
 from azure.cli.core.extension import get_extension
@@ -380,12 +380,22 @@ def image_yaml_validator(cmd, ns, image=None):
 
 
 def sandbox_resource_group_name_validator(cmd, ns):
-    if ns.sandbox_resource_group_name and _has_bake_yaml(ns):
-        raise MutuallyExclusiveArgumentError('usage error: --bake-yaml and --sandbox are mutually exclusive')
+    if hasattr(ns, 'resource_group_name') and hasattr(ns, 'sandbox_resource_group_name'):
+        raise CLIError('Shouldnt specify both resource_group_name and sandbox_resource_group_name')
+    elif hasattr(ns, 'resource_group_name'):
+        rg_name = ns.resource_group_name
+        if ns.resource_group_name and _has_bake_yaml(ns):
+            raise MutuallyExclusiveArgumentError('usage error: --bake-yaml and --sandbox are mutually exclusive')
+    elif hasattr(ns, 'sandbox_resource_group_name'):
+        rg_name = ns.sandbox_resource_group_name
+        if ns.sandbox_resource_group_name and _has_bake_yaml(ns):
+            raise MutuallyExclusiveArgumentError('usage error: --bake-yaml and --sandbox are mutually exclusive')
+    else:
+        raise RequiredArgumentMissingError('usage error: --sandbox is required.')
 
-    sandbox = get_sandbox_from_group(cmd, ns.sandbox_resource_group_name)
+    sandbox = get_sandbox_from_group(cmd, rg_name)
 
-    _validate_object(ns.sandbox_resource_group_name, sandbox, SANDBOX_PROPERTIES)
+    _validate_object(rg_name, sandbox, SANDBOX_PROPERTIES)
 
     if hasattr(ns, 'sandbox'):
         ns.sandbox = sandbox
