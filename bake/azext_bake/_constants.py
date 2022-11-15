@@ -189,6 +189,7 @@ DEFAULT_TAGS = {
 }
 
 CHOCO_PACKAGES_CONFIG_FILE = 'packages.config'
+CHOCO_PACKAGES_USER_CONFIG_FILE = 'user.packages.config'
 
 PKR_PROVISIONER_UPDATE = f'''
   # Injected by az bake
@@ -235,6 +236,23 @@ PKR_PROVISIONER_CHOCO = f'''
     source = "C:/ProgramData/chocolatey/logs/chocolatey.log"
     destination = "{OUTPUT_DIR}/chocolatey.log"
     direction = "download"
+  }}
+  {BAKE_PLACEHOLDER}'''
+
+PKR_PROVISIONER_CHOCO_USER = f'''
+  # Injected by az bake
+  provisioner "file" {{
+    source = "${{path.root}}/{CHOCO_PACKAGES_USER_CONFIG_FILE}"
+    destination = "C:/Windows/Temp/{CHOCO_PACKAGES_USER_CONFIG_FILE}"
+  }}
+
+  # Injected by az bake
+  provisioner "powershell" {{
+    elevated_user     = build.User
+    elevated_password = build.Password
+    inline = [
+      "$guid = New-Guid; New-Item -Path 'HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Active Setup\\\\Installed Components' -Name $guid.Guid -Value 'Install Chocolatey Packages'; New-ItemProperty 'HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Active Setup\\\\Installed Components\\\\$guid.Guid' -Name StubPath -Value 'choco install C:/Windows/Temp/user.packages.config --yes --no-progress'"
+    ]
   }}
   {BAKE_PLACEHOLDER}'''
 
@@ -358,7 +376,7 @@ steps:
 
   - displayName: Install az bake # get the latest version of az bake from the github releases and install it
     bash: |
-      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.2.1-py3-none-any.whl -y
+      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.2.2-py3-none-any.whl -y
       az bake upgrade
 
   - displayName: Run az bake

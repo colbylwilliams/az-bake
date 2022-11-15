@@ -148,6 +148,10 @@
                                             "packageParameters": {
                                                 "type": "string",
                                                 "description": "Parameters to pass to the package."
+                                            },
+                                            "user": {
+                                                "type": "boolean",
+                                                "description": "Install the package for the user."
                                             }
                                         },
                                         "required": [

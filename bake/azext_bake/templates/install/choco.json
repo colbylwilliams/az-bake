@@ -5,6 +5,6 @@
     },
     "postman": {
         "id": "postman",
-        "user": "true"
+        "user": true
     }
 }

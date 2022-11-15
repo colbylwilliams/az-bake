@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.2.2
+++++++
++ Support user specific choco packages
+
 0.2.1
 ++++++
 + Powershell scripts can require a restart

@@ -14,8 +14,9 @@ from pathlib import Path
 
 from azure.cli.core.azclierror import ValidationError
 
-from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE, PKR_AUTO_VARS_FILE, PKR_BUILD_FILE,
-                         PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO, PKR_PROVISIONER_RESTART, PKR_PROVISIONER_UPDATE,
+from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE, CHOCO_PACKAGES_USER_CONFIG_FILE,
+                         PKR_AUTO_VARS_FILE, PKR_BUILD_FILE, PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO,
+                         PKR_PROVISIONER_CHOCO_USER, PKR_PROVISIONER_RESTART, PKR_PROVISIONER_UPDATE,
                          PKR_PROVISIONER_WINGET_INSTALL, PKR_VARS_FILE, WINGET_SETTINGS_FILE, WINGET_SETTINGS_JSON)
 from ._utils import get_logger, get_templates_path
 
@@ -212,14 +213,16 @@ def inject_powershell_provisioner(image_dir, powershell_scripts):
             inject_powershell_provisioner(image_dir, powershell_scripts[current_index + 1:])
 
 
-def inject_choco_provisioners(image_dir, config_xml):
+def inject_choco_provisioners(image_dir, config_xml, for_user=False):
     '''Injects the chocolatey provisioners into the packer build file'''
     # create the choco packages config file
-    logger.info(f'Creating file: {image_dir / CHOCO_PACKAGES_CONFIG_FILE}')
-    with open(image_dir / CHOCO_PACKAGES_CONFIG_FILE, 'w', encoding='utf-8') as f:
+    file_name = CHOCO_PACKAGES_USER_CONFIG_FILE if for_user else CHOCO_PACKAGES_CONFIG_FILE
+
+    logger.info(f'Creating file: {image_dir / file_name}')
+    with open(image_dir / file_name, 'w', encoding='utf-8') as f:
         f.write(config_xml)
 
-    _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO)
+    _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO_USER if for_user else PKR_PROVISIONER_CHOCO)
 
 
 def inject_winget_provisioners(image_dir, winget_packages):

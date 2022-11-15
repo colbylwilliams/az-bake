@@ -131,13 +131,16 @@ def get_install_choco_dict(image):
     return choco
 
 
-def get_choco_package_config(packages, indent=2):
+def get_choco_package_config(packages, user=False, indent=2):
     '''Get the chocolatey package config file'''
     logger.info('Getting choco package config contents from install dict')
     elem = Element('packages')
     for package in packages:
-        child = Element('package', package)
-        # child.text = package
+        pkg = package.copy()
+        if 'user' in pkg:
+            del(pkg['user'])
+        child = Element('package', pkg)
+        # child.text = pkg
         elem.append(child)
     # prettify
     xml_string = tostring(elem).decode("utf-8")
