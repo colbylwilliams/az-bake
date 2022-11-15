@@ -401,15 +401,15 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
 
         choco_install = get_install_choco_dict(image)
 
-        machine_choco_install = [c for c in choco_install if 'user' not in c or not c['user']]
-        if machine_choco_install:
-            choco_config = get_choco_package_config(machine_choco_install)
-            inject_choco_provisioners(image['dir'], choco_config, for_user=False)
-
         user_choco_install = [c for c in choco_install if 'user' in c and c['user']]
         if user_choco_install:
             choco_user_config = get_choco_package_config(user_choco_install)
             inject_choco_provisioners(image['dir'], choco_user_config, for_user=True)
+
+        machine_choco_install = [c for c in choco_install if 'user' not in c or not c['user']]
+        if machine_choco_install:
+            machine_choco_config = get_choco_package_config(machine_choco_install)
+            inject_choco_provisioners(image['dir'], machine_choco_config, for_user=False)
 
         winget_config = get_install_winget(image)
         if winget_config:
