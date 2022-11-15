@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.2.6
+++++++
++ Use static key for choco active setup
+
 0.2.5
 ++++++
 + Fix bake image rebuild
