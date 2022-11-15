@@ -151,7 +151,7 @@ def bake_repo_build(cmd, repository_path, is_ci=False, image_names=None, sandbox
         p = repo['provider']
         p_user = 'gituser:' if p == 'github' else 'azurereposuser:' if p == 'azuredevops' else ''
         p_name = ' GitHub' if p == 'github' else ' DevOps' if p == 'azuredevops' else ''
-        logger.info(f'Adding {p_name} token to repository url')
+        logger.info(f'Adding{p_name} token to repository url')
         params.append(f'repository={repository_url.replace("https://", f"https://{p_user}{repository_token}@")}')
     else:
         params.append(f'repository={repository_url}')

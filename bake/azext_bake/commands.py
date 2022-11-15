@@ -3,9 +3,16 @@
 # Licensed under the MIT License.
 # ------------------------------------
 
+from azure.cli.core.commands import CliCommandType
 
+from ._client_factory import cf_container_groups
 from ._validators import (builder_validator, process_bake_repo_build_namespace, process_bake_repo_validate_namespace,
                           process_sandbox_create_namespace)
+
+container_group_sdk = CliCommandType(
+    operations_tmpl='azure.mgmt.containerinstance.operations#ContainerGroupsOperations.{}',
+    client_factory=cf_container_groups
+)
 
 
 def load_command_table(self, _):  # pylint: disable=too-many-statements
@@ -41,6 +48,9 @@ def load_command_table(self, _):  # pylint: disable=too-many-statements
     with self.command_group('bake image') as g:
         g.custom_command('create', 'bake_image_create')
         g.custom_command('logs', 'bake_image_logs')
+
+    with self.command_group('bake image', container_group_sdk) as g:
+        g.command('rebuild', 'begin_start', supports_no_wait=True)
 
     with self.command_group('bake _builder') as g:
         g.custom_command('build', 'bake_builder_build', validator=builder_validator)

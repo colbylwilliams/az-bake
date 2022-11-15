@@ -89,10 +89,18 @@ examples:
 
 helps['bake image logs'] = """
 type: command
-short-summary: Get the logs for an image.
+short-summary: Get the logs for an image build.
 examples:
   - name: Get the logs for an image.
     text: az bake image logs --sandbox mySandbox --name myImage
+"""
+
+helps['bake image rebuild'] = """
+type: command
+short-summary: Rebuild an image that failed.
+examples:
+  - name: Rebuild an image that failed.
+    text: az bake image rebuild --sandbox mySandbox --name myImage
 """
 
 

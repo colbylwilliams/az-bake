@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.2.0
+++++++
++ Add image rebuild command
+
 0.1.19
 ++++++
 + Bug fixes and minor improvements.
