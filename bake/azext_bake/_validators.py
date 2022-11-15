@@ -382,7 +382,7 @@ def image_yaml_validator(cmd, ns, image=None):
 def sandbox_resource_group_name_validator(cmd, ns):
     if hasattr(ns, 'resource_group_name') and hasattr(ns, 'sandbox_resource_group_name'):
         raise CLIError('Shouldnt specify both resource_group_name and sandbox_resource_group_name')
-    elif hasattr(ns, 'resource_group_name'):
+    if hasattr(ns, 'resource_group_name'):
         rg_name = ns.resource_group_name
         if ns.resource_group_name and _has_bake_yaml(ns):
             raise MutuallyExclusiveArgumentError('usage error: --bake-yaml and --sandbox are mutually exclusive')
