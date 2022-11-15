@@ -251,7 +251,7 @@ PKR_PROVISIONER_CHOCO_USER = f'''
     elevated_user     = build.User
     elevated_password = build.Password
     inline = [
-      "$guid = New-Guid; New-Item -Path 'HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Active Setup\\\\Installed Components' -Name $guid.Guid -Value 'Install Chocolatey Packages'; New-ItemProperty 'HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Active Setup\\\\Installed Components\\\\$guid.Guid' -Name StubPath -Value 'choco install C:/Windows/Temp/user.packages.config --yes --no-progress'"
+      "$key = [System.Guid]::NewGuid().ToString(); New-Item -Path 'HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Active Setup\\\\Installed Components' -Name $key -Value 'Install Chocolatey Packages'; New-ItemProperty 'HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Active Setup\\\\Installed Components\\\\$key' -Name StubPath -Value 'choco install C:/Windows/Temp/user.packages.config --yes --no-progress'"
     ]
   }}
   {BAKE_PLACEHOLDER}'''
@@ -376,7 +376,7 @@ steps:
 
   - displayName: Install az bake # get the latest version of az bake from the github releases and install it
     bash: |
-      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.2.3-py3-none-any.whl -y
+      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.2.4-py3-none-any.whl -y
       az bake upgrade
 
   - displayName: Run az bake

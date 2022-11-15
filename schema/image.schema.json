@@ -284,7 +284,10 @@
                                                 "type": "boolean",
                                                 "description": "A restart is required after this script is run."
                                             }
-                                        }
+                                        },
+                                        "required": [
+                                            "path"
+                                        ]
                                     }
                                 ]
                             }
