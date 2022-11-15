@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
-# pylint: disable=line-too-long, logging-fstring-interpolation, too-many-locals, unused-argument
+# pylint: disable=line-too-long, logging-fstring-interpolation, too-many-locals, too-many-statements, unused-argument
 
 import json
 import os
