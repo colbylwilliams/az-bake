@@ -66,7 +66,7 @@ Each sandbox includes a:
 
 ![sandbox](docs/sandbox.png)
 
-## Commands
+# Commands
 
 This extension adds the following commands. Use `az bake -h` for more information.
 | Command | Description |
@@ -87,11 +87,11 @@ This extension adds the following commands. Use `az bake -h` for more informatio
 
 ---
 
-### `az bake sandbox create`
+## `az bake sandbox create`
 
 Create a sandbox.
 
-#### Examples
+### Examples
 
 Create a sandbox.
 
@@ -105,81 +105,81 @@ Create a sandbox with an existing resource group.
 az bake sandbox create -l eastus --sandbox mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
 ```
 
-#### Required Parameters
+### Required Parameters
 
-##### `--name --name-prefix -n`
+#### `--name --name-prefix -n`
 
 The prefix to use in the name of all resources created in the build sandbox. For example if Contoso-Images is provided, the key vault, storage account, and vnet will be named Contoso-Images-kv, contosoimagesstorage, and contoso-images-vent respectively.
 
-#### Optional Parameters
+### Optional Parameters
 
-##### `--gallery -r`
+#### `--gallery -r`
 
 Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
 
-##### `--location -l`
+#### `--location -l`
 
 Location. Values from: `az account list-locations`. You can configure the default location using `az configure -d location=<location>`.
 
-##### `--principal --principal-id`
+#### `--principal --principal-id`
 
 The principal id of a service principal used to run az bake from a CI pipeline. It will be given contributor role to sandbox resource group.
 
-##### `--sandbox -g -s`
+#### `--sandbox -g -s`
 
 Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
 
-##### `--tags`
+#### `--tags`
 
 Space-separated tags: key[=value] [key[=value] ...]. Use '' to clear existing tags.
 
-##### `--local --local-templates`
+#### `--local --local-templates`
 
 Use local template file that was packaged with the cli instead of downloading from GitHub.
 
-##### `--pre`
+#### `--pre`
 
 Deploy latest template prerelease version.
 
-##### `--template-file`
+#### `--template-file`
 
 Path to custom sandbox arm/bicep template.
 
-##### `--templates-url`
+#### `--templates-url`
 
 URL to custom templates.json file.
 
-##### `--version -v`
+#### `--version -v`
 
 Sandbox template release version.
 
 <sup>Default: latest stable</sup>
 
-##### `--builders-prefix --builders-subnet-prefi`
+#### `--builders-prefix --builders-subnet-prefi`
 
 The CIDR prefix to use when creating the subnet for the ACI containers that execute Packer.
 
 <sup>Default: 10.0.0.128/25</sup>
 
-##### `--builders-subnet --builders-subnet-name`
+#### `--builders-subnet --builders-subnet-name`
 
 The name to use when creating the subnet for the ACI containers that execute Packer.
 
 <sup>Default: builders</sup>
 
-##### `--default-prefix --default-subnet-prefix`
+#### `--default-prefix --default-subnet-prefix`
 
 The CIDR prefix to use when creating the subnet for the temporary VMs and private endpoints.
 
 <sup>Default: 10.0.0.0/25</sup>
 
-##### `--default-subnet --default-subnet-name`
+#### `--default-subnet --default-subnet-name`
 
 The name to use when creating the subnet for the temporary VMs and private endpoints.
 
 <sup>Default: default</sup>
 
-##### `--vnet-address-prefix --vnet-prefix`
+#### `--vnet-address-prefix --vnet-prefix`
 
 The CIDR prefix to use when creating a new VNet.
 
@@ -187,43 +187,42 @@ The CIDR prefix to use when creating a new VNet.
 
 <details><summary>Global Arguments</summary>
 
-##### `--debug`
+#### `--debug`
 
 Increase logging verbosity to show all debug logs.
 
-##### `--help -h`
+#### `--help -h`
 
 Show this help message and exit.
 
-##### `--only-show-errors`
+#### `--only-show-errors`
 
 Only show errors, suppressing warnings.
 
-##### `--output -o`
+#### `--output -o`
 
 Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
 <sup>Default: json</sup>
 
-##### `--query`
+#### `--query`
 
 JMESPath query string. See <http://jmespath.org/> for more information and examples.
 
-##### `--subscription`
+#### `--subscription`
 
 Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
 
-##### `--verbose`
+#### `--verbose`
 
 Increase logging verbosity. Use --debug for full debug logs.
 </details>
 
-
-### `az bake sandbox validate`
+## `az bake sandbox validate`
 
 Validate a sandbox.
 
-#### Examples
+### Examples
 
 Validate a sandbox.
 
@@ -237,11 +236,11 @@ Validate a sandbox and ensure the correct permissions on a gallery.
 az bake sandbox validate --sandbox mySandbox --gallery myGallery
 ```
 
-### `az bake repo build`
+## `az bake repo build`
 
 Bake images defined in a repo (usually run in CI).
 
-#### Examples
+### Examples
 
 Build all the images in a repo.
 
@@ -249,11 +248,11 @@ Build all the images in a repo.
 az bake repo build --repo .
 ```
 
-### `az bake repo setup`
+## `az bake repo setup`
 
 Setup a repo for baking.
 
-#### Examples
+### Examples
 
 Setup a repo for baking.
 
@@ -261,11 +260,11 @@ Setup a repo for baking.
 az bake repo setup --sandbox mySandbox --gallery myGallery
 ```
 
-### `az bake repo validate`
+## `az bake repo validate`
 
 Validate a repo.
 
-#### Examples
+### Examples
 
 Validate a repo.
 
@@ -273,11 +272,11 @@ Validate a repo.
 az bake repo validate --repo .
 ```
 
-### `az bake image create`
+## `az bake image create`
 
 Create an image.
 
-#### Examples
+### Examples
 
 Create an image.yml file.
 
@@ -285,11 +284,11 @@ Create an image.yml file.
 az bake image create --name myImage
 ```
 
-### `az bake image logs`
+## `az bake image logs`
 
 Get the logs for an image build.
 
-#### Examples
+### Examples
 
 Get the logs for an image.
 
@@ -297,11 +296,11 @@ Get the logs for an image.
 az bake image logs --sandbox mySandbox --name myImage
 ```
 
-### `az bake image rebuild`
+## `az bake image rebuild`
 
 Rebuild an image that failed.
 
-#### Examples
+### Examples
 
 Rebuild an image that failed.
 
@@ -309,11 +308,11 @@ Rebuild an image that failed.
 az bake image rebuild --sandbox mySandbox --name myImage
 ```
 
-### `az bake yaml export`
+## `az bake yaml export`
 
 Export a bake.yaml file.
 
-#### Examples
+### Examples
 
 Export a bake.yaml file to a directory.
 
@@ -333,11 +332,11 @@ Print the bake.yaml file output to the console.
 az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
 ```
 
-### `az bake validate sandbox`
+## `az bake validate sandbox`
 
 Validate a sandbox. This is the same as `az bake sandbox validate`.
 
-#### Examples
+### Examples
 
 Validate a sandbox.
 
@@ -345,11 +344,11 @@ Validate a sandbox.
 az bake validate sandbox --sandbox mySandbox --gallery /My/Gallery/Resource/ID
 ```
 
-### `az bake validate repo`
+## `az bake validate repo`
 
 Validate a repo. This is the same as running `az bake repo validate`.
 
-#### Examples
+### Examples
 
 Validate a repo.
 
@@ -357,15 +356,15 @@ Validate a repo.
 az bake validate repo --repo .
 ```
 
-### `az bake version`
+## `az bake version`
 
 Show the version of the bake extension.
 
-### `az bake upgrade`
+## `az bake upgrade`
 
 Update bake cli extension.
 
-#### Examples
+### Examples
 
 Update bake cli extension to the latest stable release.
 
