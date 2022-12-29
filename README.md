@@ -105,6 +105,120 @@ Create a sandbox with an existing resource group.
 az bake sandbox create -l eastus --sandbox mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
 ```
 
+#### Required Parameters
+
+##### `--name --name-prefix -n`
+
+The prefix to use in the name of all resources created in the build sandbox. For example if Contoso-Images is provided, the key vault, storage account, and vnet will be named Contoso-Images-kv, contosoimagesstorage, and contoso-images-vent respectively.
+
+#### Optional Parameters
+
+##### `--gallery -r`
+
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+
+##### `--location -l`
+
+Location. Values from: `az account list-locations`. You can configure the default location using `az configure -d location=<location>`.
+
+##### `--principal --principal-id`
+
+The principal id of a service principal used to run az bake from a CI pipeline. It will be given contributor role to sandbox resource group.
+
+##### `--sandbox -g -s`
+
+Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+
+##### `--tags`
+
+Space-separated tags: key[=value] [key[=value] ...]. Use '' to clear existing tags.
+
+##### `--local --local-templates`
+
+Use local template file that was packaged with the cli instead of downloading from GitHub.
+
+##### `--pre`
+
+Deploy latest template prerelease version.
+
+##### `--template-file`
+
+Path to custom sandbox arm/bicep template.
+
+##### `--templates-url`
+
+URL to custom templates.json file.
+
+##### `--version -v`
+
+Sandbox template release version.
+
+<sup>Default: latest stable</sup>
+
+##### `--builders-prefix --builders-subnet-prefi`
+
+The CIDR prefix to use when creating the subnet for the ACI containers that execute Packer.
+
+<sup>Default: 10.0.0.128/25</sup>
+
+##### `--builders-subnet --builders-subnet-name`
+
+The name to use when creating the subnet for the ACI containers that execute Packer.
+
+<sup>Default: builders</sup>
+
+##### `--default-prefix --default-subnet-prefix`
+
+The CIDR prefix to use when creating the subnet for the temporary VMs and private endpoints.
+
+<sup>Default: 10.0.0.0/25</sup>
+
+##### `--default-subnet --default-subnet-name`
+
+The name to use when creating the subnet for the temporary VMs and private endpoints.
+
+<sup>Default: default</sup>
+
+##### `--vnet-address-prefix --vnet-prefix`
+
+The CIDR prefix to use when creating a new VNet.
+
+<sup>Default: 10.0.0.0/24</sup>
+
+<details><summary>Global Arguments</summary>
+
+##### `--debug`
+
+Increase logging verbosity to show all debug logs.
+
+##### `--help -h`
+
+Show this help message and exit.
+
+##### `--only-show-errors`
+
+Only show errors, suppressing warnings.
+
+##### `--output -o`
+
+Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+<sup>Default: json</sup>
+
+##### `--query`
+
+JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+##### `--subscription`
+
+Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+##### `--verbose`
+
+Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
+
 ### `az bake sandbox validate`
 
 Validate a sandbox.
