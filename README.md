@@ -52,7 +52,7 @@ az bake image create --name vscode-image
 
 ## Sandbox
 
-In the context of `az bake`, a _sandbox_ is a collection of resources in a resource group that are used to create (or _"bake"_) custom VM images. It's a secure, self-contained environment where Packer will be executed from Azure Container Instance in a private virtual network. A sandbox is required to use `az bake`. You can be create a new sandbox using the `az bake sandbox create` command.
+In the context of `az bake`, a _sandbox_ is a collection of resources in a resource group that are used to create (or _"bake"_) custom VM images. It's a secure, self-contained environment where [Packer][packer-docs] will be executed from [Azure Container Instance][azure-aci] in a private virtual network. A sandbox is required to use `az bake`. You can be create a new sandbox using the [`az bake sandbox create`](bake/azext_bake/_arm.py#az-bake-sandbox-create) command.
 
 Each sandbox includes a:
 
@@ -284,3 +284,4 @@ az bake upgrade --version 0.1.0
 [gh-repo-secret]:https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
 [gh-fork]:https://docs.github.com/en/get-started/quickstart/fork-a-repo
 [packer-arm]:https://www.packer.io/plugins/builders/azure/arm
+[packer-docs]:https://developer.hashicorp.com/packer/docs
