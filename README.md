@@ -71,24 +71,204 @@ Each sandbox includes a:
 This extension adds the following commands. Use `az bake -h` for more information.
 | Command | Description |
 | ------- | ----------- |
-| [az bake repo](#az-bake-repo) | // TODO |
+| [`az bake sandbox create`](#az-bake-sandbox-create) | Create a [sandbox](#sandbox). |
+| [`az bake sandbox validate`](#az-bake-sandbox-validate) | Validate a [sandbox](#sandbox). |
+| [`az bake repo build`](#az-bake-repo-build) | Bake images defined in a repo (usually run in CI). |
+| [`az bake repo setup`](#az-bake-repo-setup) | Setup a repo for baking. |
+| [`az bake repo validate`](#az-bake-repo-validate) | Validate a repo. |
+| [`az bake image create`](#az-bake-image-create) | Create an image. |
+| [`az bake image logs`](#az-bake-image-logs) | Get the logs for an image build. |
+| [`az bake image rebuild`](#az-bake-image-rebuild) | Rebuild an image that failed. |
+| [`az bake yaml export`](#az-bake-yaml-export) | Export a bake.yaml file. |
+| [`az bake validate sandbox`](#az-bake-validate-sandbox) | Validate a [sandbox](#sandbox). This is the same as `az bake sandbox validate`. |
+| [`az bake validate repo`](#az-bake-validate-repo) | Validate a repo. This is the same as running `az bake repo validate`. |
+| [`az bake version`](#az-bake-version) | Show the version of the bake extension. |
+| [`az bake upgrade`](#az-bake-upgrade) | Update bake cli extension. |
 
 ---
 
-### `az bake repo`
+### `az bake sandbox create`
 
-// TODO
-
-```sh
-az bake repo
-```
+Create a sandbox.
 
 #### Examples
 
-```sh
-az bake repo
+Create a sandbox.
 
-# output: user@example.com has valid licenses for dev box: ['SPE_E3']
+```sh
+az bake sandbox create -l eastus --name mySandbox --gallery myGallery --principal ci-sp-id
+```
+
+Create a sandbox with an existing resource group.
+
+```sh
+az bake sandbox create -l eastus --sandbox mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
+```
+
+### `az bake sandbox validate`
+
+Validate a sandbox.
+
+#### Examples
+
+Validate a sandbox.
+
+```sh
+az bake sandbox validate --sandbox mySandbox
+```
+
+Validate a sandbox and ensure the correct permissions on a gallery.
+
+```sh
+az bake sandbox validate --sandbox mySandbox --gallery myGallery
+```
+
+### `az bake repo build`
+
+Bake images defined in a repo (usually run in CI).
+
+#### Examples
+
+Build all the images in a repo.
+
+```sh
+az bake repo build --repo .
+```
+
+### `az bake repo setup`
+
+Setup a repo for baking.
+
+#### Examples
+
+Setup a repo for baking.
+
+```sh
+az bake repo setup --sandbox mySandbox --gallery myGallery
+```
+
+### `az bake repo validate`
+
+Validate a repo.
+
+#### Examples
+
+Validate a repo.
+
+```sh
+az bake repo validate --repo .
+```
+
+### `az bake image create`
+
+Create an image.
+
+#### Examples
+
+Create an image.yml file.
+
+```sh
+az bake image create --name myImage
+```
+
+### `az bake image logs`
+
+Get the logs for an image build.
+
+#### Examples
+
+Get the logs for an image.
+
+```sh
+az bake image logs --sandbox mySandbox --name myImage
+```
+
+### `az bake image rebuild`
+
+Rebuild an image that failed.
+
+#### Examples
+
+Rebuild an image that failed.
+
+```sh
+az bake image rebuild --sandbox mySandbox --name myImage
+```
+
+### `az bake yaml export`
+
+Export a bake.yaml file.
+
+#### Examples
+
+Export a bake.yaml file to a directory.
+
+```sh
+az bake yaml export --sandbox MySandbox --gallery myGallery --outdir ./myDir
+```
+
+Export a bake.yaml file to a specific file.
+
+```sh
+az bake yaml export --sandbox MySandbox --gallery myGallery --outfile ./myDir/myFile.yaml
+```
+
+Print the bake.yaml file output to the console.
+
+```sh
+az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
+```
+
+### `az bake validate sandbox`
+
+Validate a sandbox. This is the same as `az bake sandbox validate`.
+
+#### Examples
+
+Validate a sandbox.
+
+```sh
+az bake validate sandbox --sandbox mySandbox --gallery /My/Gallery/Resource/ID
+```
+
+### `az bake validate repo`
+
+Validate a repo. This is the same as running `az bake repo validate`.
+
+#### Examples
+
+Validate a repo.
+
+```sh
+az bake validate repo --repo .
+```
+
+### `az bake version`
+
+Show the version of the bake extension.
+
+### `az bake upgrade`
+
+Update bake cli extension.
+
+#### Examples
+
+Update bake cli extension to the latest stable release.
+
+```sh
+az bake upgrade
+```
+
+Update bake cli extension to the latest pre-release.
+
+```sh
+az bake upgrade --pre
+```
+
+Update bake cli extension a specific version.
+
+```sh
+az bake upgrade --version 0.1.0
 ```
 
 [install-az]:https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
