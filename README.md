@@ -33,13 +33,13 @@ _After [installing the Azure CLI][install-az] if you haven't already_
 #### 2. Create a new [sandbox](#sandbox)
 
 ```sh
-az bake sandbox create --name MySandbox --gallery MyGallery
+az bake sandbox create --name mySandbox --gallery myGallery
 ```
 
 #### 3. Setup the repo
 
 ```sh
-az bake repo setup --sandbox MySandbox --gallery MyGallery
+az bake repo setup --sandbox mySandbox --gallery myGallery
 ```
 
 #### 4. Create an image
@@ -721,19 +721,19 @@ az bake yaml export --gallery
 Export a bake.yaml file to a directory.
 
 ```sh
-az bake yaml export --sandbox MySandbox --gallery myGallery --outdir ./myDir
+az bake yaml export --sandbox mySandbox --gallery myGallery --outdir ./myDir
 ```
 
 Export a bake.yaml file to a specific file.
 
 ```sh
-az bake yaml export --sandbox MySandbox --gallery myGallery --outfile ./myDir/myFile.yaml
+az bake yaml export --sandbox mySandbox --gallery myGallery --outfile ./myDir/myFile.yaml
 ```
 
 Print the bake.yaml file output to the console.
 
 ```sh
-az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
+az bake yaml export --sandbox mySandbox --gallery myGallery --stdout
 ```
 
 ### Required Parameters
