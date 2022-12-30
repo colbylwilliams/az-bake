@@ -122,11 +122,11 @@ type: command
 short-summary: Export a bake.yaml file.
 examples:
   - name: Export a bake.yaml file to a directory.
-    text: az bake yaml export --sandbox MySandbox --gallery myGallery --outdir ./myDir
+    text: az bake yaml export --sandbox mySandbox --gallery myGallery --outdir ./myDir
   - name: Export a bake.yaml file to a specific file.
-    text: az bake yaml export --sandbox MySandbox --gallery myGallery --outfile ./myDir/myFile.yaml
+    text: az bake yaml export --sandbox mySandbox --gallery myGallery --outfile ./myDir/myFile.yaml
   - name: Print the bake.yaml file output to the console.
-    text: az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
+    text: az bake yaml export --sandbox mySandbox --gallery myGallery --stdout
 """
 
 
