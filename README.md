@@ -134,11 +134,11 @@ The prefix to use in the name of all resources created in the build sandbox. For
 
 #### `--gallery -r`
 
-Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`.
 
 #### `--location -l`
 
-Location. Values from: `az account list-locations`. You can configure the default location using `az configure -d location=<location>`.
+Location. Values from: `az account list-locations`. You can configure the default location using `az configure --defaults location=<location>`.
 
 #### `--principal --principal-id`
 
@@ -146,7 +146,7 @@ The principal id of a service principal used to run az bake from a CI pipeline. 
 
 #### `--sandbox -g -s`
 
-Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`.
 
 #### `--tags`
 
@@ -172,37 +172,37 @@ URL to custom templates.json file.
 
 Sandbox template release version.
 
-<sup>Default: latest stable</sup>
+<sup>default value: latest stable</sup>
 
 #### `--builders-prefix --builders-subnet-prefix`
 
 The CIDR prefix to use when creating the subnet for the ACI containers that execute Packer.
 
-<sup>Default: 10.0.0.128/25</sup>
+<sup>default value: 10.0.0.128/25</sup>
 
 #### `--builders-subnet --builders-subnet-name`
 
 The name to use when creating the subnet for the ACI containers that execute Packer.
 
-<sup>Default: builders</sup>
+<sup>default value: builders</sup>
 
 #### `--default-prefix --default-subnet-prefix`
 
 The CIDR prefix to use when creating the subnet for the temporary VMs and private endpoints.
 
-<sup>Default: 10.0.0.0/25</sup>
+<sup>default value: 10.0.0.0/25</sup>
 
 #### `--default-subnet --default-subnet-name`
 
 The name to use when creating the subnet for the temporary VMs and private endpoints.
 
-<sup>Default: default</sup>
+<sup>default value: default</sup>
 
 #### `--vnet-address-prefix --vnet-prefix`
 
 The CIDR prefix to use when creating a new VNet.
 
-<sup>Default: 10.0.0.0/24</sup>
+<sup>default value: 10.0.0.0/24</sup>
 
 <details><summary><h4>Global Arguments</h4></summary>
 
@@ -222,7 +222,7 @@ The CIDR prefix to use when creating a new VNet.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -264,13 +264,13 @@ az bake sandbox validate --sandbox mySandbox --gallery myGallery
 
 #### `--sandbox -g -s`
 
-Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`.
 
 ### Optional Parameters
 
 #### `--gallery -r`
 
-Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`.
 
 <details><summary><h4>Global Arguments</h4></summary>
 
@@ -290,7 +290,7 @@ Name or ID of a Azure Compute Gallery. You can configure the default using `az c
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -337,7 +337,7 @@ Path to the locally cloned repository.
 
 Space separated list of images to bake.
 
-<sup>Default: all images in repository<sup>
+<sup>default value: all images in repository<sup>
 
 #### `--repo-revision`
 
@@ -369,7 +369,7 @@ Repository url.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -406,11 +406,11 @@ az bake repo setup --sandbox mySandbox --gallery myGallery
 
 #### `--gallery -r`
 
-Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`.
 
 #### `--sandbox -g -s`
 
-Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`.
 
 ### Optional Parameters
 
@@ -418,7 +418,7 @@ Name of the sandbox resource group. You can configure the default using `az conf
 
 Path to the locally cloned repository.
 
-<sup>Default: ./<sup>
+<sup>default value: ./<sup>
 
 <details><summary><h4>Global Arguments</h4></summary>
 
@@ -438,7 +438,7 @@ Path to the locally cloned repository.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -475,7 +475,7 @@ az bake repo validate --repo .
 
 Path to the locally cloned repository.
 
-<sup>Default: ./<sup>
+<sup>default value: ./<sup>
 
 <details><summary><h4>Global Arguments</h4></summary>
 
@@ -495,7 +495,7 @@ Path to the locally cloned repository.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -539,7 +539,7 @@ Name of the image to create.
 
 Path to the locally cloned repository.
 
-<sup>Default: ./<sup>
+<sup>default value: ./<sup>
 
 <details><summary><h4>Global Arguments</h4></summary>
 
@@ -559,7 +559,7 @@ Path to the locally cloned repository.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -599,7 +599,7 @@ Name of the image.
 
 #### `--sandbox -g -s`
 
-Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`.
 
 <details><summary><h4>Global Arguments</h4></summary>
 
@@ -619,7 +619,7 @@ Name of the sandbox resource group. You can configure the default using `az conf
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -660,7 +660,7 @@ Name of the image to rebuild.
 
 #### `--sandbox -g -s`
 
-Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`.
 
 ### Optional Parameters
 
@@ -686,7 +686,7 @@ Do not wait for the long-running operation to finish.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -737,11 +737,11 @@ az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
 
 #### `--gallery -r`
 
-Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`.
 
 #### `--sandbox -g -s`
 
-Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`.
 
 ### Optional Parameters
 
@@ -753,7 +753,7 @@ When set, saves the output at the specified directory.
 
 When set, saves the output as the specified file path.
 
-<sup>Default: ./bake.yml<sup>
+<sup>default value: ./bake.yml<sup>
 
 #### `--stdout`
 
@@ -777,7 +777,7 @@ When set, prints all output to stdout instead of corresponding files.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -813,13 +813,13 @@ az bake validate sandbox --sandbox mySandbox --gallery /My/Gallery/Resource/ID
 
 #### `--sandbox -g -s`
 
-Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`.
 
 ### Optional Parameters
 
 #### `--gallery -r`
 
-Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`.
 
 <details><summary><h4>Global Arguments</h4></summary>
 
@@ -839,7 +839,7 @@ Name or ID of a Azure Compute Gallery. You can configure the default using `az c
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -876,7 +876,7 @@ az bake validate repo --repo .
 
 Path to the locally cloned repository.
 
-<sup>Default: ./<sup>
+<sup>default value: ./<sup>
 
 <details><summary><h4>Global Arguments</h4></summary>
 
@@ -896,7 +896,7 @@ Path to the locally cloned repository.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -937,7 +937,7 @@ az bake version
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
@@ -1009,7 +1009,7 @@ Version (tag). Default: latest stable.
 
   Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-  <sup>Default: json</sup>
+  <sup>default value: json</sup>
 
   #### `--query`
 
