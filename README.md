@@ -80,8 +80,8 @@ This extension adds the following commands. Use `az bake -h` for more informatio
 | [`az bake image logs`](#az-bake-image-logs) | Get the logs for an image build. |
 | [`az bake image rebuild`](#az-bake-image-rebuild) | Rebuild an image that failed. |
 | [`az bake yaml export`](#az-bake-yaml-export) | Export a bake.yaml file. |
-| [`az bake validate sandbox`](#az-bake-validate-sandbox) | Validate a [sandbox](#sandbox). This is the same as `az bake sandbox validate`. |
-| [`az bake validate repo`](#az-bake-validate-repo) | Validate a repo. This is the same as running `az bake repo validate`. |
+| [`az bake validate sandbox`](#az-bake-validate-sandbox) | Validate a [sandbox](#sandbox). This is an alias for `az bake sandbox validate`. |
+| [`az bake validate repo`](#az-bake-validate-repo) | Validate a repo. This is an alias for `az bake repo validate`. |
 | [`az bake version`](#az-bake-version) | Show the version of the bake extension. |
 | [`az bake upgrade`](#az-bake-upgrade) | Update bake cli extension. |
 
@@ -794,7 +794,7 @@ When set, prints all output to stdout instead of corresponding files.
 
 ## `az bake validate sandbox`
 
-Validate a sandbox. This is the same as 'az bake sandbox validate'.
+Validate a sandbox. This is an alias for [`az bake sandbox validate`](#az-bake-sandbox-validate).
 
 ```sh
 az bake validate sandbox --sandbox
@@ -856,7 +856,7 @@ Name or ID of a Azure Compute Gallery. You can configure the default using `az c
 
 ## `az bake validate repo`
 
-Validate a repo. This is the same as running 'az bake repo validate'.
+Validate a repo. This is an alias for [`az bake repo validate`](#az-bake-repo-validate).
 
 ```sh
 az bake validate repo --repo
