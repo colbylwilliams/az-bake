@@ -103,7 +103,7 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
                                                  parameters=[params])
     logger.info('Finished deploying sandbox')
     print('Successfully deployed sandbox environment')
-    print(f'You can configure it as your default sandbox using `az configure --defaults bake-sandbox={sandbox_resource_group_name}`')
+    # print(f'You can configure it as your default sandbox using `az configure --defaults bake-sandbox={sandbox_resource_group_name}`')
 
     hook.end(message=' ')
 

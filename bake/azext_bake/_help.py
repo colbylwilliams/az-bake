@@ -20,9 +20,13 @@ type: command
 short-summary: Create a sandbox.
 examples:
   - name: Create a sandbox.
-    text: az bake sandbox create -l eastus --name mySandbox --gallery myGallery --principal ci-sp-id
+    text: |
+      az bake sandbox create -l eastus --name mySandbox \\
+        --gallery myGallery --principal CI_SP_ID
   - name: Create a sandbox with an existing resource group.
-    text: az bake sandbox create -l eastus --sandbox mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
+    text: |
+      az bake sandbox create -l eastus -g mySandbox --name my-sandbox \\
+        --gallery myGallery --principal CI_SP_ID
 """
 
 helps['bake sandbox validate'] = """
@@ -151,7 +155,7 @@ short-summary: Validate a sandbox, repo, or image.
 
 helps['bake validate sandbox'] = """
 type: command
-short-summary: Validate a sandbox. This is the same as 'az bake sandbox validate'.
+short-summary: Validate a sandbox. This is an alias for 'az bake sandbox validate'.
 examples:
   - name: Validate a sandbox.
     text: az bake validate sandbox --sandbox mySandbox --gallery /My/Gallery/Resource/ID
@@ -159,7 +163,7 @@ examples:
 
 helps['bake validate repo'] = """
 type: command
-short-summary: Validate a repo. This is the same as running 'az bake repo validate'.
+short-summary: Validate a repo. This is an alias for 'az bake repo validate'.
 examples:
   - name: Validate a repo.
     text: az bake validate repo --repo .

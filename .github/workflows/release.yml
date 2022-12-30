@@ -40,7 +40,7 @@ jobs:
         id: prepare_assets
         run: python ./tools/prepare-assets.py
 
-      - name: Create Pre-release
+      - name: Create Release
         id: publish_assets
         uses: actions/github-script@v6
         with:

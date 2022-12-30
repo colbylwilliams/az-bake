@@ -93,7 +93,7 @@ def load_arguments(self, _):
         c.argument('templates_url', arg_group='Advanced', help='URL to custom templates.json file.')
         c.argument('template_file', arg_group='Advanced', type=file_type, help='Path to custom sandbox arm/bicep template.')
         c.argument('local_templates', options_list=['--local-templates', '--local'], action='store_true', arg_group='Advanced',
-                   help='Use local template file that was packaged with the cliinstead of downloading from GitHub.')
+                   help='Use local template file that was packaged with the cli instead of downloading from GitHub.')
 
     for scope in ['bake sandbox validate', 'bake validate sandbox']:
         with self.argument_context(scope) as c:
