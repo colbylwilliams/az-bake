@@ -1,13 +1,6 @@
-# az-bake
+# `az bake`
 
-Microsoft Azure CLI Custom Image 'az bake' Extension adds support for creating (or _"baking"_) custom VM images.
-
-
-- [Install](#install)
-  - [Update](#update)
-- [Quickstart](#quickstart)
-- [Sandbox](#sandbox)
-- [Commands](#commands)
+Microsoft Azure CLI Extension for creating (or _"baking"_) custom virtual machine (VM) images.
 
 ## Install
 
@@ -123,13 +116,15 @@ az bake sandbox create --name
 Create a sandbox.
 
 ```sh
-az bake sandbox create -l eastus --name mySandbox --gallery myGallery --principal ci-sp-id
+az bake sandbox create -l eastus --name mySandbox \
+  --gallery myGallery --principal CI_SP_ID
 ```
 
 Create a sandbox with an existing resource group.
 
 ```sh
-az bake sandbox create -l eastus -g mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
+az bake sandbox create -l eastus -g mySandbox --name my-sandbox \
+  --gallery myGallery --principal CI_SP_ID
 ```
 
 ### Required Parameters
