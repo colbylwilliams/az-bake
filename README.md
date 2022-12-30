@@ -91,6 +91,25 @@ This extension adds the following commands. Use `az bake -h` for more informatio
 
 Create a sandbox.
 
+```sh
+az bake sandbox create --name
+                       [--gallery]
+                       [--location]
+                       [--principal]
+                       [--sandbox]
+                       [--tags]
+                       [--local]
+                       [--pre]
+                       [--template-file]
+                       [--templates-url]
+                       [--version]
+                       [--builders-prefix]
+                       [--builders-subnet]
+                       [--default-prefix]
+                       [--default-subnet]
+                       [--vnet-address-prefix]
+```
+
 ### Examples
 
 Create a sandbox.
@@ -155,7 +174,7 @@ Sandbox template release version.
 
 <sup>Default: latest stable</sup>
 
-#### `--builders-prefix --builders-subnet-prefi`
+#### `--builders-prefix --builders-subnet-prefix`
 
 The CIDR prefix to use when creating the subnet for the ACI containers that execute Packer.
 
@@ -185,37 +204,37 @@ The CIDR prefix to use when creating a new VNet.
 
 <sup>Default: 10.0.0.0/24</sup>
 
-<details><summary>Global Arguments</summary>
+<details><summary><h4>Global Arguments</h4></summary>
 
-#### `--debug`
+  #### `--debug`
 
-Increase logging verbosity to show all debug logs.
+  Increase logging verbosity to show all debug logs.
 
-#### `--help -h`
+  #### `--help -h`
 
-Show this help message and exit.
+  Show this help message and exit.
 
-#### `--only-show-errors`
+  #### `--only-show-errors`
 
-Only show errors, suppressing warnings.
+  Only show errors, suppressing warnings.
 
-#### `--output -o`
+  #### `--output -o`
 
-Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
 
-<sup>Default: json</sup>
+  <sup>Default: json</sup>
 
-#### `--query`
+  #### `--query`
 
-JMESPath query string. See <http://jmespath.org/> for more information and examples.
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
 
-#### `--subscription`
+  #### `--subscription`
 
-Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
 
-#### `--verbose`
+  #### `--verbose`
 
-Increase logging verbosity. Use --debug for full debug logs.
+  Increase logging verbosity. Use --debug for full debug logs.
 </details>
 
 ## `az bake sandbox validate`
