@@ -241,6 +241,11 @@ The CIDR prefix to use when creating a new VNet.
 
 Validate a sandbox.
 
+```sh
+az bake sandbox validate --sandbox
+                         [--gallery]
+```
+
 ### Examples
 
 Validate a sandbox.
@@ -255,9 +260,62 @@ Validate a sandbox and ensure the correct permissions on a gallery.
 az bake sandbox validate --sandbox mySandbox --gallery myGallery
 ```
 
+### Required Parameters
+
+#### `--sandbox -g -s`
+
+Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+
+### Optional Parameters
+
+#### `--gallery -r`
+
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake repo build`
 
 Bake images defined in a repo (usually run in CI).
+
+```sh
+az bake repo build --repo
+                   [--images]
+                   [--repo-revision]
+                   [--repo-token]
+                   [--repo-url]
+```
 
 ### Examples
 
@@ -267,9 +325,74 @@ Build all the images in a repo.
 az bake repo build --repo .
 ```
 
+### Required Parameters
+
+#### `--repo --repo-path -r`
+
+Path to the locally cloned repository.
+
+### Optional Parameters
+
+#### `--images -i`
+
+Space separated list of images to bake.
+
+<sup>Default: all images in repository<sup>
+
+#### `--repo-revision`
+
+Repository revision.
+
+#### `--repo-token`
+
+Repository token.
+
+#### `--repo-url`
+
+Repository url.
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake repo setup`
 
 Setup a repo for baking.
+
+```sh
+az bake repo setup --gallery
+                   [--sandbox]
+                   [--repo]
+```
 
 ### Examples
 
@@ -279,9 +402,64 @@ Setup a repo for baking.
 az bake repo setup --sandbox mySandbox --gallery myGallery
 ```
 
+### Required Parameters
+
+#### `--gallery -r`
+
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+
+#### `--sandbox -g -s`
+
+Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+
+### Optional Parameters
+
+#### `--repo --repo-path`
+
+Path to the locally cloned repository.
+
+<sup>Default: ./<sup>
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake repo validate`
 
 Validate a repo.
+
+```sh
+az bake repo validate --repo
+```
 
 ### Examples
 
@@ -291,9 +469,55 @@ Validate a repo.
 az bake repo validate --repo .
 ```
 
+### Required Parameters
+
+#### `--repo --repo-path`
+
+Path to the locally cloned repository.
+
+<sup>Default: ./<sup>
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake image create`
 
 Create an image.
+
+```sh
+az bake image create --name
+                     [--repo]
+```
 
 ### Examples
 
@@ -303,9 +527,61 @@ Create an image.yml file.
 az bake image create --name myImage
 ```
 
+### Required Parameters
+
+#### `--name -n`
+
+Name of the image to create.
+
+### Optional Parameters
+
+#### `--repo --repo-path -r`
+
+Path to the locally cloned repository.
+
+<sup>Default: ./<sup>
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake image logs`
 
 Get the logs for an image build.
+
+```sh
+az bake image logs --name
+                   --sandbox
+```
 
 ### Examples
 
@@ -315,9 +591,58 @@ Get the logs for an image.
 az bake image logs --sandbox mySandbox --name myImage
 ```
 
+### Required Parameters
+
+#### `--name -n`
+
+Name of the image.
+
+#### `--sandbox -g -s`
+
+Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake image rebuild`
 
 Rebuild an image that failed.
+
+```sh
+az bake image rebuild --name
+                      --sandbox
+                      [--no-wait]
+```
 
 ### Examples
 
@@ -327,9 +652,66 @@ Rebuild an image that failed.
 az bake image rebuild --sandbox mySandbox --name myImage
 ```
 
+### Required Parameters
+
+#### `--name -n`
+
+Name of the image to rebuild.
+
+#### `--sandbox -g -s`
+
+Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+
+### Optional Parameters
+
+#### `--no-wait`
+
+Do not wait for the long-running operation to finish.
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake yaml export`
 
 Export a bake.yaml file.
+
+```sh
+az bake yaml export --gallery
+                    --sandbox
+                    [--outdir]
+                    [--outfile]
+                    [--stdout]
+```
 
 ### Examples
 
@@ -351,9 +733,73 @@ Print the bake.yaml file output to the console.
 az bake yaml export --sandbox MySandbox --gallery myGallery --stdout
 ```
 
+### Required Parameters
+
+#### `--gallery -r`
+
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+
+#### `--sandbox -g -s`
+
+Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+
+### Optional Parameters
+
+#### `--outdir`
+
+When set, saves the output at the specified directory.
+
+#### `--outfile`
+
+When set, saves the output as the specified file path.
+
+<sup>Default: ./bake.yml<sup>
+
+#### `--stdout`
+
+When set, prints all output to stdout instead of corresponding files.
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake validate sandbox`
 
-Validate a sandbox. This is the same as `az bake sandbox validate`.
+Validate a sandbox. This is the same as 'az bake sandbox validate'.
+
+```sh
+az bake validate sandbox --sandbox
+                         [--gallery]
+```
 
 ### Examples
 
@@ -363,9 +809,58 @@ Validate a sandbox.
 az bake validate sandbox --sandbox mySandbox --gallery /My/Gallery/Resource/ID
 ```
 
+### Required Parameters
+
+#### `--sandbox -g -s`
+
+Name of the sandbox resource group. You can configure the default using `az configure -d bake-sandbox=<name>`.
+
+### Optional Parameters
+
+#### `--gallery -r`
+
+Name or ID of a Azure Compute Gallery. You can configure the default using `az configure -d bake-gallery=<id>`.
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake validate repo`
 
-Validate a repo. This is the same as running `az bake repo validate`.
+Validate a repo. This is the same as running 'az bake repo validate'.
+
+```sh
+az bake validate repo --repo
+```
 
 ### Examples
 
@@ -375,13 +870,96 @@ Validate a repo.
 az bake validate repo --repo .
 ```
 
+### Required Parameters
+
+#### `--repo --repo-path`
+
+Path to the locally cloned repository.
+
+<sup>Default: ./<sup>
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake version`
 
 Show the version of the bake extension.
 
+```sh
+az bake version
+```
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 ## `az bake upgrade`
 
 Update bake cli extension.
+
+```sh
+az bake upgrade [-pre]
+                [--version]
+```
 
 ### Examples
 
@@ -402,6 +980,50 @@ Update bake cli extension a specific version.
 ```sh
 az bake upgrade --version 0.1.0
 ```
+
+### Optional Parameters
+
+#### `--pre`
+
+Update to the latest template prerelease version.
+
+#### `--version -v`
+
+Version (tag). Default: latest stable.
+
+<details><summary><h4>Global Arguments</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>Default: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
 
 [install-az]:https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 [azure-identities]:https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
