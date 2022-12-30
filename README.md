@@ -2,6 +2,13 @@
 
 Microsoft Azure CLI Custom Image 'az bake' Extension adds support for creating (or _"baking"_) custom VM images.
 
+
+- [Install](#install)
+  - [Update](#update)
+- [Quickstart](#quickstart)
+- [Sandbox](#sandbox)
+- [Commands](#commands)
+
 ## Install
 
 To install the Azure CLI Custom Image Helper extension, simply run the following command:
@@ -69,21 +76,22 @@ Each sandbox includes a:
 # Commands
 
 This extension adds the following commands. Use `az bake -h` for more information.
-| Command | Description |
-| ------- | ----------- |
-| [`az bake sandbox create`](#az-bake-sandbox-create) | Create a [sandbox](#sandbox). |
-| [`az bake sandbox validate`](#az-bake-sandbox-validate) | Validate a [sandbox](#sandbox). |
-| [`az bake repo build`](#az-bake-repo-build) | Bake images defined in a repo (usually run in CI). |
-| [`az bake repo setup`](#az-bake-repo-setup) | Setup a repo for baking. |
-| [`az bake repo validate`](#az-bake-repo-validate) | Validate a repo. |
-| [`az bake image create`](#az-bake-image-create) | Create an image. |
-| [`az bake image logs`](#az-bake-image-logs) | Get the logs for an image build. |
-| [`az bake image rebuild`](#az-bake-image-rebuild) | Rebuild an image that failed. |
-| [`az bake yaml export`](#az-bake-yaml-export) | Export a bake.yaml file. |
+
+| Command                                                 | Description                                                                      |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [`az bake sandbox create`](#az-bake-sandbox-create)     | Create a [sandbox](#sandbox).                                                    |
+| [`az bake sandbox validate`](#az-bake-sandbox-validate) | Validate a [sandbox](#sandbox).                                                  |
+| [`az bake repo build`](#az-bake-repo-build)             | Bake images defined in a repo (usually run in CI).                               |
+| [`az bake repo setup`](#az-bake-repo-setup)             | Setup a repo for baking.                                                         |
+| [`az bake repo validate`](#az-bake-repo-validate)       | Validate a repo.                                                                 |
+| [`az bake image create`](#az-bake-image-create)         | Create an image.                                                                 |
+| [`az bake image logs`](#az-bake-image-logs)             | Get the logs for an image build.                                                 |
+| [`az bake image rebuild`](#az-bake-image-rebuild)       | Rebuild an image that failed.                                                    |
+| [`az bake yaml export`](#az-bake-yaml-export)           | Export a bake.yaml file.                                                         |
 | [`az bake validate sandbox`](#az-bake-validate-sandbox) | Validate a [sandbox](#sandbox). This is an alias for `az bake sandbox validate`. |
-| [`az bake validate repo`](#az-bake-validate-repo) | Validate a repo. This is an alias for `az bake repo validate`. |
-| [`az bake version`](#az-bake-version) | Show the version of the bake extension. |
-| [`az bake upgrade`](#az-bake-upgrade) | Update bake cli extension. |
+| [`az bake validate repo`](#az-bake-validate-repo)       | Validate a repo. This is an alias for `az bake repo validate`.                   |
+| [`az bake version`](#az-bake-version)                   | Show the version of the bake extension.                                          |
+| [`az bake upgrade`](#az-bake-upgrade)                   | Update bake cli extension.                                                       |
 
 ---
 
@@ -121,7 +129,7 @@ az bake sandbox create -l eastus --name mySandbox --gallery myGallery --principa
 Create a sandbox with an existing resource group.
 
 ```sh
-az bake sandbox create -l eastus --sandbox mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
+az bake sandbox create -l eastus -g mySandbox --name my-sandbox --gallery myGallery --principal ci-sp-id
 ```
 
 ### Required Parameters
@@ -204,7 +212,7 @@ The CIDR prefix to use when creating a new VNet.
 
 <sup>default value: 10.0.0.0/24</sup>
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -272,7 +280,7 @@ Name of the sandbox resource group. You can configure the default using `az conf
 
 Name or ID of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`.
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -351,7 +359,7 @@ Repository token.
 
 Repository url.
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -420,7 +428,7 @@ Path to the locally cloned repository.
 
 <sup>default value: ./<sup>
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -477,7 +485,7 @@ Path to the locally cloned repository.
 
 <sup>default value: ./<sup>
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -541,7 +549,7 @@ Path to the locally cloned repository.
 
 <sup>default value: ./<sup>
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -601,7 +609,7 @@ Name of the image.
 
 Name of the sandbox resource group. You can configure the default using `az configure --defaults bake-sandbox=<name>`.
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -668,7 +676,7 @@ Name of the sandbox resource group. You can configure the default using `az conf
 
 Do not wait for the long-running operation to finish.
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -759,7 +767,7 @@ When set, saves the output as the specified file path.
 
 When set, prints all output to stdout instead of corresponding files.
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -821,7 +829,7 @@ Name of the sandbox resource group. You can configure the default using `az conf
 
 Name or ID of a Azure Compute Gallery. You can configure the default using `az configure --defaults bake-gallery=<id>`.
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -878,7 +886,7 @@ Path to the locally cloned repository.
 
 <sup>default value: ./<sup>
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -919,7 +927,7 @@ Show the version of the bake extension.
 az bake version
 ```
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -991,7 +999,7 @@ Update to the latest template prerelease version.
 
 Version (tag). Default: latest stable.
 
-<details><summary><h4>Global Arguments</h4></summary>
+<details><summary><h4>Global Parameters</h4></summary>
 
   #### `--debug`
 
@@ -1023,7 +1031,6 @@ Version (tag). Default: latest stable.
 
   Increase logging verbosity. Use --debug for full debug logs.
 </details>
-
 
 [install-az]:https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 [azure-identities]:https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
