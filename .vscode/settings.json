@@ -37,5 +37,12 @@
     ],
     "restructuredtext.languageServer.disabled": true,
     "restructuredtext.confPath": "",
-    "restructuredtext.linter.disabled": true
+    "restructuredtext.linter.disabled": true,
+    "markdownlint.config": {
+        "MD001": false,
+        "MD023": false,
+        "MD024": false,
+        "MD025": false,
+        "MD033": false
+    }
 }
