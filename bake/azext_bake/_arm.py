@@ -227,7 +227,8 @@ def get_image_definition(cmd, resource_group_name: str, gallery_name: str, galle
         return None
 
 
-def get_image_version(cmd, resource_group_name: str, gallery_name: str, gallery_image_name: str, gallery_image_version_name: str):
+def get_image_version(cmd, resource_group_name: str, gallery_name: str, gallery_image_name: str,
+                      gallery_image_version_name: str):
     logger.info(f'Getting version {gallery_image_version_name} of {gallery_image_name} in gallery {gallery_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
@@ -239,7 +240,8 @@ def get_image_version(cmd, resource_group_name: str, gallery_name: str, gallery_
         return None
 
 
-def image_version_exists(cmd, resource_group_name: str, gallery_name: str, gallery_image_name: str, gallery_image_version_name: str):
+def image_version_exists(cmd, resource_group_name: str, gallery_name: str, gallery_image_name: str,
+                         gallery_image_version_name: str):
     version = get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name)
     return version is not None
 

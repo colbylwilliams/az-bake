@@ -111,7 +111,8 @@ def save_packer_vars_file(sandbox: Sandbox, gallery: Gallery, image: Image, addi
         json.dump(auto_vars, f, ensure_ascii=False, indent=4, sort_keys=True)
 
 
-def save_packer_vars_files(sandbox: Sandbox, gallery: Gallery, images: Sequence[Image], additonal_vars: Mapping[str, Any] = None):
+def save_packer_vars_files(sandbox: Sandbox, gallery: Gallery, images: Sequence[Image],
+                           additonal_vars: Mapping[str, Any] = None):
     '''Saves properties from each image.yaml to packer auto variables files'''
     for image in images:
         save_packer_vars_file(sandbox, gallery, image, additonal_vars)

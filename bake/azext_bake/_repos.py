@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
+# pylint: disable=too-many-instance-attributes
 
 import os
 
@@ -117,7 +118,8 @@ class Repo:
         # https://github.com/colbylwilliams/az-bake.git
         # git@github.com:colbylwilliams/az-bake.git
 
-        url = url.lower().replace('git@', 'https://').replace('git://', 'https://').replace('github.com:', 'github.com/')
+        url = url.lower().replace('git@', 'https://').replace('git://', 'https://')\
+            .replace('github.com:', 'github.com/')
 
         if url.endswith('.git'):
             url = url[:-4]
@@ -141,14 +143,13 @@ class Repo:
         elif 'dev.azure.com' in self.url.lower() or 'visualstudio.com' in self.url.lower():
             self.provider = 'devops'
             self._parse_devops_url(self.url)
-            self.clone_url = self.url.replace('https://', f'https://azurereposuser:{self.token}@') if self.token else self.url
+            self.clone_url = self.url.replace(
+                'https://', f'https://azurereposuser:{self.token}@') if self.token else self.url
         else:
             raise CLIError(f'{self.url} is not a valid Azure DevOps or GitHub respository url')
 
 
 if __name__ == '__main__':
-
-    import json
 
     test_urls = [
         'git://github.com/colbylwilliams/az-bake.git',

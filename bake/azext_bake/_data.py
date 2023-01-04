@@ -1,3 +1,9 @@
+# ------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+# ------------------------------------
+# pylint: disable=too-many-instance-attributes
+
 from dataclasses import MISSING, asdict, dataclass, field, fields
 from pathlib import Path
 from typing import List, Literal, Optional
@@ -44,7 +50,8 @@ def _validate_data_object(data_type: type, obj: dict, path: Path = None, parent_
 
 def get_dict(instance):
     # TODO: shoul we filter False values?  How can we convert back to string lists fo things like choco packages?
-    return asdict(instance, dict_factory=lambda x: {_snake_to_camel(k): v for k, v in x if v is not None and v is not False})
+    return asdict(instance, dict_factory=lambda x: {_snake_to_camel(k): v for k,
+                                                    v in x if v is not None and v is not False})
 
 
 # --------------------------------
@@ -74,7 +81,8 @@ class ImageInstallScripts:
     def __init__(self, obj: dict, path: Path = None) -> None:
         _validate_data_object(ImageInstallScripts, obj, path=path, parent_key='install.scripts')
 
-        self.powershell = [PowershellScript({'path': s}, path) if isinstance(s, str) else PowershellScript(s, path) for s in obj['powershell']]
+        self.powershell = [PowershellScript({'path': s}, path) if isinstance(s, str)
+                           else PowershellScript(s, path) for s in obj['powershell']]
 
 
 # --------------------------------
@@ -138,7 +146,8 @@ class ImageInstallChoco:
     def __init__(self, obj: dict, path: Path = None) -> None:
         _validate_data_object(ImageInstallChoco, obj, path=path, parent_key='install.choco')
 
-        self.packages = [ChocoPackage({'id': p}, path) if isinstance(p, str) else ChocoPackage(p, path) for p in obj['packages']]
+        self.packages = [ChocoPackage({'id': p}, path) if isinstance(p, str)
+                         else ChocoPackage(p, path) for p in obj['packages']]
 
 
 # --------------------------------
@@ -178,7 +187,8 @@ class WingetPackage:
 
         # TODO: Validate that only one of id, name, moniker, any is set
         if not self.id and not self.name and not self.moniker and not self.any:
-            raise ValidationError(f'{path} is missing required property: install.winget.id, install.winget.name, install.winget.moniker')
+            raise ValidationError(f'{path} is missing required property: install.winget.id, install.winget.name, '
+                                  'install.winget.moniker')
 
         self.source = obj.get('source', None)
         self.version = obj.get('version', None)
@@ -194,7 +204,8 @@ class ImageInstallWinget:
     def __init__(self, obj: dict, path: Path = None) -> None:
         _validate_data_object(ImageInstallWinget, obj, path=path, parent_key='install.winget')
 
-        self.packages = [WingetPackage({'any': p}, path) if isinstance(p, str) else WingetPackage(p, path) for p in obj['packages']]
+        self.packages = [WingetPackage({'any': p}, path) if isinstance(p, str)
+                         else WingetPackage(p, path) for p in obj['packages']]
         self.defaults = WingetDefaults(obj['defaults'], path) if 'defaults' in obj else None
 
 
