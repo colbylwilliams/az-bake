@@ -170,7 +170,7 @@ def create_resource_group(cli_ctx, resource_group_name, location, tags=None):
 # ----------------
 
 
-def ensure_gallery_permissions(cmd, gallery_id, identity_id, create_assignment=True):
+def ensure_gallery_permissions(cmd, gallery_id: str, identity_id: str, create_assignment=True):
     from azure.cli.command_modules.role.custom import list_role_assignments
 
     i_parts = parse_resource_id(identity_id)
@@ -205,7 +205,7 @@ def ensure_gallery_permissions(cmd, gallery_id, identity_id, create_assignment=T
 # def ensure_sandbox_permissions(cmd, sandbox_id, identity_id):
 #     logger('Ensuring permissions for sandbox %s', sandbox_id)
 
-def get_gallery(cmd, resource_group_name, gallery_name):
+def get_gallery(cmd, resource_group_name: str, gallery_name: str):
     logger.info(f'Getting gallery {gallery_name} in resource group {resource_group_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
@@ -216,7 +216,7 @@ def get_gallery(cmd, resource_group_name, gallery_name):
         return None
 
 
-def get_image_definition(cmd, resource_group_name, gallery_name, gallery_image_name):
+def get_image_definition(cmd, resource_group_name: str, gallery_name: str, gallery_image_name: str):
     logger.info(f'Getting image definition {gallery_image_name} from gallery {gallery_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
@@ -227,7 +227,7 @@ def get_image_definition(cmd, resource_group_name, gallery_name, gallery_image_n
         return None
 
 
-def get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name):
+def get_image_version(cmd, resource_group_name: str, gallery_name: str, gallery_image_name: str, gallery_image_version_name: str):
     logger.info(f'Getting version {gallery_image_version_name} of {gallery_image_name} in gallery {gallery_name}')
     client = cf_compute(cmd.cli_ctx)
     try:
@@ -239,7 +239,7 @@ def get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name
         return None
 
 
-def image_version_exists(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name):
+def image_version_exists(cmd, resource_group_name: str, gallery_name: str, gallery_image_name: str, gallery_image_version_name: str):
     version = get_image_version(cmd, resource_group_name, gallery_name, gallery_image_name, gallery_image_version_name)
     return version is not None
 
