@@ -1,8 +1,10 @@
-from dataclasses import MISSING, dataclass, field, fields
+from dataclasses import MISSING, asdict, dataclass, field, fields
 from pathlib import Path
 from typing import List, Literal, Optional
 
 from azure.cli.core.azclierror import ValidationError
+from azure.cli.core.util import is_guid
+from azure.mgmt.core.tools import is_valid_resource_id
 
 from ._constants import IMAGE_DEFAULT_BASE_WINDOWS
 
@@ -10,6 +12,10 @@ from ._constants import IMAGE_DEFAULT_BASE_WINDOWS
 def _snake_to_camel(name: str):
     parts = name.split('_')
     return parts[0] + ''.join(word.title() for word in parts[1:])
+
+
+def _camel_to_snake(name: str):
+    return ''.join(['_' + c.lower() if c.isupper() else c for c in name]).lstrip('_')
 
 
 def _validate_data_object(data_type: type, obj: dict, path: Path = None, parent_key: str = None):
@@ -34,6 +40,11 @@ def _validate_data_object(data_type: type, obj: dict, path: Path = None, parent_
     for k in obj:
         if k not in all_fields and k not in ['file', 'dir']:
             raise ValidationError(f'{name} contains an invalid property: {key_prefix}{k}')
+
+
+def get_dict(instance):
+    # TODO: shoul we filter False values?  How can we convert back to string lists fo things like choco packages?
+    return asdict(instance, dict_factory=lambda x: {_snake_to_camel(k): v for k, v in x if v is not None and v is not False})
 
 
 # --------------------------------
@@ -221,14 +232,10 @@ class ImageBase:
 
 @dataclass
 class Image:
-    '''Image definition'''
     # required
     publisher: str
     offer: str
     replica_locations: List[str]
-
-    '''Image name, e.g. "Windows Server 2019 Datacenter"'''
-    name: str
     sku: str
     version: str
     os: Literal['Windows', 'Linux']
@@ -238,7 +245,7 @@ class Image:
     base: ImageBase = None
     update: bool = True
     # cli
-    # name: str = None
+    name: str = None
     dir: Path = None
     file: Path = None
 
@@ -248,17 +255,30 @@ class Image:
         self.publisher = obj['publisher']
         self.offer = obj['offer']
         self.replica_locations = obj['replicaLocations']
-        self.name = obj['name']
+        # self.name = obj['name']
         self.sku = obj['sku']
         self.version = obj['version']
         self.os = obj['os']
         self.description = obj.get('description')
         self.install = ImageInstall(obj['install'], path) if 'install' in obj else None
-        self.base = ImageBase(obj['base'], path) if 'base' in obj else ImageBase(IMAGE_DEFAULT_BASE_WINDOWS, path)
+
+        if 'base' in obj:
+            self.base = ImageBase(obj['base'], path)
+        elif self.os.lower() == 'windows':
+            self.base = ImageBase(IMAGE_DEFAULT_BASE_WINDOWS, path)
+        else:
+            raise ValidationError('Image base is required for non-Windows images')
+
         self.update = obj.get('update', True)
 
-        self.dir = path.parent
-        self.file = path
+        if path:
+            self.name = path.parent.name
+            self.dir = path.parent
+            self.file = path
+        elif 'name' in obj:
+            self.name = obj['name']
+        else:
+            raise ValidationError('Image name is required if not using a file path')
 
 
 # --------------------------------
@@ -295,11 +315,11 @@ class Sandbox:
         self.identity_id = obj['identityId']
         self.location = obj.get('location')
 
-        # if not is_guid(bake_obj['sandbox']['subscription']):
-        #     raise ValidationError('sandbox.subscription is not a valid GUID')
+        if not is_guid(self.subscription):
+            raise ValidationError('sandbox.subscription is not a valid GUID')
 
-        # if not is_valid_resource_id(bake_obj['sandbox']['identityId']):
-        #     raise ValidationError('sandbox.identityId is not a valid resource ID')
+        if not is_valid_resource_id(self.identity_id):
+            raise ValidationError('sandbox.identityId is not a valid resource ID')
 
 
 # --------------------------------
@@ -323,6 +343,9 @@ class Gallery:
         self.resource_group = obj['resourceGroup']
         self.subscription = obj.get('subscription')
 
+        if self.subscription and not is_guid(self.subscription):
+            raise ValidationError('gallery.subscription is not a valid GUID')
+
 
 # --------------------------------
 # BakeConfig
@@ -337,15 +360,20 @@ class BakeConfig:
     sandbox: Sandbox
     gallery: Gallery
     # cli
-    name: str
-    dir: Path
+    name: str = None
+    dir: Path = None
 
-    def __init__(self, obj: dict, path: Path = None) -> None:
+    def __init__(self, obj: dict, path: Path) -> None:
+        if 'file' not in obj:
+            obj['file'] = path
+
         _validate_data_object(BakeConfig, obj, path=path)
 
         self.file = obj['file']
-        self.name = obj['name']
-        self.dir = obj['dir']
+        self.name = self.file.name
+        self.dir = self.file.parent
+        # self.name = obj['name']
+        # self.dir = obj['dir']
 
         self.version = obj['version']
         self.sandbox = Sandbox(obj['sandbox'], path)
