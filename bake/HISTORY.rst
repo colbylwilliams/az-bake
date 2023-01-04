@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.1
+++++++
++ Bug fixes and minor improvements.
+
 0.3.0
 ++++++
 + Overhaul to use python dataclasses
