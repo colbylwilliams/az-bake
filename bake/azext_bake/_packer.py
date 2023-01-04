@@ -11,6 +11,7 @@ import subprocess
 import sys
 
 from pathlib import Path
+from typing import Any, Mapping, Sequence
 
 from azure.cli.core.azclierror import ValidationError
 
@@ -18,6 +19,7 @@ from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE, CHOCO_PAC
                          PKR_AUTO_VARS_FILE, PKR_BUILD_FILE, PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO,
                          PKR_PROVISIONER_CHOCO_USER, PKR_PROVISIONER_RESTART, PKR_PROVISIONER_UPDATE,
                          PKR_PROVISIONER_WINGET_INSTALL, PKR_VARS_FILE, WINGET_SETTINGS_FILE, WINGET_SETTINGS_JSON)
+from ._data import Gallery, Image, PowershellScript, Sandbox, WingetPackage, get_dict
 from ._utils import get_logger, get_templates_path
 
 logger = get_logger(__name__)
@@ -61,10 +63,10 @@ def _parse_command(command):
     return args
 
 
-def get_packer_vars(image):
+def get_packer_vars(image: Image):
     '''Gets the available packer variables from the variable.pkr.hcl file'''
     try:
-        args = _parse_command(['inspect', '-machine-readable', image['dir']])
+        args = _parse_command(['inspect', '-machine-readable', image.dir])
         logger.info(f'Running packer command: {" ".join(args)}')
         proc = subprocess.run(args, capture_output=True, check=True, text=True)
         if proc.stdout:
@@ -76,18 +78,20 @@ def get_packer_vars(image):
 
 
 def _clean_for_vars(obj, allowed_keys):
+    '''Cleans an object for use as packer variables'''
+    obj_dict = get_dict(obj)
     obj_vars = {}
-    for k in obj:
+    for k in obj_dict:
         if k in allowed_keys:
-            obj_vars[k] = obj[k]
+            obj_vars[k] = obj_dict[k]
     return obj_vars
 
 
-def save_packer_vars_file(sandbox, gallery, image, additonal_vars=None):
+def save_packer_vars_file(sandbox: Sandbox, gallery: Gallery, image: Image, additonal_vars: Mapping[str, Any] = None):
     '''Saves properties from image.yaml to a packer auto variables file'''
-    logger.info(f'Saving packer auto variables file for {image["name"]}')
+    logger.info(f'Saving packer auto variables file for {image.name}')
     pkr_vars = get_packer_vars(image)
-    logger.info(f'Packer variables for {image["name"]}: {pkr_vars}')
+    logger.info(f'Packer variables for {image.name}: {pkr_vars}')
     auto_vars = {}
 
     if additonal_vars:
@@ -99,49 +103,49 @@ def save_packer_vars_file(sandbox, gallery, image, additonal_vars=None):
     auto_vars['gallery'] = _clean_for_vars(gallery, PKR_DEFAULT_VARS['gallery'])
     auto_vars['image'] = _clean_for_vars(image, PKR_DEFAULT_VARS['image'])
 
-    logger.info(f'Saving {image["name"]} packer auto variables:')
+    logger.info(f'Saving {image.name} packer auto variables:')
     for line in json.dumps(auto_vars, indent=4).splitlines():
         logger.info(line)
 
-    with open(image['dir'] / PKR_AUTO_VARS_FILE, 'w', encoding='utf-8') as f:
+    with open(image.dir / PKR_AUTO_VARS_FILE, 'w', encoding='utf-8') as f:
         json.dump(auto_vars, f, ensure_ascii=False, indent=4, sort_keys=True)
 
 
-def save_packer_vars_files(sandbox, gallery, images, additonal_vars=None):
+def save_packer_vars_files(sandbox: Sandbox, gallery: Gallery, images: Sequence[Image], additonal_vars: Mapping[str, Any] = None):
     '''Saves properties from each image.yaml to packer auto variables files'''
     for image in images:
         save_packer_vars_file(sandbox, gallery, image, additonal_vars)
 
 
-def packer_init(image):
+def packer_init(image: Image):
     '''Executes the packer init command on an image'''
-    logger.info(f'Executing packer init for {image["name"]}')
-    args = _parse_command(['init', image['dir']])
+    logger.info(f'Executing packer init for {image.name}')
+    args = _parse_command(['init', image.dir])
     logger.info(f'Running packer command: {" ".join(args)}')
     proc = subprocess.run(args, stdout=sys.stdout, stderr=sys.stderr, check=True, text=True)
-    logger.info(f'Done executing packer init for {image["name"]}')
+    logger.info(f'Done executing packer init for {image.name}')
     return proc.returncode
 
 
-def packer_build(image):
+def packer_build(image: Image):
     '''Executes the packer build command on an image'''
-    logger.info(f'Executing packer build for {image["name"]}')
-    args = _parse_command(['build', '-force', image['dir']])
+    logger.info(f'Executing packer build for {image.name}')
+    args = _parse_command(['build', '-force', image.dir])
     if in_builder:
         args.insert(2, '-color=false')
     logger.info(f'Running packer command: {" ".join(args)}')
     proc = subprocess.run(args, stdout=sys.stdout, stderr=sys.stderr, check=True, text=True)
-    logger.info(f'Done executing packer build for {image["name"]}')
+    logger.info(f'Done executing packer build for {image.name}')
     return proc.returncode
 
 
-def packer_execute(image):
+def packer_execute(image: Image):
     '''Executes the packer init and build commands on an image'''
     i = packer_init(image)
     return packer_build(image) if i == 0 else i
 
 
-def copy_packer_files(image_dir):
+def copy_packer_files(image_dir: Path):
     '''Copies the packer files from the bake templates to the image directory unless they already exist'''
     logger.info(f'Copying packer files to {image_dir}')
     templates_dir = get_templates_path('packer')
@@ -163,17 +167,17 @@ def copy_packer_files(image_dir):
     return True
 
 
-def inject_update_provisioner(image_dir):
+def inject_update_provisioner(image_dir: Path):
     '''Injects the update provisioner into the packer build file'''
     _inject_provisioner(image_dir, PKR_PROVISIONER_UPDATE)
 
 
-def inject_restart_provisioner(image_dir):
+def inject_restart_provisioner(image_dir: Path):
     '''Injects the restart provisioner into the packer build file'''
     _inject_provisioner(image_dir, PKR_PROVISIONER_RESTART)
 
 
-def inject_powershell_provisioner(image_dir, powershell_scripts):
+def inject_powershell_provisioner(image_dir: Path, powershell_scripts: Sequence[PowershellScript]):
     '''Injects the powershell provisioner into the packer build file'''
 
     current_index = 0
@@ -189,10 +193,10 @@ def inject_powershell_provisioner(image_dir, powershell_scripts):
 
     for i, script in enumerate(powershell_scripts):
         current_index = i
-        script_path = script['path']
+        script_path = script.path
         powershell_provisioner += f'      "{script_path}"'
 
-        if script['restart'] is True:
+        if script.restart is True:
             inject_restart = True
             break
 
@@ -213,7 +217,7 @@ def inject_powershell_provisioner(image_dir, powershell_scripts):
             inject_powershell_provisioner(image_dir, powershell_scripts[current_index + 1:])
 
 
-def inject_choco_provisioners(image_dir, config_xml, for_user=False):
+def inject_choco_provisioners(image_dir: Path, config_xml, for_user=False):
     '''Injects the chocolatey provisioners into the packer build file'''
     # create the choco packages config file
     file_name = CHOCO_PACKAGES_USER_CONFIG_FILE if for_user else CHOCO_PACKAGES_CONFIG_FILE
@@ -225,7 +229,7 @@ def inject_choco_provisioners(image_dir, config_xml, for_user=False):
     _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO_USER if for_user else PKR_PROVISIONER_CHOCO)
 
 
-def inject_winget_provisioners(image_dir, winget_packages):
+def inject_winget_provisioners(image_dir: Path, winget_packages: Sequence[WingetPackage]):
     '''Injects the winget provisioners into the packer build file'''
 
     logger.info(f'Creating file: {image_dir / WINGET_SETTINGS_FILE}')
@@ -245,15 +249,19 @@ def inject_winget_provisioners(image_dir, winget_packages):
     for i, p in enumerate(winget_packages):
         winget_cmd = 'winget install '
 
-        if 'ANY' in p:  # user just specified a string, it could be a the moniker, name or id
-            winget_cmd += f'{p["ANY"]} '
-        else:  # user specified the moniker, name or id
-            for a in ['id', 'name', 'moniker', 'source']:
-                if a in p:
-                    winget_cmd += f'--{a} {p[a]} '
-        for a in ['source']:  # even if the user only specified a string, source could be in defaults
-            if a in p:
-                winget_cmd += f'--{a} {p[a]} '
+        if p.any:  # user just specified a string, it could be a the moniker, name or id
+            winget_cmd += f'{p.any} '
+        elif p.id:
+            winget_cmd += f'--id {p.id} '
+        elif p.name:
+            winget_cmd += f'--name {p.name} '
+        elif p.moniker:
+            winget_cmd += f'--moniker {p.moniker} '
+        else:
+            raise Exception('Invalid winget package configuration')
+
+        if p.source:  # even if the user only specified a string, source could be in defaults
+            winget_cmd += f'--source {p.source} '
 
         winget_cmd += '--accept-package-agreements --accept-source-agreements'
 
@@ -271,7 +279,7 @@ def inject_winget_provisioners(image_dir, winget_packages):
     _inject_provisioner(image_dir, winget_install)
 
 
-def _inject_provisioner(image_dir, provisioner):
+def _inject_provisioner(image_dir: Path, provisioner: str):
     '''Injects the provisioner into the packer build file'''
 
     build_file_path = image_dir / PKR_BUILD_FILE

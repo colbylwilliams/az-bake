@@ -116,6 +116,17 @@ class ChocoPackage:
         self.package_parameters = obj.get('packageParameters', None)
         self.user = obj.get('user', False)
 
+    @property
+    def id_only(self):
+        return self.source is None and self.version is None and self.install_arguments is None \
+            and self.package_parameters is None and not self.user
+
+    def apply_defaults(self, defaults: ChocoDefaults):
+        if defaults.source is not None and self.source is None:
+            self.source = defaults.source
+        if defaults.install_arguments is not None and self.install_arguments is None:
+            self.install_arguments = defaults.install_arguments
+
 
 @dataclass
 class ImageInstallChoco:

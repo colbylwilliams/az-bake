@@ -16,17 +16,16 @@ from azure.cli.core.azclierror import (ArgumentUsageError, CLIError, InvalidArgu
 from azure.cli.core.commands.parameters import get_resources_in_subscription
 from azure.cli.core.commands.validators import validate_tags
 from azure.cli.core.extension import get_extension
-from azure.cli.core.util import is_guid
 from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
 
-from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER, AZ_BAKE_IMAGE_BUILDER_VERSION,
-                         BAKE_PROPERTIES, IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_PROPERTIES, IN_BUILDER, KEY_ALLOWED,
-                         KEY_REQUIRED, REPO_DIR, SANDBOX_PROPERTIES, STORAGE_DIR, tag_key)
+from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER, AZ_BAKE_IMAGE_BUILDER_VERSION, IN_BUILDER,
+                         REPO_DIR, STORAGE_DIR, tag_key)
+from ._data import BakeConfig, Gallery, Image
 from ._github import get_github_latest_release_version, github_release_version_exists
 from ._packer import check_packer_install
-from ._repos import get_repo, is_ci, parse_repo_url
+from ._repos import CI, Repo
 from ._sandbox import get_sandbox_from_group
-from ._utils import get_logger, get_yaml_file_contents, get_yaml_file_path
+from ._utils import get_logger, get_yaml_file_data, get_yaml_file_path
 
 logger = get_logger(__name__)
 
@@ -48,25 +47,6 @@ def process_sandbox_create_namespace(cmd, ns):
     gallery_resource_id_validator(cmd, ns)
 
 
-def process_bake_image_namespace(cmd, ns):
-    # common = None
-    if ns.bake_yaml:
-        if ns.sandbox_resource_group_name or ns.gallery_resource_id:
-            raise MutuallyExclusiveArgumentError('usage error: --bake-yaml can not be used with --sandbox or --gallery')
-        bake_yaml_validator(cmd, ns)
-        # bakeobj = bake_yaml_validator(cmd, ns)
-        # common = bakeobj['images']
-    elif not ns.sandbox_resource_group_name or not ns.gallery_resource_id:
-        raise RequiredArgumentMissingError('usage error: --sandbox and --gallery OR --bake-yaml is required')
-    else:
-        sandbox_resource_group_name_validator(cmd, ns)
-        gallery_resource_id_validator(cmd, ns)
-
-    image_path_validator(cmd, ns)
-    image_yaml_validator(cmd, ns)
-    # image_yaml_validator(cmd, ns, common=common)
-
-
 def process_bake_repo_build_namespace(cmd, ns):
     # if hasattr(ns, 'sandbox_resource_group_name') and ns.sandbox_resource_group_name \
     #     and hasattr(ns, 'gallery_resource_id') and ns.gallery_resource_id:
@@ -74,33 +54,30 @@ def process_bake_repo_build_namespace(cmd, ns):
     repository_path_validator(cmd, ns)
     repository_images_validator(cmd, ns)
     bake_yaml_validator(cmd, ns)
-    # bake_obj = bake_yaml_validator(cmd, ns)
-    for i, image in enumerate(ns.images):
-        # ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
-        ns.images[i] = image_yaml_validator(cmd, ns, image=image)
 
-    ci = is_ci()
-    ns.is_ci = ci
-
-    if ci:
+    if CI.is_ci():
         logger.info('Running in CI environment')
         if ns.repository_url or ns.repository_token or ns.repository_revision:
             raise ArgumentUsageError('--repo-url, --repo-token, and --repo-revision can not be used in a CI environment')
-        repo = get_repo()
-        ns.repository_url = repo['url']
-        ns.repository_token = repo['token']
-        ns.repository_revision = repo['sha']
+
+        ci = CI()
+        env_key = 'GITHUB_TOKEN' if ci.provider == 'github' else 'SYSTEM_ACCESSTOKEN'
+        logger.warning(f'WARNING: {env_key} environment variable not set. This is required for private repositories.')
+
+        repo = Repo(url=ci.url, token=ci.token, ref=ci.ref, revision=ci.revision)
+
     else:
         logger.info('Running in local environment')
         if not ns.repository_url:
             raise RequiredArgumentMissingError('--repo-url is required when not running in a CI environment')
-        repo = parse_repo_url(ns.repository_url)
 
-    for prop in ['provider', 'url']:
-        if prop not in repo:
-            raise ValidationError(f'Repo is missing {prop} property')
-        if not repo[prop]:
-            raise ValidationError(f'Repo {prop} property is empty')
+        if not ns.repository_token:
+            logger.warning('WARNING: --repo-token is not set. This is required for private repositories.')
+
+        repo = Repo(url=ns.repository_url, token=ns.repository_token, revision=ns.repository_revision)
+
+    if repo.clone_url is None:
+        raise CLIError(f'Unable to parse repository url: {repo.url}')
 
     ns.repo = repo
 
@@ -109,10 +86,6 @@ def process_bake_repo_validate_namespace(cmd, ns):
     repository_path_validator(cmd, ns)
     repository_images_validator(cmd, ns)
     bake_yaml_validator(cmd, ns)
-    # bake_obj = bake_yaml_validator(cmd, ns)
-    for i, image in enumerate(ns.images):
-        # ns.images[i] = image_yaml_validator(cmd, ns, image=image, common=bake_obj['images'])
-        ns.images[i] = image_yaml_validator(cmd, ns, image=image)
 
 
 def builder_validator(cmd, ns):
@@ -152,21 +125,10 @@ def builder_validator(cmd, ns):
     logger.info(f'Build suffix: {ns.suffix}')
 
     bake_yaml = get_yaml_file_path(REPO_DIR, 'bake', required=True)
+    bake_yaml_validator(cmd, ns, bake_yaml)
 
-    # bake_obj = bake_yaml_content_validator(cmd, ns, bake_yaml)
-    bake_yaml_content_validator(cmd, ns, bake_yaml)
-
-    image_dir = image_path
-    image_file = get_yaml_file_path(image_dir, 'image', required=True)
-    image_name = image_path.name
-    ns.image = {
-        'name': image_name,
-        'dir': image_dir,
-        'file': image_file,
-    }
-
-    # image_yaml_validator(cmd, ns, common=bake_obj['images'])
-    image_yaml_validator(cmd, ns)
+    image_yaml = get_yaml_file_path(image_path, 'image', required=True)
+    image_yaml_validator(cmd, ns, image_yaml)
 
 
 def repository_images_validator(cmd, ns):
@@ -200,11 +162,13 @@ def repository_images_validator(cmd, ns):
     # for each image, validate the image.yaml file exists and get the path
     for image_dir in image_dirs:
         if all_images or image_dir.name in images:
-            ns.images.append({
-                'name': image_dir.name,
-                'dir': image_dir,
-                'file': get_yaml_file_path(image_dir, 'image', required=True)
-            })
+            image_yaml = get_yaml_file_path(image_dir, 'image', required=True)
+            ns.images.append(image_yaml_validator(cmd, ns, image_yaml))
+            # ns.images.append({
+            #     'name': image_dir.name,
+            #     'dir': image_dir,
+            #     'file': get_yaml_file_path(image_dir, 'image', required=True)
+            # })
 
 
 def repository_path_validator(cmd, ns):
@@ -272,106 +236,37 @@ def validate_subnet(cmd, ns, subnet, vnet_prefixes):
             f'(prefixed: {", ".join(vnet_prefixes)})')
 
 
-def bake_yaml_validator(cmd, ns):
+def bake_yaml_validator(cmd, ns, path=None):
 
-    if hasattr(ns, 'repository_path') and ns.repository_path:
+    if not path and hasattr(ns, 'repository_path') and ns.repository_path:
         # should have already run the repository_path_validator
         path = get_yaml_file_path(ns.repository_path, 'bake', required=True)
-    elif _has_bake_yaml(ns):
-        bake_yaml = Path(ns.bake_yaml).resolve()
-        bake_yaml = get_yaml_file_path(bake_yaml.parent, 'bake', required=True)
-        ns.bake_yaml = bake_yaml
-        path = bake_yaml
     else:
-        raise RequiredArgumentMissingError('usage error: --repository-path or --bake-yaml is required.')
+        raise RequiredArgumentMissingError('usage error: --repository-path is required.')
 
-    return bake_yaml_content_validator(cmd, ns, path)
-
-
-def bake_yaml_content_validator(cmd, ns, path):
-    bake_obj = get_yaml_file_contents(path)
-    bake_obj['name'] = path.name
-    bake_obj['dir'] = path.parent
-    bake_obj['file'] = path
-
-    _validate_object(bake_obj['file'], bake_obj, BAKE_PROPERTIES)
-
-    for key, prop in BAKE_PROPERTIES.items():
-        if key not in [KEY_REQUIRED, KEY_ALLOWED]:
-            _validate_object(bake_obj['file'], bake_obj[key], prop, parent_key=key)
-
-    if not is_guid(bake_obj['sandbox']['subscription']):
-        raise ValidationError('sandbox.subscription is not a valid GUID')
-
-    if not is_valid_resource_id(bake_obj['sandbox']['identityId']):
-        raise ValidationError('sandbox.identityId is not a valid resource ID')
+    bake_config = get_yaml_file_data(BakeConfig, path)
+    print('')
+    print(bake_config)
+    print('')
 
     if hasattr(ns, 'bake_obj'):
-        ns.bake_obj = bake_obj
+        ns.bake_obj = bake_config
 
     if hasattr(ns, 'sandbox'):
-        ns.sandbox = bake_obj['sandbox']
+        ns.sandbox = bake_config.sandbox
 
     if hasattr(ns, 'gallery'):
-        ns.gallery = bake_obj['gallery']
+        ns.gallery = bake_config.gallery
 
-    return bake_obj
-
-
-def image_path_validator(cmd, ns):
-    # allow user to specify the image.yaml file or parent folder
-    image_path = Path(ns.image_path).resolve()
-    if not image_path.exists():
-        raise ValidationError(f'Could not find image file or directory at {image_path}')
-    if image_path.is_file():
-        image_dir = image_path.parent
-        image_name = image_path.parent.name
-        image_file = image_path
-    if image_path.is_dir():
-        image_dir = image_path
-        image_file = get_yaml_file_path(image_dir, 'image', required=True)
-        image_name = image_path.name
-
-    if hasattr(ns, 'image'):
-        ns.image = {
-            'name': image_name,
-            'dir': image_dir,
-            'file': image_file,
-        }
+    return bake_config
 
 
-# def image_yaml_validator(cmd, ns, image=None, common=None):
-def image_yaml_validator(cmd, ns, image=None):
-    if image is None and hasattr(ns, 'image') and ns.image is not None:
-        image = ns.image
+def image_yaml_validator(cmd, ns, path):
+    image = get_yaml_file_data(Image, path)
 
-    # TODO: may not need this
-    img_temp = get_yaml_file_contents(image['file'])
-    temp = img_temp.copy()
-    temp.update(image)
-    image = temp
-
-    # if common:
-    #     img_common = common
-    #     temp = img_common.copy()
-    #     temp.update(image)
-    #     image = temp.copy()
-
-    logger.info(f'Validating image: {image["name"]}')
-    _validate_object(image['file'], image, IMAGE_PROPERTIES)
-
-    for key, prop in IMAGE_PROPERTIES.items():
-        if key not in [KEY_REQUIRED, KEY_ALLOWED] and key in image:
-            _validate_object(image['file'], image[key], prop, parent_key=key)
-
-    if 'base' not in image:
-        if image['os'].lower() == 'windows':
-            image['base'] = IMAGE_DEFAULT_BASE_WINDOWS
-        else:
-            raise ValidationError('Image base is required for non-Windows images')
-
-    if 'update' not in image:
-        image['update'] = True
+    print('')
+    print(image)
+    print('')
 
     if hasattr(ns, 'image'):
         ns.image = image
@@ -384,18 +279,12 @@ def sandbox_resource_group_name_validator(cmd, ns):
         raise CLIError('Shouldnt specify both resource_group_name and sandbox_resource_group_name')
     if hasattr(ns, 'resource_group_name'):
         rg_name = ns.resource_group_name
-        if ns.resource_group_name and _has_bake_yaml(ns):
-            raise MutuallyExclusiveArgumentError('usage error: --bake-yaml and --sandbox are mutually exclusive')
     elif hasattr(ns, 'sandbox_resource_group_name'):
         rg_name = ns.sandbox_resource_group_name
-        if ns.sandbox_resource_group_name and _has_bake_yaml(ns):
-            raise MutuallyExclusiveArgumentError('usage error: --bake-yaml and --sandbox are mutually exclusive')
     else:
         raise RequiredArgumentMissingError('usage error: --sandbox is required.')
 
     sandbox = get_sandbox_from_group(cmd, rg_name)
-
-    _validate_object(rg_name, sandbox, SANDBOX_PROPERTIES)
 
     if hasattr(ns, 'sandbox'):
         ns.sandbox = sandbox
@@ -416,11 +305,11 @@ def gallery_resource_id_validator(cmd, ns):
 
         if hasattr(ns, 'gallery'):
             gallery_id = parse_resource_id(ns.gallery_resource_id)
-            ns.gallery = {
+            ns.gallery = Gallery({
                 'name': gallery_id['name'],
                 'resourceGroup': gallery_id['resource_group'],
                 'subscription': gallery_id['subscription'],
-            }
+            })
 
 
 def bake_source_version_validator(cmd, ns):
@@ -485,28 +374,6 @@ def yaml_out_validator(cmd, ns):
             ns.outfile = None
         if ns.outdir:
             ns.outdir = _validate_dir_path(ns.outdir)
-
-
-def _has_bake_yaml(ns):
-    return hasattr(ns, 'bake_yaml') and ns.bake_yaml is not None
-
-
-def _validate_object(path, obj, properties, parent_key=None):
-
-    key_prefix = f'{parent_key}.' if parent_key else ''
-
-    if KEY_REQUIRED in properties:
-        for prop in properties[KEY_REQUIRED]:
-            if prop not in obj:
-                raise ValidationError(f'{path} is missing {KEY_REQUIRED} property: {key_prefix}{prop}')
-            if not obj[prop]:
-                raise ValidationError(f'{path} is missing a value for {KEY_REQUIRED} property: {key_prefix}{prop}')
-    if KEY_ALLOWED in properties:
-        for prop in obj:
-            if prop not in properties[KEY_ALLOWED] and prop not in ['file', 'dir']:
-                raise ValidationError(f'{path} contains an invalid property: {key_prefix}{prop}')
-
-    return obj
 
 
 def _validate_dir_path(path, name=None):

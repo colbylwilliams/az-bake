@@ -45,96 +45,12 @@ PKR_AUTO_VARS_FILE = 'vars.auto.pkrvars.json'
 
 TAG_PREFIX = 'hidden-bake:'
 
-KEY_REQUIRED = 'required'
-KEY_ALLOWED = 'allowed'
-
-BAKE_REQUIRED_PROPERTIES = [
-    'version',
-    'sandbox',
-    'gallery',
-    # 'images'
-]
-
-# TODO: Add type and description to the properties for validaiton and hints
-
-SANDBOX_REQUIRED_PROPERTIES = [
-    'resourceGroup',
-    'subscription',
-    'virtualNetwork',
-    'keyVault',
-    'storageAccount',
-    'identityId',
-    'virtualNetworkResourceGroup',
-    'defaultSubnet',
-    'builderSubnet'
-]
-SANDBOX_ALLOWED_PROPERTIES = SANDBOX_REQUIRED_PROPERTIES + [
-    'location'
-]
-SANDBOX_PROPERTIES = {
-    KEY_REQUIRED: SANDBOX_REQUIRED_PROPERTIES,
-    KEY_ALLOWED: SANDBOX_ALLOWED_PROPERTIES
-}
-
-GALLERY_REQUIRED_PROPERTIES = [
-    'name',
-    'resourceGroup'
-]
-GALLERY_ALLOWED_PROPERTIES = GALLERY_REQUIRED_PROPERTIES + [
-    'subscription'
-]
-GALLERY_PROPERTIES = {
-    KEY_REQUIRED: GALLERY_REQUIRED_PROPERTIES,
-    KEY_ALLOWED: GALLERY_ALLOWED_PROPERTIES
-}
-
-IMAGE_COMMON_ALLOWED_PROPERTIES = [
-    'publisher',
-    'offer',
-    'replicaLocations'
-]
-IMAGE_REQUIRED_PROPERTIES = IMAGE_COMMON_ALLOWED_PROPERTIES + [
-    'name',
-    'sku',
-    'version',
-    'os'
-]
-IMAGE_ALLOWED_PROPERTIES = IMAGE_REQUIRED_PROPERTIES + [
-    'description',
-    'install',
-    'base',
-    'update'
-]
-
-IMAGE_INSTALL_PROPERTIES = {
-    KEY_ALLOWED: ['scripts', 'choco', 'winget']
-}
-
-IMAGE_BASE_PROPERTIES = {
-    KEY_REQUIRED: ['publisher', 'offer', 'sku', 'version'],
-}
 
 IMAGE_DEFAULT_BASE_WINDOWS = {
     'publisher': 'microsoftwindowsdesktop',
     'offer': 'windows-ent-cpc',
     'sku': 'win11-22h2-ent-cpc-m365',
     'version': 'latest'
-}
-
-BAKE_PROPERTIES = {
-    KEY_REQUIRED: BAKE_REQUIRED_PROPERTIES,
-    'sandbox': SANDBOX_PROPERTIES,
-    # 'images': {
-    #     KEY_ALLOWED: IMAGE_COMMON_ALLOWED_PROPERTIES
-    # },
-    'gallery': GALLERY_PROPERTIES
-}
-
-IMAGE_PROPERTIES = {
-    KEY_REQUIRED: IMAGE_REQUIRED_PROPERTIES,
-    KEY_ALLOWED: IMAGE_ALLOWED_PROPERTIES,
-    'install': IMAGE_INSTALL_PROPERTIES,
-    'base': IMAGE_BASE_PROPERTIES
 }
 
 
@@ -162,10 +78,6 @@ PKR_DEFAULT_VARS = {
         'storageAccount',
         'identityId'
     ]
-}
-
-PKR_VARS_MAP = {
-
 }
 
 
@@ -377,7 +289,7 @@ steps:
 
   - displayName: Install az bake # get the latest version of az bake from the github releases and install it
     bash: |
-      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.2.8-py3-none-any.whl -y
+      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.3.0-py3-none-any.whl -y
       az bake upgrade
 
   - displayName: Run az bake

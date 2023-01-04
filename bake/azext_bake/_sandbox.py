@@ -13,12 +13,13 @@ from azure.mgmt.core.tools import is_valid_resource_id, resource_id
 from ._arm import get_resource_group_tags
 from ._client_factory import cf_keyvault, cf_network, cf_storage
 from ._constants import tag_key
+from ._data import Sandbox
 from ._utils import get_logger
 
 logger = get_logger(__name__)
 
 
-def get_sandbox_from_group(cmd, resource_group_name):  # pylint: disable=too-many-statements
+def get_sandbox_from_group(cmd, resource_group_name: str) -> Sandbox:  # pylint: disable=too-many-statements
     tags = get_resource_group_tags(cmd, resource_group_name)
 
     sub = tags.get(tag_key('subscription'))
@@ -105,7 +106,7 @@ def get_sandbox_from_group(cmd, resource_group_name):  # pylint: disable=too-man
         default_subnet = default_subnet.name
         builder_subnet = builder_subnet.name
 
-    return {
+    return Sandbox({
         'resourceGroup': resource_group_name,
         'subscription': sub,
         'location': loc,
@@ -116,16 +117,16 @@ def get_sandbox_from_group(cmd, resource_group_name):  # pylint: disable=too-man
         'keyVault': keyvault_name,
         'storageAccount': storage_account,
         'identityId': identity_id
-    }
+    })
 
 
-def get_builder_subnet_id(sandbox):
-    for k in ['subscription', 'virtualNetworkResourceGroup', 'virtualNetwork', 'builderSubnet']:
-        if k not in sandbox or not sandbox[k]:
-            raise ValidationError(f'Sandbox is missing required property: {k}')
-    return resource_id(subscription=sandbox['subscription'], resource_group=sandbox['virtualNetworkResourceGroup'],
-                       namespace='Microsoft.Network', type='virtualNetworks', name=sandbox['virtualNetwork'],
-                       child_type_1='subnets', child_name_1=sandbox['builderSubnet'])
+def get_builder_subnet_id(sandbox: Sandbox):
+    # for k in ['subscription', 'virtualNetworkResourceGroup', 'virtualNetwork', 'builderSubnet']:
+    #     if k not in sandbox or not sandbox[k]:
+    #         raise ValidationError(f'Sandbox is missing required property: {k}')
+    return resource_id(subscription=sandbox.subscription, resource_group=sandbox.virtual_network_resource_group,
+                       namespace='Microsoft.Network', type='virtualNetworks', name=sandbox.virtual_network,
+                       child_type_1='subnets', child_name_1=sandbox.builder_subnet)
 
 
 def _check_keyvault_name_availability(cmd, keyvault_name):

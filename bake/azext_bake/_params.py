@@ -119,7 +119,7 @@ def load_arguments(self, _):
         c.argument('repository_url', options_list=['--repo-url'], arg_group='Repo', help='Repository url.')
         c.argument('repository_token', options_list=['--repo-token'], arg_group='Repo', help='Repository token.')
         c.argument('repository_revision', options_list=['--repo-revision'], arg_group='Repo', help='Repository revision.')
-        c.ignore('is_ci')
+        # c.ignore('is_ci')
         c.ignore('sandbox')
         c.ignore('gallery')
         c.ignore('images')

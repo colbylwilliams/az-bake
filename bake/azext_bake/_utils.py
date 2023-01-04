@@ -7,6 +7,7 @@
 import json
 
 from pathlib import Path
+from typing import List, Sequence, TypeVar
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
 
@@ -16,6 +17,7 @@ from azure.cli.core.azclierror import FileOperationError, ValidationError
 from knack.log import get_logger as knack_get_logger
 
 from ._constants import IN_BUILDER, OUTPUT_DIR, STORAGE_DIR
+from ._data import ChocoPackage, Image, PowershellScript, get_dict
 
 
 def get_logger(name):
@@ -81,6 +83,11 @@ def get_yaml_file_contents(path):
     try:
         with open(path, 'r', encoding='utf-8') as f:
             obj = yaml.safe_load(f)
+            # obj['file'] = path
+            # obj['name'] = path.name
+            # obj['dir'] = path.parent
+            # obj['file'] = path
+
     except OSError:  # FileNotFoundError introduced in Python 3
         raise FileOperationError(f'No such file or directory: {path}')  # pylint: disable=raise-missing-from
     except yaml.YAMLError as e:
@@ -90,13 +97,22 @@ def get_yaml_file_contents(path):
     return obj
 
 
-def get_install_choco_dict(image):
+TData = TypeVar('TData')
+
+
+def get_yaml_file_data(data_type: TData, path: Path) -> TData:
+    '''Get the data from a yaml file'''
+    obj = get_yaml_file_contents(path)
+    return data_type(obj, path)
+
+
+def get_install_choco_packages(image: Image) -> List[ChocoPackage]:
     '''Get the dict for the install choco section supplemented by the index'''
     logger.info('Getting choco install dictionary from image.yaml')
-    if 'install' not in image or 'choco' not in image['install']:
+    if image.install is None or image.install.choco is None:
         return None
 
-    if 'packages' not in image['install']['choco']:
+    if image.install.choco.packages is None:
         raise ValidationError('No packages found in install.choco in image.yaml')
 
     install_path = get_templates_path('install')
@@ -107,36 +123,27 @@ def get_install_choco_dict(image):
 
     choco = []
 
-    choco_defaults = image['install']['choco']['defaults'] if 'defaults' in image['install']['choco'] else None
-
-    for c in image['install']['choco']['packages']:
+    for c in image.install.choco.packages:
         logger.info(f'Getting choco config for {c} type {type(c)}')
-        if isinstance(c, str):
-            # if only the id was givin, check the index for the rest of the config
-            choco_node = choco_index[c] if c in choco_index else {'id': c}
-        elif isinstance(c, dict):
-            # if the full config was given, use it
-            choco_node = c
-        else:
-            raise ValidationError(f'Invalid choco config {c} in image {image["name"]}')
+        # if only the id was givin, check the index for the rest of the config
+        choco_node = ChocoPackage(choco_index[c.id]) if c.id_only and c.id in choco_index else c.copy()
 
+        # TODO
         # if defaults were given, add them to the config
-        if choco_defaults:  # merge common properties into image properties
-            temp = choco_defaults.copy()
-            temp.update(choco_node)
-            choco_node = temp.copy()
+        if image.install.choco.defaults:
+            choco_node.apply_defaults(image.install.choco.defaults)  # merge common properties into package properties
 
         choco.append(choco_node)
 
     return choco
 
 
-def get_choco_package_config(packages, indent=2):
+def get_choco_package_config(packages: Sequence[ChocoPackage], indent=2) -> str:
     '''Get the chocolatey package config file'''
     logger.info('Getting choco package config contents from install dict')
     elem = Element('packages')
     for package in packages:
-        pkg = package.copy()
+        pkg = get_dict(package)
         if 'user' in pkg:
             del pkg['user']
         child = Element('package', pkg)
@@ -150,13 +157,14 @@ def get_choco_package_config(packages, indent=2):
     return xml_string
 
 
-def get_install_winget(image):
+def get_install_winget(image: Image):
+    # TODO
     '''Get the dict for the install winget section supplemented by the index'''
     logger.info('Getting wingit install dictionary from image.yaml')
-    if 'install' not in image or 'winget' not in image['install']:
+    if image.install is None or image.install.winget is None:
         return None
 
-    if 'packages' not in image['install']['winget']:
+    if image.install.winget.packages is None:
         raise ValidationError('No packages found in install.winget in image.yaml')
 
     install_path = get_templates_path('install')
@@ -167,9 +175,9 @@ def get_install_winget(image):
 
     winget = []
 
-    winget_defaults = image['install']['winget']['defaults'] if 'defaults' in image['install']['winget'] else None
+    winget_defaults = image.install.winget.defaults
 
-    for c in image['install']['winget']['packages']:
+    for c in image.install.winget.packages:
         logger.info(f'Getting winget config for {c} type {type(c)}')
         if isinstance(c, str):
             # if only the id was givin, check the index for the rest of the config
@@ -191,37 +199,28 @@ def get_install_winget(image):
     return winget
 
 
-def get_install_powershell_scripts(image):
+def get_install_powershell_scripts(image: Image) -> List[PowershellScript]:
+    # TODO
     logger.info('Getting powershell scripts install dictionary from image.yaml')
-    if 'install' not in image or 'scripts' not in image['install']:
+    if image.install is None or image.install.scripts is None:
         return None
 
-    if 'powershell' not in image['install']['scripts']:
+    if image.install.scripts.powershell is None:
         raise ValidationError('Image install.scripts must include a powershell section')
 
-    img_dir = image['dir'].resolve()
+    img_dir = image.dir.resolve()
 
-    scripts = []
+    scripts: List[PowershellScript] = []
 
-    for script in image['install']['scripts']['powershell']:
+    for script in image.install.scripts.powershell:
         logger.info(f'Getting powershell script config for {script} type {type(script)}')
-        if isinstance(script, str):
-            # if only the path was givin add it to the list
-            _validate_file_path(image['dir'] / script)
-            script_path = str(img_dir / script).replace(str(img_dir), '${path.root}')
-            scripts.append({'path': script_path, 'restart': False})
-        elif isinstance(script, dict):
-            # if the full object was given, use it
-            _validate_file_path(image['dir'] / script['path'])
-            script_path = str(img_dir / script['path']).replace(str(img_dir), '${path.root}')
-            scripts.append({'path': script_path, 'restart': script['restart'] if 'restart' in script else False})
-        else:
-            raise ValidationError(f'Invalid powershell script config {script} in image {image["name"]}')
+        script_path = str(_validate_file_path(image.dir / script.path)).replace(str(img_dir), '${path.root}')
+        scripts.append(PowershellScript({'path': script_path, 'restart': script.restart}))
 
     return scripts
 
 
-def _validate_file_path(path, name=None):
+def _validate_file_path(path, name=None) -> Path:
     file_path = (path if isinstance(path, Path) else Path(path)).resolve()
     not_exists = f'Could not find {name} file at {file_path}' if name else f'{file_path} is not a file or directory'
     if not file_path.exists():

@@ -7,6 +7,8 @@
 import json
 import os
 
+from typing import Sequence
+
 import yaml
 
 from azure.cli.core.extension.operations import show_extension, update_extension
@@ -18,13 +20,15 @@ from ._arm import (create_image_definition, create_resource_group, deploy_arm_te
                    get_resource_group_by_name, image_version_exists)
 from ._client_factory import cf_container, cf_container_groups
 from ._constants import (BAKE_YAML_SCHEMA, GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR, GITHUB_WORKFLOW_FILE,
-                         IMAGE_YAML_SCHEMA, IN_BUILDER)
+                         IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_YAML_SCHEMA, IN_BUILDER)
+from ._data import Gallery, Image, Sandbox, get_dict
 from ._github import get_github_latest_release_version, get_github_release, get_release_templates, get_template_url
-from ._packer import (check_packer_install, copy_packer_files, inject_choco_provisioners, inject_powershell_provisioner,
-                      inject_update_provisioner, inject_winget_provisioners, packer_execute, save_packer_vars_file)
+from ._packer import (copy_packer_files, inject_choco_provisioners, inject_powershell_provisioner,
+                      inject_update_provisioner, packer_execute, save_packer_vars_file)
+from ._repos import Repo
 from ._sandbox import get_builder_subnet_id, get_sandbox_resource_names
-from ._utils import (get_choco_package_config, get_install_choco_dict, get_install_powershell_scripts,
-                     get_install_winget, get_logger, get_templates_path)
+from ._utils import (get_choco_package_config, get_install_choco_packages, get_install_powershell_scripts, get_logger,
+                     get_templates_path)
 
 logger = get_logger(__name__)
 
@@ -108,9 +112,10 @@ def bake_sandbox_create(cmd, location, name_prefix, sandbox_resource_group_name=
     hook.end(message=' ')
 
 
-def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=None, sandbox=None, gallery=None):
+def bake_sandbox_validate(cmd, sandbox_resource_group_name: str, gallery_resource_id: str = None,
+                          sandbox: Sandbox = None, gallery: Gallery = None):
     logger.info('Validating gallery permissions')
-    ensure_gallery_permissions(cmd, gallery_resource_id, sandbox['identityId'])
+    ensure_gallery_permissions(cmd, gallery_resource_id, sandbox.identity_id)
     print('Sandbox is valid')
 
 
@@ -118,8 +123,9 @@ def bake_sandbox_validate(cmd, sandbox_resource_group_name, gallery_resource_id=
 # bake repo
 # ----------------
 
-def bake_repo_build(cmd, repository_path, is_ci=False, image_names=None, sandbox=None, gallery=None, images=None,
-                    repository_url=None, repository_token=None, repository_revision=None, repo=None):
+def bake_repo_build(cmd, repository_path, image_names: Sequence[str] = None, sandbox: Sandbox = None,
+                    gallery: Gallery = None, images: Sequence[Image] = None, repository_url: str = None,
+                    repository_token: str = None, repository_revision: str = None, repo: Repo = None):
 
     hook = cmd.cli_ctx.get_progress_controller()
     hook.begin()
@@ -144,49 +150,41 @@ def bake_repo_build(cmd, repository_path, is_ci=False, image_names=None, sandbox
 
     params = [
         f'subnetId={get_builder_subnet_id(sandbox)}',
-        f'storageAccount={sandbox["storageAccount"]}',
-        f'identityId={sandbox["identityId"]}'
+        f'storageAccount={sandbox.storage_account}',
+        f'identityId={sandbox.identity_id}',
+        f'repository={repo.clone_url}'
     ]
 
-    if repository_token:
-        p = repo['provider']
-        p_user = 'gituser:' if p == 'github' else 'azurereposuser:' if p == 'azuredevops' else ''
-        p_name = ' GitHub' if p == 'github' else ' DevOps' if p == 'azuredevops' else ''
-        logger.info(f'Adding{p_name} token to repository url')
-        params.append(f'repository={repository_url.replace("https://", f"https://{p_user}{repository_token}@")}')
-    else:
-        params.append(f'repository={repository_url}')
-
-    if repository_revision:
-        params.append(f'revision={repository_revision}')
+    if repo.revision:
+        params.append(f'revision={repo.revision}')
 
     for image in images:
-        logger.info(f'Getting deployment params for {image["name"]} builder')
+        logger.info(f'Getting deployment params for {image.name} builder')
 
         image_params = params.copy()
-        image_params.append(f'image={image["name"]}')
-        image_params.append(f'version={image["version"]}')
+        image_params.append(f'image={image.name}')
+        image_params.append(f'version={image.version}')
 
-        hook.add(message=f'Deploying {image["name"]} builder')
-        logger.info(f'Deploying {image["name"]} builder...')
-        deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox['resourceGroup'], template_file=template_file,
+        hook.add(message=f'Deploying {image.name} builder')
+        logger.info(f'Deploying {image.name} builder...')
+        deployment, outputs = deploy_arm_template_at_resource_group(cmd, sandbox.resource_group, template_file=template_file,
                                                                     template_uri=template_uri, parameters=[image_params])
         logs = get_arm_output(outputs, 'logs')
         bake_logs = get_arm_output(outputs, 'bake')
         portal = get_arm_output(outputs, 'portal')
 
-        logger.warning(f'Finished deploying builder for {image["name"]} but packer is still running.')
+        logger.warning(f'Finished deploying builder for {image.name} but packer is still running.')
         logger.warning('You can check the progress of the packer build:')
         logger.warning(f'  - Azure CLI: {logs}')
         logger.warning(f'  - Az Bake CLI: {bake_logs}')
         logger.warning(f'  - Azure Portal: {portal}')
         logger.warning('')
 
-        if repo and 'provider' in repo and repo['provider'] == 'github':
+        if repo and repo.provider == 'github':
             github_step_summary = os.environ.get('GITHUB_STEP_SUMMARY', None)
             if github_step_summary:
                 summary = [
-                    f'## Building {image["name"]}',
+                    f'## Building {image.name}',
                     'You can check the progress of the packer build:',
                     f'- Azure CLI: `{logs}`', f'- Az Bake CLI: `{bake_logs}`', f'- Azure Portal: {portal}', ''
                 ]
@@ -198,11 +196,24 @@ def bake_repo_build(cmd, repository_path, is_ci=False, image_names=None, sandbox
     hook.end(message=' ')
 
 
-def bake_repo_validate(cmd, repository_path, sandbox=None, gallery=None, images=None):
+def bake_repo_validate(cmd, repository_path, sandbox: Sandbox = None, gallery: Gallery = None, images: Sequence[Image] = None):
+    print('')
+    print('Sabndbox:')
+    print(get_dict(sandbox))
+    print('')
+    print('Gallery:')
+    print(get_dict(gallery))
+    print('')
+    print('Images:')
+    print('')
+    for image in images:
+        print(get_dict(image))
+        print('')
     logger.info('Validating repository')
 
 
-def bake_repo_setup(cmd, sandbox_resource_group_name, gallery_resource_id, repository_path='./', sandbox=None, gallery=None):
+def bake_repo_setup(cmd, sandbox_resource_group_name: str, gallery_resource_id: str, repository_path='./',
+                    sandbox: Sandbox = None, gallery: Gallery = None):
     logger.info('Setting up repository')
     _bake_yaml_export(sandbox=sandbox, gallery=gallery, outdir=repository_path)
 
@@ -219,16 +230,11 @@ def bake_repo_setup(cmd, sandbox_resource_group_name, gallery_resource_id, repos
 # bake image
 # ----------------
 
-def bake_image(cmd, image_path, sandbox_resource_group_name=None, bake_yaml=None, gallery_resource_id=None,
-               gallery=None, sandbox=None, image=None):
-    check_packer_install(raise_error=True)
-    raise CLIError('Not implemented')
-
 
 def bake_image_create(cmd, image_name, repository_path='./'):
     logger.info('Creating image.yml file')
 
-    image_obj = {
+    image = Image({
         'name': image_name,
         'version': '0.0.1',
         'description': f'A description for {image_name}',
@@ -238,18 +244,15 @@ def bake_image_create(cmd, image_name, repository_path='./'):
         'os': 'Windows',
         'replicaLocations': ['eastus', 'westus'],
         'update': True,
-        'base': {
-            'publisher': 'microsoftwindowsdesktop',
-            'offer': 'windows-ent-cpc',
-            'sku': 'win11-22h2-ent-cpc-m365',
-            'version': 'latest'
-        },
+        'base': IMAGE_DEFAULT_BASE_WINDOWS,
         'install': {
             'choco': {
                 'packages': ['git', 'googlechrome', ]
             }
         }
-    }
+    })
+
+    image_obj = get_dict(image)
 
     yaml_str = f'{IMAGE_YAML_SCHEMA}\n' + yaml.safe_dump(image_obj, default_flow_style=False, sort_keys=False)
 
@@ -268,14 +271,14 @@ def bake_image_create(cmd, image_name, repository_path='./'):
     logger.warning('The image was generated with default values. You should review the file and make any necessary changes.')
 
 
-def bake_image_logs(cmd, sandbox_resource_group_name, image_name, sandbox=None):
+def bake_image_logs(cmd, sandbox_resource_group_name, image_name, sandbox: Sandbox = None):
     container_client = cf_container(cmd.cli_ctx)
     container_group_client = cf_container_groups(cmd.cli_ctx)
-    container_group = container_group_client.get(sandbox['resourceGroup'], image_name)
+    container_group = container_group_client.get(sandbox.resource_group, image_name)
 
     # we only have one container in the group
     container_name = container_group.containers[0].name
-    log = container_client.list_logs(sandbox['resourceGroup'], image_name, container_name)
+    log = container_client.list_logs(sandbox.resource_group, image_name, container_name)
     print(log.content)
 
 
@@ -283,14 +286,10 @@ def bake_image_logs(cmd, sandbox_resource_group_name, image_name, sandbox=None):
 # bake yaml
 # ----------------
 
-def bake_yaml_export(cmd, sandbox_resource_group_name, gallery_resource_id, sandbox=None, gallery=None, images=None,
+def bake_yaml_export(cmd, sandbox_resource_group_name, gallery_resource_id,
+                     sandbox: Sandbox = None, gallery: Gallery = None, images: Sequence[Image] = None,
                      outfile='./bake.yml', outdir=None, stdout=False):
     _bake_yaml_export(sandbox=sandbox, gallery=gallery, images=images, outfile=outfile, outdir=outdir, stdout=stdout)
-
-
-# def bake_yaml_validate(cmd):
-#     logger.info('Validating bake.yaml file')
-#     print('bake.yaml is valid')
 
 
 # ----------------
@@ -355,7 +354,7 @@ def bake_upgrade(cmd, version=None, prerelease=False):
 # bake _builder
 # ----------------
 
-def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None):
+def bake_builder_build(cmd, sandbox: Sandbox = None, gallery: Gallery = None, image: Image = None, suffix=None):
 
     if IN_BUILDER:
         from azure.cli.command_modules.profile.custom import login
@@ -377,43 +376,43 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
     else:
         logger.info('Not in builder. Skipping login.')
 
-    gallery_res = get_gallery(cmd, gallery['resourceGroup'], gallery['name'])
+    gallery_res = get_gallery(cmd, gallery.resource_group, gallery.name)
     if not gallery_res:
-        raise CLIError(f'Could not find gallery {gallery["name"]} in resource group {gallery["resourceGroup"]}')
+        raise CLIError(f'Could not find gallery {gallery.name} in resource group {gallery.resource_group}')
 
-    definition = get_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'])
+    definition = get_image_definition(cmd, gallery.resource_group, gallery.name, image.name)
     if not definition:
-        logger.info(f'Image definition {image["name"]} does not exist. Creating...')
-        definition = create_image_definition(cmd, gallery['resourceGroup'], gallery['name'], image['name'],
-                                             image['publisher'], image['offer'], image['sku'], gallery_res.location)
-    elif image_version_exists(cmd, gallery['resourceGroup'], gallery['name'], image['name'], image['version']):
+        logger.info(f'Image definition {image.name} does not exist. Creating...')
+        definition = create_image_definition(cmd, gallery.resource_group, gallery.name, image.name,
+                                             image.publisher, image.offer, image.sku, gallery_res.location)
+    elif image_version_exists(cmd, gallery.resource_group, gallery.name, image.name, image.version):
         raise CLIError('Image version already exists')
 
-    logger.info(f'Image version {image["version"]} does not exist.')
+    logger.info(f'Image version {image.version} does not exist.')
 
-    if copy_packer_files(image['dir']):
-        if 'update' in image and image['update']:
-            inject_update_provisioner(image['dir'])
+    if copy_packer_files(image.dir):
+        if image.update:
+            inject_update_provisioner(image.dir)
 
         powershell_scripts = get_install_powershell_scripts(image)
         if powershell_scripts:
-            inject_powershell_provisioner(image['dir'], powershell_scripts)
+            inject_powershell_provisioner(image.dir, powershell_scripts)
 
-        choco_install = get_install_choco_dict(image)
+        choco_install = get_install_choco_packages(image)
 
-        user_choco_install = [c for c in choco_install if 'user' in c and c['user']]
+        user_choco_install = [c for c in choco_install if c.user]
         if user_choco_install:
             choco_user_config = get_choco_package_config(user_choco_install)
-            inject_choco_provisioners(image['dir'], choco_user_config, for_user=True)
+            inject_choco_provisioners(image.dir, choco_user_config, for_user=True)
 
-        machine_choco_install = [c for c in choco_install if 'user' not in c or not c['user']]
+        machine_choco_install = [c for c in choco_install if not c.user]
         if machine_choco_install:
             machine_choco_config = get_choco_package_config(machine_choco_install)
-            inject_choco_provisioners(image['dir'], machine_choco_config, for_user=False)
+            inject_choco_provisioners(image.dir, machine_choco_config, for_user=False)
 
-        winget_config = get_install_winget(image)
-        if winget_config:
-            inject_winget_provisioners(image['dir'], winget_config)
+        # winget_config = get_install_winget(image)
+        # if winget_config:
+        #     inject_winget_provisioners(image.dir, winget_config)
 
     save_packer_vars_file(sandbox, gallery, image)
 
@@ -431,13 +430,14 @@ def bake_builder_build(cmd, sandbox=None, gallery=None, image=None, suffix=None)
 # _private
 # ----------------
 
-def _bake_yaml_export(sandbox=None, gallery=None, images=None, outfile=None, outdir=None, stdout=False):
+def _bake_yaml_export(sandbox: Sandbox = None, gallery: Gallery = None, images: Sequence[Image] = None,
+                      outfile=None, outdir=None, stdout=False):
     logger.info('Exporting bake.yaml file')
 
-    bake_obj = {'version': 1.0, 'sandbox': sandbox, 'gallery': gallery}
+    bake_obj = {'version': 1.0, 'sandbox': get_dict(sandbox), 'gallery': get_dict(gallery)}
 
     if images:
-        bake_obj['images'] = images
+        bake_obj['images'] = [get_dict(image) for image in images]
 
     yaml_str = f'{BAKE_YAML_SCHEMA}\n' + yaml.safe_dump(bake_obj, default_flow_style=False, sort_keys=False)
 
