@@ -49,11 +49,14 @@ jobs:
 
             const assets = JSON.parse('${{steps.prepare_assets.outputs.assets}}');
 
+            const release_notes = '${{ steps.cli_version.outputs.changes }}'.replaceAll(',', '\n');
+
             const releaseResult = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: 'v${{ steps.cli_version.outputs.version }}',
               name: 'v${{ steps.cli_version.outputs.version }}',
+              body: release_notes
             });
 
             const release = releaseResult.data;

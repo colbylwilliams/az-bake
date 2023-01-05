@@ -19,7 +19,7 @@ args = parser.parse_args()
 
 major = args.major
 minor = args.minor
-notes = '+ {}'.format('\n* '.join(args.notes))
+notes = '* {}'.format('\n* '.join(args.notes))
 
 if major and minor:
     raise ValueError('usage error: --major | --minor')
