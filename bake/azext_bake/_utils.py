@@ -126,7 +126,7 @@ def get_install_choco_packages(image: Image) -> List[ChocoPackage]:
     for c in image.install.choco.packages:
         logger.info(f'Getting choco config for {c} type {type(c)}')
         # if only the id was givin, check the index for the rest of the config
-        choco_node = ChocoPackage(choco_index[c.id]) if c.id_only and c.id in choco_index else c.copy()
+        choco_node = ChocoPackage(choco_index[c.id]) if c.id_only and c.id in choco_index else ChocoPackage(get_dict(c))
 
         # TODO
         # if defaults were given, add them to the config

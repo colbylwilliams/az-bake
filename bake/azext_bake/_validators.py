@@ -61,8 +61,10 @@ def process_bake_repo_build_namespace(cmd, ns):
             raise ArgumentUsageError('--repo-url, --repo-token, and --repo-revision can not be used in a CI environment')
 
         ci = CI()
-        env_key = 'GITHUB_TOKEN' if ci.provider == 'github' else 'SYSTEM_ACCESSTOKEN'
-        logger.warning(f'WARNING: {env_key} environment variable not set. This is required for private repositories.')
+
+        if ci.token is None:
+            env_key = 'GITHUB_TOKEN' if ci.provider == 'github' else 'SYSTEM_ACCESSTOKEN'
+            logger.warning(f'WARNING: {env_key} environment variable not set. This is required for private repositories.')
 
         repo = Repo(url=ci.url, token=ci.token, ref=ci.ref, revision=ci.revision)
 
@@ -241,9 +243,6 @@ def bake_yaml_validator(cmd, ns, path=None):
             raise RequiredArgumentMissingError('usage error: --repository-path is required.')
 
     bake_config = get_yaml_file_data(BakeConfig, path)
-    print('')
-    print(bake_config)
-    print('')
 
     if hasattr(ns, 'bake_obj'):
         ns.bake_obj = bake_config
@@ -259,10 +258,6 @@ def bake_yaml_validator(cmd, ns, path=None):
 
 def image_yaml_validator(cmd, ns, path):
     image = get_yaml_file_data(Image, path)
-
-    print('')
-    print(image)
-    print('')
 
     if hasattr(ns, 'image'):
         ns.image = image

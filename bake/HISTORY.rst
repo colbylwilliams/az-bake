@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.3
+++++++
++ Fix choco bug in builder
+
 0.3.2
 ++++++
 + Fix bug in builder

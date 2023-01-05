@@ -197,18 +197,6 @@ def bake_repo_build(cmd, repository_path, image_names: Sequence[str] = None, san
 
 
 def bake_repo_validate(cmd, repository_path, sandbox: Sandbox = None, gallery: Gallery = None, images: Sequence[Image] = None):
-    print('')
-    print('Sabndbox:')
-    print(get_dict(sandbox))
-    print('')
-    print('Gallery:')
-    print(get_dict(gallery))
-    print('')
-    print('Images:')
-    print('')
-    for image in images:
-        print(get_dict(image))
-        print('')
     logger.info('Validating repository')
 
 
@@ -398,16 +386,16 @@ def bake_builder_build(cmd, sandbox: Sandbox = None, gallery: Gallery = None, im
         if powershell_scripts:
             inject_powershell_provisioner(image.dir, powershell_scripts)
 
-        choco_install = get_install_choco_packages(image)
+        choco_packages = get_install_choco_packages(image)
 
-        user_choco_install = [c for c in choco_install if c.user]
-        if user_choco_install:
-            choco_user_config = get_choco_package_config(user_choco_install)
+        user_choco_packages = [package for package in choco_packages if package.user]
+        if user_choco_packages:
+            choco_user_config = get_choco_package_config(user_choco_packages)
             inject_choco_provisioners(image.dir, choco_user_config, for_user=True)
 
-        machine_choco_install = [c for c in choco_install if not c.user]
-        if machine_choco_install:
-            machine_choco_config = get_choco_package_config(machine_choco_install)
+        machine_choco_packages = [package for package in choco_packages if not package.user]
+        if machine_choco_packages:
+            machine_choco_config = get_choco_package_config(machine_choco_packages)
             inject_choco_provisioners(image.dir, machine_choco_config, for_user=False)
 
         # winget_config = get_install_winget(image)
