@@ -69,13 +69,19 @@ az bake sandbox create --name MySandbox --gallery MyGallery --principal 00000000
 az bake repo setup --sandbox MySandbox --gallery MyGallery
 ```
 
-#### 7. Create an image
+#### 7. Create an image definiiton in your repo
 
 ```sh
-az bake image create --name vscode-image
+az bake image create --name MyImage
 ```
 
 #### 8. Commit and push your changes
+
+This will kick off a GitHub Actions workflow to build your custom images. Once the workflow is finished, you can continue to monitor the image builds:
+
+```sh
+az bake image logs --sandbox MySandbox --name MyImage
+```
 
 ## Sandbox
 
