@@ -26,29 +26,56 @@ az bake upgrade --pre
 
 ## Quickstart
 
-#### 1. [Install](#install) the `az bake` Azure CLI extension
+#### 1. [Create][github-repo-create] a new repository, [clone][github-repo-clone] it locally, and open a shell at the root
 
-_After [installing the Azure CLI][install-az] if you haven't already_
+#### 2. Create a Service Principal (or use an existing one)
 
-#### 2. Create a new [sandbox](#sandbox)
-
-```sh
-az bake sandbox create --name mySandbox --gallery myGallery
-```
-
-#### 3. Setup the repo
+_You'll have to [install the Azure CLI][install-az] if you haven't already_
 
 ```sh
-az bake repo setup --sandbox mySandbox --gallery myGallery
+az ad sp create-for-rbac -n MyUniqueName
 ```
 
-#### 4. Create an image
+output:
+
+```json
+{
+   "appId": "<GUID>",
+   "displayName": "MyUniqueName",
+   "password": "<STRING>",
+   "tenant": "<GUID>"
+}
+```
+
+#### 3. Create three new [repository secrets][github-repo-secret] with the values output above
+
+- `AZURE_CLIENT_ID` _(appId)_
+- `AZURE_CLIENT_SECRET` _(password)_
+- `AZURE_TENANT_ID` _(tenant)_
+
+#### 4. [Install](#install) the `az bake` Azure CLI extension
+
+#### 5. Create a new [sandbox](#sandbox), providing an [Azure Compute Gallery][azure-compute-gallery] and the Service Principal's ID (created above)
+
+> _**Important:** The GUID passed in for the `--principal` argument is the principal's Id **NOT** its AppId from the output above. To get the principal's ID, run:_  `az ad sp show --id appId -o tsv --query id`
+
+```sh
+az bake sandbox create --name MySandbox --gallery MyGallery --principal 00000000-0000-0000-0000-000000000000
+```
+
+#### 6. Setup the repo for use with `az bake`
+
+```sh
+az bake repo setup --sandbox MySandbox --gallery MyGallery
+```
+
+#### 7. Create an image
 
 ```sh
 az bake image create --name vscode-image
 ```
 
-#### 5. Commit and push your changes
+#### 8. Commit and push your changes
 
 ## Sandbox
 
@@ -1037,7 +1064,9 @@ Version (tag). Default: latest stable.
 [azure-vnet]:https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
 [azure-roles-contributor]:https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor
 [azure-assign-rbac]:https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current
-[gh-repo-secret]:https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
-[gh-fork]:https://docs.github.com/en/get-started/quickstart/fork-a-repo
+[github-repo-create]:https://docs.github.com/en/get-started/quickstart/create-a-repo
+[github-repo-clone]:https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository
+[github-repo-secret]:https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
+[github-repo-fork]:https://docs.github.com/en/get-started/quickstart/fork-a-repo
 [packer-arm]:https://www.packer.io/plugins/builders/azure/arm
 [packer-docs]:https://developer.hashicorp.com/packer/docs
