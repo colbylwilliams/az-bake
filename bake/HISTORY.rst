@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.2
+++++++
++ Fix bug in builder
+
 0.3.1
 ++++++
 + Bug fixes and minor improvements.

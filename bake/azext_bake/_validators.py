@@ -164,11 +164,6 @@ def repository_images_validator(cmd, ns):
         if all_images or image_dir.name in images:
             image_yaml = get_yaml_file_path(image_dir, 'image', required=True)
             ns.images.append(image_yaml_validator(cmd, ns, image_yaml))
-            # ns.images.append({
-            #     'name': image_dir.name,
-            #     'dir': image_dir,
-            #     'file': get_yaml_file_path(image_dir, 'image', required=True)
-            # })
 
 
 def repository_path_validator(cmd, ns):
@@ -238,11 +233,12 @@ def validate_subnet(cmd, ns, subnet, vnet_prefixes):
 
 def bake_yaml_validator(cmd, ns, path=None):
 
-    if not path and hasattr(ns, 'repository_path') and ns.repository_path:
-        # should have already run the repository_path_validator
-        path = get_yaml_file_path(ns.repository_path, 'bake', required=True)
-    else:
-        raise RequiredArgumentMissingError('usage error: --repository-path is required.')
+    if path is None:
+        if hasattr(ns, 'repository_path') and ns.repository_path:
+            # should have already run the repository_path_validator
+            path = get_yaml_file_path(ns.repository_path, 'bake', required=True)
+        else:
+            raise RequiredArgumentMissingError('usage error: --repository-path is required.')
 
     bake_config = get_yaml_file_data(BakeConfig, path)
     print('')
