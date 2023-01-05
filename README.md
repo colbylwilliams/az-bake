@@ -113,6 +113,7 @@ This extension adds the following commands. Use `az bake -h` for more informatio
 | [`az bake image create`](#az-bake-image-create)         | Create an image.                                                                 |
 | [`az bake image logs`](#az-bake-image-logs)             | Get the logs for an image build.                                                 |
 | [`az bake image rebuild`](#az-bake-image-rebuild)       | Rebuild an image that failed.                                                    |
+| [`az bake image bump`](#az-bake-image-bump)             | Bump the version number of images.                                               |
 | [`az bake yaml export`](#az-bake-yaml-export)           | Export a bake.yaml file.                                                         |
 | [`az bake validate sandbox`](#az-bake-validate-sandbox) | Validate a [sandbox](#sandbox). This is an alias for `az bake sandbox validate`. |
 | [`az bake validate repo`](#az-bake-validate-repo)       | Validate a repo. This is an alias for `az bake repo validate`.                   |
@@ -703,6 +704,93 @@ Name of the sandbox resource group. You can configure the default using `az conf
 #### `--no-wait`
 
 Do not wait for the long-running operation to finish.
+
+<details><summary><h4>Global Parameters</h4></summary>
+
+  #### `--debug`
+
+  Increase logging verbosity to show all debug logs.
+
+  #### `--help -h`
+
+  Show this help message and exit.
+
+  #### `--only-show-errors`
+
+  Only show errors, suppressing warnings.
+
+  #### `--output -o`
+
+  Output format.  Allowed values: json, jsonc, none, table, tsv, yaml, yamlc.
+
+  <sup>default value: json</sup>
+
+  #### `--query`
+
+  JMESPath query string. See <http://jmespath.org/> for more information and examples.
+
+  #### `--subscription`
+
+  Name or ID of subscription. You can configure the default subscription using `az account set -s NAME_OR_ID`.
+
+  #### `--verbose`
+
+  Increase logging verbosity. Use --debug for full debug logs.
+</details>
+
+## `az bake image bump`
+
+Bump the version numbers of images.
+
+```sh
+az bake image bump [--images]
+                   [--repo]
+                   [--major]
+                   [--minor]
+
+```
+
+### Examples
+
+Bump the patch version of all images.
+
+```sh
+az bake image bump
+```
+
+Bump the minor version of all images.
+
+```sh
+az bake image bump --minor
+```
+
+Bump the major version of specific images.
+
+```sh
+az bake image bump --major --images myImage1 MyImage2
+```
+
+### Optional Parameters
+
+#### `--images -i`
+
+Space separated list of images to bump.
+
+<sup>default value: all images in repository<sup>
+
+#### `--repo --repo-path`
+
+Path to the locally cloned repository.
+
+#### `--major`
+
+Bump the major version.
+
+#### `--minor`
+
+Bump the minor version
+
+<sup>default value: ./<sup>
 
 <details><summary><h4>Global Parameters</h4></summary>
 
