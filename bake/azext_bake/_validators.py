@@ -18,8 +18,8 @@ from azure.cli.core.commands.validators import validate_tags
 from azure.cli.core.extension import get_extension
 from azure.mgmt.core.tools import is_valid_resource_id, parse_resource_id
 
-from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER, AZ_BAKE_IMAGE_BUILDER_VERSION, IN_BUILDER,
-                         REPO_DIR, STORAGE_DIR, tag_key)
+from ._constants import (AZ_BAKE_BUILD_IMAGE_NAME, AZ_BAKE_IMAGE_BUILDER, AZ_BAKE_IMAGE_BUILDER_VERSION,
+                         DEVOPS_PROVIDER_NAME, GITHUB_PROVIDER_NAME, IN_BUILDER, REPO_DIR, STORAGE_DIR, tag_key)
 from ._data import BakeConfig, Gallery, Image
 from ._github import get_github_latest_release_version, github_release_version_exists
 from ._packer import check_packer_install
@@ -63,7 +63,7 @@ def process_bake_repo_build_namespace(cmd, ns):
         ci = CI()
 
         if ci.token is None:
-            env_key = 'GITHUB_TOKEN' if ci.provider == 'github' else 'SYSTEM_ACCESSTOKEN'
+            env_key = 'GITHUB_TOKEN' if ci.provider == GITHUB_PROVIDER_NAME else 'SYSTEM_ACCESSTOKEN'
             logger.warning(f'WARNING: {env_key} environment variable not set. This is required for private repositories.')
 
         repo = Repo(url=ci.url, token=ci.token, ref=ci.ref, revision=ci.revision)
@@ -135,7 +135,7 @@ def builder_validator(cmd, ns):
 
 def repository_images_validator(cmd, ns):
     if not ns.repository_path:
-        raise RequiredArgumentMissingError('--repository-path/-r is required')
+        raise RequiredArgumentMissingError('--repo-path/--repo is required')
 
     images_path = _validate_dir_path(ns.repository_path / 'images', name='images')
 
@@ -171,13 +171,40 @@ def repository_images_validator(cmd, ns):
 def repository_path_validator(cmd, ns):
     '''Ensure the repository path is valid, transforms to a path object, and validates a .git directory exists'''
     if not ns.repository_path:
-        raise RequiredArgumentMissingError('--repository-path/-r is required')
+        raise RequiredArgumentMissingError('--repo-path/--repo is required')
 
     repo_path = _validate_dir_path(ns.repository_path, name='repository')
     ns.repository_path = repo_path
 
-    git_path = repo_path / '.git'
-    git_path = _validate_dir_path(git_path, name='.git')
+    git_path = _validate_dir_path(repo_path / '.git', name='.git')
+    if hasattr(ns, 'git_path'):
+        ns.git_path = git_path
+
+    if hasattr(ns, 'repository_provider'):
+        if ns.repository_provider and ns.repository_provider not in [GITHUB_PROVIDER_NAME, DEVOPS_PROVIDER_NAME]:
+            raise InvalidArgumentValueError(f'--repo-provider/--provider must be one of {GITHUB_PROVIDER_NAME} '
+                                            f'or {DEVOPS_PROVIDER_NAME}')
+
+        # if the repository provider is not specified, try to determine it from the git config
+        git_config = _validate_file_path(git_path / 'config', 'git config')
+        config_lines = git_config.read_text().splitlines()
+        remote_url = None
+        for line in config_lines:
+            line_clean = line.strip()
+            if line_clean.startswith('url = '):
+                remote_url = line_clean.replace('url = ', '')
+
+        if not remote_url:
+            raise ValidationError('Unable to determine repository provider from git config. '
+                                  'Please specify --repo-provider/--provider')
+
+        if 'github.com' in remote_url:
+            ns.repository_provider = GITHUB_PROVIDER_NAME
+        elif 'dev.azure.com' in remote_url or 'visualstudio.com' in remote_url:
+            ns.repository_provider = DEVOPS_PROVIDER_NAME
+        else:
+            raise ValidationError('Unable to determine repository provider from git config. '
+                                  'Please specify --repo-provider/--provider')
 
 
 def image_names_validator(cmd, ns):
@@ -240,7 +267,7 @@ def bake_yaml_validator(cmd, ns, path=None):
             # should have already run the repository_path_validator
             path = get_yaml_file_path(ns.repository_path, 'bake', required=True)
         else:
-            raise RequiredArgumentMissingError('usage error: --repository-path is required.')
+            raise RequiredArgumentMissingError('--repo-path/--repo is required.')
 
     bake_config = get_yaml_file_data(BakeConfig, path)
 

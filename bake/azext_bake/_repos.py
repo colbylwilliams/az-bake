@@ -11,10 +11,12 @@ from typing import Literal
 
 from azure.cli.core.azclierror import CLIError
 
+from ._constants import DEVOPS_PROVIDER_NAME, GITHUB_PROVIDER_NAME
+
 
 @dataclass
 class CI:
-    provider: Literal['github', 'devops'] = None
+    provider: Literal['GitHub', 'AzureDevOps'] = None
     url: str = None
     token: str = None
     ref: str = None
@@ -28,7 +30,7 @@ class CI:
 
     def __init__(self) -> None:
         if os.environ.get('CI', False) and os.environ.get('GITHUB_ACTION', False):
-            self.provider = 'github'
+            self.provider = GITHUB_PROVIDER_NAME
             self.token = os.environ.get('GITHUB_TOKEN', None)
             self.ref = os.environ.get('GITHUB_REF', None)
             self.revision = os.environ.get('GITHUB_SHA', None)
@@ -41,7 +43,7 @@ class CI:
                 raise CLIError('Could not determine GitHub repository url from environment variables.')
 
         elif os.environ.get('TF_BUILD', False):
-            self.provider = 'devops'
+            self.provider = DEVOPS_PROVIDER_NAME
             self.token = os.environ.get('SYSTEM_ACCESSTOKEN', None)
             self.ref = os.environ.get('BUILD_SOURCEBRANCH', None)
             self.revision = os.environ.get('BUILD_SOURCEVERSION', None)
@@ -58,7 +60,7 @@ class CI:
 class Repo:
     # required properties
     url: str
-    provider: Literal['github', 'devops'] = field(init=False)
+    provider: Literal['GitHub', 'AzureDevOps'] = field(init=False)
     org: str = field(init=False)
     repo: str = field(init=False)
     # optional properties
@@ -137,11 +139,11 @@ class Repo:
 
     def __post_init__(self):
         if 'github.com' in self.url.lower():
-            self.provider = 'github'
+            self.provider = GITHUB_PROVIDER_NAME
             self._parse_github_url(self.url)
             self.clone_url = self.url.replace('https://', f'https://gituser:{self.token}@') if self.token else self.url
         elif 'dev.azure.com' in self.url.lower() or 'visualstudio.com' in self.url.lower():
-            self.provider = 'devops'
+            self.provider = DEVOPS_PROVIDER_NAME
             self._parse_devops_url(self.url)
             self.clone_url = self.url.replace(
                 'https://', f'https://azurereposuser:{self.token}@') if self.token else self.url
@@ -164,11 +166,11 @@ if __name__ == '__main__':
     for test in test_urls:
 
         repository = Repo(url=test, token='mytoken')
-        if repository.provider not in ['github', 'devops']:
+        if repository.provider not in [GITHUB_PROVIDER_NAME, DEVOPS_PROVIDER_NAME]:
             raise CLIError(f'{repository.provider} is not a valid provider')
         if repository.org != 'colbylwilliams':
             raise CLIError(f'{repository.org} is not a valid organization')
-        if repository.provider == 'devops' and repository.project != 'myproject':
+        if repository.provider == DEVOPS_PROVIDER_NAME and repository.project != 'myproject':
             raise CLIError(f'{repository.project} is not a valid project')
         if repository.repo != 'az-bake':
             raise CLIError(f'{repository.repo} is not a valid repository')

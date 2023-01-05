@@ -26,7 +26,7 @@ def get_logger(name):
 
     if IN_BUILDER and STORAGE_DIR.is_dir():
         import logging
-        log_file = OUTPUT_DIR / 'builder.txt'
+        log_file = OUTPUT_DIR / 'builder.log'
         formatter = logging.Formatter('{asctime} [{name:^28}] {levelname:<8}: {message}',
                                       datefmt='%m/%d/%Y %I:%M:%S %p', style='{',)
         fh = logging.FileHandler(log_file)

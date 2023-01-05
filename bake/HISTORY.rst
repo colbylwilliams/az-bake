@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.4
+++++++
++ Add support for AzureDevOps
+
 0.3.3
 ++++++
 + Fix choco bug in builder

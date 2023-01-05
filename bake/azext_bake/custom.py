@@ -11,16 +11,17 @@ from typing import Sequence
 
 import yaml
 
+from azure.cli.core.azclierror import CLIError, InvalidArgumentValueError
 from azure.cli.core.extension.operations import show_extension, update_extension
-from knack.util import CLIError
 from packaging.version import parse
 
 from ._arm import (create_image_definition, create_resource_group, deploy_arm_template_at_resource_group,
                    ensure_gallery_permissions, get_arm_output, get_gallery, get_image_definition,
                    get_resource_group_by_name, image_version_exists)
 from ._client_factory import cf_container, cf_container_groups
-from ._constants import (BAKE_YAML_SCHEMA, GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR, GITHUB_WORKFLOW_FILE,
-                         IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_YAML_SCHEMA, IN_BUILDER)
+from ._constants import (BAKE_YAML_SCHEMA, DEVOPS_PIPELINE_CONTENT, DEVOPS_PIPELINE_DIR, DEVOPS_PIPELINE_FILE,
+                         DEVOPS_PROVIDER_NAME, GITHUB_PROVIDER_NAME, GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR,
+                         GITHUB_WORKFLOW_FILE, IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_YAML_SCHEMA, IN_BUILDER)
 from ._data import Gallery, Image, Sandbox, get_dict
 from ._github import get_github_latest_release_version, get_github_release, get_release_templates, get_template_url
 from ._packer import (copy_packer_files, inject_choco_provisioners, inject_powershell_provisioner,
@@ -180,7 +181,7 @@ def bake_repo_build(cmd, repository_path, image_names: Sequence[str] = None, san
         logger.warning(f'  - Azure Portal: {portal}')
         logger.warning('')
 
-        if repo and repo.provider == 'github':
+        if repo and repo.provider == GITHUB_PROVIDER_NAME:
             github_step_summary = os.environ.get('GITHUB_STEP_SUMMARY', None)
             if github_step_summary:
                 summary = [
@@ -201,17 +202,28 @@ def bake_repo_validate(cmd, repository_path, sandbox: Sandbox = None, gallery: G
 
 
 def bake_repo_setup(cmd, sandbox_resource_group_name: str, gallery_resource_id: str, repository_path='./',
-                    sandbox: Sandbox = None, gallery: Gallery = None):
+                    repository_provider: str = None, sandbox: Sandbox = None, gallery: Gallery = None):
     logger.info('Setting up repository')
+
+    # logger.warning(repository_provider)
     _bake_yaml_export(sandbox=sandbox, gallery=gallery, outdir=repository_path)
 
-    workflows_dir = repository_path / GITHUB_WORKFLOW_DIR
+    if repository_provider == GITHUB_PROVIDER_NAME:
+        workflows_dir = repository_path / GITHUB_WORKFLOW_DIR
 
-    if not workflows_dir.exists():
-        workflows_dir.mkdir(parents=True, exist_ok=True)
+        if not workflows_dir.exists():
+            workflows_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(workflows_dir / GITHUB_WORKFLOW_FILE, 'w', encoding='utf-8') as f:
-        f.write(GITHUB_WORKFLOW_CONTENT)
+        with open(workflows_dir / GITHUB_WORKFLOW_FILE, 'w', encoding='utf-8') as f:
+            f.write(GITHUB_WORKFLOW_CONTENT)
+
+    elif repository_provider == DEVOPS_PROVIDER_NAME:
+
+        with open(repository_path / DEVOPS_PIPELINE_FILE, 'w', encoding='utf-8') as f:
+            f.write(DEVOPS_PIPELINE_CONTENT)
+    else:
+        raise InvalidArgumentValueError(f'--repo-provider/--provider must be one of {GITHUB_PROVIDER_NAME} '
+                                        f'or {DEVOPS_PROVIDER_NAME}')
 
 
 # ----------------

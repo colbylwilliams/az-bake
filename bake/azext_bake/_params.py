@@ -5,11 +5,12 @@
 # pylint: disable=line-too-long, too-many-statements
 
 from argcomplete.completers import DirectoriesCompleter, FilesCompleter
-from azure.cli.core.commands.parameters import (file_type, get_location_type, get_resource_group_completion_list,
-                                                tags_type)
+from azure.cli.core.commands.parameters import (file_type, get_enum_type, get_location_type,
+                                                get_resource_group_completion_list, tags_type)
 from knack.arguments import CLIArgumentType
 
 from ._completers import get_version_completion_list
+from ._constants import DEVOPS_PROVIDER_NAME, GITHUB_PROVIDER_NAME
 from ._validators import (bake_source_version_validator, gallery_resource_id_validator, repository_path_validator,
                           sandbox_resource_group_name_validator, yaml_out_validator)
 
@@ -128,6 +129,9 @@ def load_arguments(self, _):
     with self.argument_context('bake repo setup') as c:
         c.argument('repository_path', options_list=['--repo-path', '--repo'], type=file_type, default='./',
                    validator=repository_path_validator, help='Path to the locally cloned repository.')
+        c.argument('repository_provider', get_enum_type([GITHUB_PROVIDER_NAME, DEVOPS_PROVIDER_NAME], default=None),
+                   options_list=['--repo-provider', '--provider'], required=False,
+                   help='Repository provider. If not specified, will attempt to detect provider.')
         c.argument('sandbox_resource_group_name', sandbox_resource_group_name_type)
         c.argument('gallery_resource_id', gallery_resource_id_type)
         c.ignore('sandbox')

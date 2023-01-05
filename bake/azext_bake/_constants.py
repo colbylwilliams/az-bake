@@ -222,7 +222,7 @@ PKR_PROVISIONER_WINGET_INSTALL = f'''
   }}
 '''
 
-
+GITHUB_PROVIDER_NAME = 'GitHub'
 GITHUB_WORKFLOW_FILE = 'bake_images.yml'
 GITHUB_WORKFLOW_DIR = '.github/workflows'
 GITHUB_WORKFLOW_CONTENT = '''name: Bake Images
@@ -264,6 +264,7 @@ jobs:
         run: az bake repo build --verbose --repo .
     '''
 
+DEVOPS_PROVIDER_NAME = 'AzureDevOps'
 DEVOPS_PIPELINE_FILE = 'azure-pipelines.yml'
 DEVOPS_PIPELINE_DIR = '.azure'
 DEVOPS_PIPELINE_CONTENT = '''name: Bake Images
@@ -272,30 +273,26 @@ trigger:
   - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
-# stages:
-#   - stage: Bake Images
-#     jobs:
-#     - job: bakeImages
-#       displayName: Bake Images
 steps:
-  - displayName: Login to Azure
+  - script: az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    displayName: Login to Azure
     env:
       AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
       AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
       AZURE_TENANT_ID: $(AZURE_TENANT_ID)
-    bash: az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
 
-  - displayName: Install az bake # get the latest version of az bake from the github releases and install it
-    bash: |
-      az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.3.3-py3-none-any.whl -y
-      az bake upgrade
+  - script: az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.3.4-py3-none-any.whl -y
+    displayName: Install az bake
 
-  - displayName: Run az bake
+  - script: az bake upgrade
+    displayName: Update az bake
+
+  - script: az bake repo build --verbose --repo .
+    displayName: Run az bake
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-    bash: az bake repo build --verbose --repo .
 '''
 
 
