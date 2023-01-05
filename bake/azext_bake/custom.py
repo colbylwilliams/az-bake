@@ -19,9 +19,9 @@ from ._arm import (create_image_definition, create_resource_group, deploy_arm_te
                    ensure_gallery_permissions, get_arm_output, get_gallery, get_image_definition,
                    get_resource_group_by_name, image_version_exists)
 from ._client_factory import cf_container, cf_container_groups
-from ._constants import (BAKE_YAML_SCHEMA, DEVOPS_PIPELINE_CONTENT, DEVOPS_PIPELINE_DIR, DEVOPS_PIPELINE_FILE,
-                         DEVOPS_PROVIDER_NAME, GITHUB_PROVIDER_NAME, GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR,
-                         GITHUB_WORKFLOW_FILE, IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_YAML_SCHEMA, IN_BUILDER)
+from ._constants import (BAKE_YAML_SCHEMA, DEVOPS_PIPELINE_CONTENT, DEVOPS_PIPELINE_FILE, DEVOPS_PROVIDER_NAME,
+                         GITHUB_PROVIDER_NAME, GITHUB_WORKFLOW_CONTENT, GITHUB_WORKFLOW_DIR, GITHUB_WORKFLOW_FILE,
+                         IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_YAML_SCHEMA, IN_BUILDER)
 from ._data import Gallery, Image, Sandbox, get_dict
 from ._github import get_github_latest_release_version, get_github_release, get_release_templates, get_template_url
 from ._packer import (copy_packer_files, inject_choco_provisioners, inject_powershell_provisioner,
