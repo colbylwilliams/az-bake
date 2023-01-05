@@ -283,7 +283,7 @@ steps:
       AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
       AZURE_TENANT_ID: $(AZURE_TENANT_ID)
 
-  - script: az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.3.4-py3-none-any.whl -y
+  - script: az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.3.5-py3-none-any.whl -y
     displayName: Install az bake
 
   - script: az bake upgrade

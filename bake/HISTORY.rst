@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.5
+++++++
++ Added az bake image bump
+
 0.3.4
 ++++++
 + Add support for AzureDevOps

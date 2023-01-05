@@ -47,6 +47,7 @@ def load_command_table(self, _):  # pylint: disable=too-many-statements
     with self.command_group('bake image') as g:
         g.custom_command('create', 'bake_image_create')
         g.custom_command('logs', 'bake_image_logs')
+        g.custom_command('bump', 'bake_image_bump')
 
     with self.command_group('bake image', container_group_sdk) as g:
         g.command('rebuild', 'begin_start', supports_no_wait=True)

@@ -142,7 +142,7 @@ def repository_images_validator(cmd, ns):
     image_dirs = []
     image_names = []
 
-    images = getattr(ns, 'images_names', None)
+    images = getattr(ns, 'image_names', None)
 
     all_images = not images or not isinstance(images, list) or len(images) == 0
 
@@ -157,7 +157,7 @@ def repository_images_validator(cmd, ns):
     if not all_images:
         bad_names = [i for i in images if i not in image_names]
         if bad_names:
-            raise InvalidArgumentValueError(f'--image/-i {bad_names} are not a valid images')
+            raise InvalidArgumentValueError(f'--images/-i {bad_names} are not a valid images')
 
     ns.images = []
 

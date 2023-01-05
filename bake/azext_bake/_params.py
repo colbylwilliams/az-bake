@@ -11,8 +11,8 @@ from knack.arguments import CLIArgumentType
 
 from ._completers import get_version_completion_list
 from ._constants import DEVOPS_PROVIDER_NAME, GITHUB_PROVIDER_NAME
-from ._validators import (bake_source_version_validator, gallery_resource_id_validator, repository_path_validator,
-                          sandbox_resource_group_name_validator, yaml_out_validator)
+from ._validators import (bake_source_version_validator, gallery_resource_id_validator, repository_images_validator,
+                          repository_path_validator, sandbox_resource_group_name_validator, yaml_out_validator)
 
 # get_resource_group_completion_list,)
 
@@ -153,6 +153,15 @@ def load_arguments(self, _):
         # c.argument('outfile', yaml_outfile_type, default='./images/image.yml')
         # c.argument('outdir', yaml_outdir_type)
         # c.argument('stdout', yaml_stdout_type)
+
+    with self.argument_context('bake image bump') as c:
+        c.argument('repository_path', options_list=['--repo-path', '--repo', '-r'], type=file_type, default='./',
+                   validator=repository_path_validator, help='Path to the locally cloned repository.')
+        c.argument('image_names', options_list=['--images', '-i'], nargs='*', validator=repository_images_validator,
+                   help='Space separated list of images to bump.  Default: all images in repository.')
+        c.argument('major', options_list=['--major'], action='store_true', help='Bump major version.')
+        c.argument('minor', options_list=['--minor'], action='store_true', help='Bump minor version.')
+        c.ignore('images')
 
     with self.argument_context('bake image rebuild') as c:
         c.argument('resource_group_name', sandbox_resource_group_name_type)

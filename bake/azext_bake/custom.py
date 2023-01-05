@@ -11,9 +11,9 @@ from typing import Sequence
 
 import yaml
 
-from azure.cli.core.azclierror import CLIError, InvalidArgumentValueError
+from azure.cli.core.azclierror import CLIError, InvalidArgumentValueError, MutuallyExclusiveArgumentError
 from azure.cli.core.extension.operations import show_extension, update_extension
-from packaging.version import parse
+from packaging.version import parse as parse_version
 
 from ._arm import (create_image_definition, create_resource_group, deploy_arm_template_at_resource_group,
                    ensure_gallery_permissions, get_arm_output, get_gallery, get_image_definition,
@@ -282,6 +282,42 @@ def bake_image_logs(cmd, sandbox_resource_group_name, image_name, sandbox: Sandb
     print(log.content)
 
 
+def bake_image_bump(cmd, repository_path='./', image_names: Sequence[str] = None, images: Sequence[Image] = None,
+                    major: bool = False, minor: bool = False):
+    logger.info('Bumping image version')
+
+    if major and minor:
+        raise MutuallyExclusiveArgumentError('Only use one of --major | --minor')
+
+    for image in images:
+        version = image.version
+        version_old = parse_version(version)
+
+        if len(version_old.release) != 3:
+            raise CLIError(f'Version must be in the format major.minro.patch (found: {version})')
+
+        n_major = version_old.major + 1 if major else version_old.major
+        n_minor = 0 if major else version_old.minor + 1 if minor else version_old.minor
+        n_patch = 0 if major or minor else version_old.micro + 1
+
+        version_new = parse_version(f'{n_major}.{n_minor}.{n_patch}')
+
+        print(f'Bumping version for {image.name} {version_old.public} -> {version_new.public}')
+
+        with open(image.file, 'r', encoding='utf-8') as f:
+            image_yaml = f.read()
+
+        if f'version: {version_old.public}' not in image_yaml:
+            raise CLIError(f"Version string 'version {version_old.public}' not found in {image.file}")
+
+        image_yaml = image_yaml.replace(f'version: {version_old.public}', f'version: {version_new.public}')
+
+        with open(image.file, 'w', encoding='utf-8') as f:
+            f.write(image_yaml)
+
+        # print(f'Bumping version for {image.name} from {image.version} to {bump_version(image.version)}')
+
+
 # ----------------
 # bake yaml
 # ----------------
@@ -302,12 +338,12 @@ def bake_version(cmd):
     current_version = 'v' + ext['version']
     is_dev = 'extensionType' in ext and ext['extensionType'] == 'dev'
     logger.info(f'Current version: {current_version}')
-    current_version_parsed = parse(current_version)
+    current_version_parsed = parse_version(current_version)
     print(f'az bake version: {current_version}{" (dev)" if is_dev else ""}')
 
     latest_version = get_github_latest_release_version()
     logger.info(f'Latest version: {latest_version}')
-    latest_version_parsed = parse(latest_version)
+    latest_version_parsed = parse_version(latest_version)
 
     if current_version_parsed < latest_version_parsed:
         logger.warning(f'There is a new version of az bake {latest_version}. Please update using: az bake upgrade')
@@ -317,13 +353,13 @@ def bake_upgrade(cmd, version=None, prerelease=False):
     ext = show_extension('bake')
     current_version = 'v' + ext['version']
     logger.info(f'Current version: {current_version}')
-    current_version_parsed = parse(current_version)
+    current_version_parsed = parse_version(current_version)
 
     release = get_github_release(version=version, prerelease=prerelease)
 
     new_version = release['tag_name']
     logger.info(f'Latest{" prerelease" if prerelease else ""} version: {new_version}')
-    new_version_parsed = parse(new_version)
+    new_version_parsed = parse_version(new_version)
 
     is_dev = 'extensionType' in ext and ext['extensionType'] == 'dev'
 

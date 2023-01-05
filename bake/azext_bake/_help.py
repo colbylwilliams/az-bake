@@ -107,6 +107,18 @@ examples:
     text: az bake image rebuild --sandbox mySandbox --name myImage
 """
 
+helps['bake image bump'] = """
+type: command
+short-summary: Bump the version number of images.
+examples:
+  - name: Bump the patch version of all images.
+    text: az bake image bump
+  - name: Bump the minor version of all images.
+    text: az bake image bump --minor
+  - name: Bump the major version of specific images.
+    text: az bake image bump --major --images myImage1 MyImage2
+"""
+
 
 # ----------------
 # bake yaml
