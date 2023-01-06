@@ -8,12 +8,12 @@ import argparse
 from pathlib import Path
 from re import search
 
-from packaging.version import parse  # pylint: disable=unresolved-import
+from packaging.version import parse as parse_version  # pylint: disable=unresolved-import
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--major', action='store_true', help='bump major version')
 parser.add_argument('--minor', action='store_true', help='bump minor version')
-parser.add_argument('--notes', nargs='*', default=['Bug fixes and minor improvements.'], help='space seperated strings with release notes')
+parser.add_argument('--notes', nargs='*', default=['Bug fixes and minor improvements'], help='space seperated strings with release notes')
 
 args = parser.parse_args()
 
@@ -43,21 +43,21 @@ with open(path_bake / 'setup.py', 'r') as f:
 if not version:
     raise ValueError('no version found in setup.py')
 
-version_old = parse(version)
+version_old = parse_version(version)
 
 n_major = version_old.major + 1 if major else version_old.major
 n_minor = 0 if major else version_old.minor + 1 if minor else version_old.minor
 n_patch = 0 if major or minor else version_old.micro + 1
 
-version_new = parse('{}.{}.{}'.format(n_major, n_minor, n_patch))
+version_new = parse_version(f'{n_major}.{n_minor}.{n_patch}')
 
 
-print('bumping version: {} -> {}'.format(version_old.public, version_new.public))
+print(f'bumping version: {version_old.public} -> {version_new.public}')
 
 fmt_setup = 'VERSION = \'{}\''
 fmt_readme = 'https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-{}-py3-none-any.whl'
 fmt_docker = 'https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-{}-py3-none-any.whl'
-fmt_consts = 'https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-{}-py3-none-any.whl'
+# fmt_consts = 'https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-{}-py3-none-any.whl'
 fmt_history = '{}\n++++++\n{}\n\n{}'
 
 
@@ -117,15 +117,15 @@ with open(path_root / 'README.md', 'w') as f:
     f.write(readme)
 
 
-print('..updating _constants.py')
+# print('..updating _constants.py')
 
-with open(path_bake / 'azext_bake' / '_constants.py', 'r') as f:
-    constants = f.read()
+# with open(path_bake / 'azext_bake' / '_constants.py', 'r') as f:
+#     constants = f.read()
 
-if fmt_consts.format(version_old.public) not in constants:
-    raise ValueError('version string not found in _constants.py')
+# if fmt_consts.format(version_old.public) not in constants:
+#     raise ValueError('version string not found in _constants.py')
 
-constants = constants.replace(fmt_consts.format(version_old.public), fmt_consts.format(version_new.public))
+# constants = constants.replace(fmt_consts.format(version_old.public), fmt_consts.format(version_new.public))
 
-with open(path_bake / 'azext_bake' / '_constants.py', 'w') as f:
-    f.write(constants)
+# with open(path_bake / 'azext_bake' / '_constants.py', 'w') as f:
+#     f.write(constants)

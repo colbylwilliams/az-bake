@@ -283,11 +283,10 @@ steps:
       AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
       AZURE_TENANT_ID: $(AZURE_TENANT_ID)
 
-  - script: az extension add --source https://github.com/colbylwilliams/az-bake/releases/latest/download/bake-0.3.6-py3-none-any.whl -y
+  - script: | # get the latest version of az bake from the github releases and install it
+      curl -L https://github.com/colbylwilliams/az-bake/releases/latest/download/index.json > $AGENT_TEMPDIRECTORY/index.json
+      az extension add --yes --source $(jq -r '.extensions.bake[0].downloadUrl' $AGENT_TEMPDIRECTORY/index.json)
     displayName: Install az bake
-
-  - script: az bake upgrade
-    displayName: Update az bake
 
   - script: az bake repo build --verbose --repo .
     displayName: Run az bake

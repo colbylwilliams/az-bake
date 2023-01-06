@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.7
+++++++
+* Always use latest version of az bake in Azure DevOps pipelines
+
 0.3.6
 ++++++
 * Added az bake image bump
@@ -12,7 +16,7 @@ Release History
 0.3.5
 ++++++
 * Added az bake image bump
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.3.4
 ++++++
@@ -28,7 +32,7 @@ Release History
 
 0.3.1
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.3.0
 ++++++
@@ -36,15 +40,15 @@ Release History
 
 0.2.9
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.2.8
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.2.7
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.2.6
 ++++++
@@ -56,11 +60,11 @@ Release History
 
 0.2.4
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.2.3
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.2.2
 ++++++
@@ -76,7 +80,7 @@ Release History
 
 0.1.19
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.1.18
 ++++++
@@ -84,7 +88,7 @@ Release History
 
 0.1.17
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.1.16
 ++++++
@@ -92,15 +96,15 @@ Release History
 
 0.1.15
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.1.14
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.1.13
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.1.12
 ++++++
@@ -118,7 +122,7 @@ Release History
 
 0.1.9
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.1.8
 ++++++
@@ -126,11 +130,11 @@ Release History
 
 0.1.7
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.1.6
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.1.5
 ++++++
@@ -157,15 +161,15 @@ Release History
 
 0.1.0
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.35
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.34
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.33
 ++++++
@@ -242,63 +246,63 @@ Release History
 
 0.0.16
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.15
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.14
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.13
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.12
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.11
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.10
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.9
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.8
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.7
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.6
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.5
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.4
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.3
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.2
 ++++++
-* Bug fixes and minor improvements.
+* Bug fixes and minor improvements
 
 0.0.1
 ++++++
