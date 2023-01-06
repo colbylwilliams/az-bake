@@ -1,5 +1,7 @@
 # `az bake`
 
+[![Release](https://github.com/colbylwilliams/az-bake/actions/workflows/release.yml/badge.svg)](https://github.com/colbylwilliams/az-bake/actions/workflows/release.yml)
+
 Microsoft Azure CLI Extension for creating (or _"baking"_) custom virtual machine (VM) images.
 
 ## Install
