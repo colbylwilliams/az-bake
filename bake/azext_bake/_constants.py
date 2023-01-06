@@ -270,7 +270,14 @@ DEVOPS_PIPELINE_DIR = '.azure'
 DEVOPS_PIPELINE_CONTENT = '''name: Bake Images
 
 trigger:
-  - main
+  batch: true
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - 'bake.yml'
+      - 'images/**'
 
 pool:
   vmImage: ubuntu-latest

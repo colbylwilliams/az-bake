@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.8
+++++++
+* Filter Azure DevOps pipelines trigger
+
 0.3.7
 ++++++
 * Always use latest version of az bake in Azure DevOps pipelines
