@@ -5,8 +5,10 @@
 # pylint: disable=logging-fstring-interpolation
 
 import json
+import os
 
 from pathlib import Path
+from shutil import copy2, copytree
 from typing import List, Sequence, TypeVar
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
@@ -16,7 +18,7 @@ import yaml
 from azure.cli.core.azclierror import FileOperationError, ValidationError
 from knack.log import get_logger as knack_get_logger
 
-from ._constants import IN_BUILDER, OUTPUT_DIR, STORAGE_DIR
+from ._constants import OUTPUT_DIR, STORAGE_DIR
 from ._data import ChocoPackage, Image, PowershellScript, get_dict
 
 
@@ -24,7 +26,8 @@ def get_logger(name):
     '''Get the logger for the extension'''
     _logger = knack_get_logger(name)
 
-    if IN_BUILDER and STORAGE_DIR.is_dir():
+    # if IN_BUILDER and STORAGE_DIR.is_dir():
+    if STORAGE_DIR.is_dir():
         import logging
         log_file = OUTPUT_DIR / 'builder.log'
         formatter = logging.Formatter('{asctime} [{name:^28}] {levelname:<8}: {message}',
@@ -38,6 +41,38 @@ def get_logger(name):
 
 
 logger = get_logger(__name__)
+
+
+def copy_to_builder_output_dir(src, dest_path=OUTPUT_DIR):
+    '''Copy files to the builder output directory'''
+    src_path = (src if isinstance(src, Path) else Path(src)).resolve()
+    dest_path = (dest_path if isinstance(dest_path, Path) else Path(dest_path)).resolve()
+
+    logger.info(f'Copying {src_path} to {dest_path}')
+
+    if not src_path.exists():
+        raise FileOperationError(f'Cannot copy to builder output because {src_path} does not exist')
+
+    if not dest_path.exists():
+        raise FileOperationError(f'Cannot copy to builder output because {dest_path} does not exist')
+
+    if src_path.is_dir():
+        # walk the dir and copy all the files to the output dir
+        for dirpath, dirnames, files in os.walk(src_path):
+            for f in files:  # copy all the files in the root directory
+                f_src = Path(dirpath) / f
+                logger.info(f'Copying {f_src} to {dest_path}')
+                copy2(f_src, dest_path)
+            for d in dirnames:  # copy all the directories in the root directory recursively
+                d_path = Path(dirpath) / d
+                logger.info(f'Copying {d_path} to {dest_path}')
+                copytree(d_path, dest_path / d)
+            break  # we copied the directories in root recursively, so we don't need to walk the subdirectories
+    elif src_path.is_file():
+        logger.info(f'Copying {src_path} to {dest_path}')
+        copy2(src_path, dest_path)
+    else:
+        raise FileOperationError(f'Cannot copy to builder output because {src_path} is not a file or directory')
 
 
 def get_templates_path(folder=None):
@@ -83,11 +118,6 @@ def get_yaml_file_contents(path):
     try:
         with open(path, 'r', encoding='utf-8') as f:
             obj = yaml.safe_load(f)
-            # obj['file'] = path
-            # obj['name'] = path.name
-            # obj['dir'] = path.parent
-            # obj['file'] = path
-
     except OSError:  # FileNotFoundError introduced in Python 3
         raise FileOperationError(f'No such file or directory: {path}')  # pylint: disable=raise-missing-from
     except yaml.YAMLError as e:

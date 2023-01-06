@@ -28,8 +28,8 @@ from ._packer import (copy_packer_files, inject_choco_provisioners, inject_power
                       inject_update_provisioner, packer_execute, save_packer_vars_file)
 from ._repos import Repo
 from ._sandbox import get_builder_subnet_id, get_sandbox_resource_names
-from ._utils import (get_choco_package_config, get_install_choco_packages, get_install_powershell_scripts, get_logger,
-                     get_templates_path)
+from ._utils import (copy_to_builder_output_dir, get_choco_package_config, get_install_choco_packages,
+                     get_install_powershell_scripts, get_logger, get_templates_path)
 
 logger = get_logger(__name__)
 
@@ -451,6 +451,8 @@ def bake_builder_build(cmd, sandbox: Sandbox = None, gallery: Gallery = None, im
         #     inject_winget_provisioners(image.dir, winget_config)
 
     save_packer_vars_file(sandbox, gallery, image)
+
+    copy_to_builder_output_dir(image.dir)
 
     success = packer_execute(image) if IN_BUILDER else 0
 

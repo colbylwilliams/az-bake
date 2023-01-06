@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.9
+++++++
+* Save all image config files to builder storage
+
 0.3.8
 ++++++
 * Filter Azure DevOps pipelines trigger
