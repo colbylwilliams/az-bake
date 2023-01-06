@@ -18,7 +18,7 @@ import yaml
 from azure.cli.core.azclierror import FileOperationError, ValidationError
 from knack.log import get_logger as knack_get_logger
 
-from ._constants import OUTPUT_DIR, STORAGE_DIR
+from ._constants import IN_BUILDER, OUTPUT_DIR, STORAGE_DIR
 from ._data import ChocoPackage, Image, PowershellScript, get_dict
 
 
@@ -26,8 +26,9 @@ def get_logger(name):
     '''Get the logger for the extension'''
     _logger = knack_get_logger(name)
 
-    # if IN_BUILDER and STORAGE_DIR.is_dir():
-    if STORAGE_DIR.is_dir():
+    # this must only happen in the builder, otherwise
+    # the log file could be created on users machines
+    if IN_BUILDER and STORAGE_DIR.is_dir():
         import logging
         log_file = OUTPUT_DIR / 'builder.log'
         formatter = logging.Formatter('{asctime} [{name:^28}] {levelname:<8}: {message}',

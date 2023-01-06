@@ -170,6 +170,17 @@
                 "id": "terminal",
                 "color": "terminal.ansiMagenta"
             }
+        },
+        {
+            "label": "util: clear images",
+            "command": "python3",
+            "args": [
+                "tools${pathSeparator}clear-images.py"
+            ],
+            "icon": {
+                "id": "terminal",
+                "color": "terminal.ansiMagenta"
+            }
         }
     ],
     "inputs": [
