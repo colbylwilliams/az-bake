@@ -20,4 +20,3 @@ install:
     packages:
       - googlechrome
       - firefox
-      - gh
