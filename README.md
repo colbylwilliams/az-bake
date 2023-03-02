@@ -28,7 +28,7 @@ az bake upgrade --pre
 
 ## Quickstart
 
-#### 1. [Create][github-repo-create] a new repository, [clone][github-repo-clone] it locally, and open a shell at the root
+#### 1. Create a new GitHub or Azure DevOps repository, clone it locally, and open a shell at the root
 
 #### 2. Create a Service Principal (or use an existing one)
 
@@ -49,7 +49,7 @@ output:
 }
 ```
 
-#### 3. Create three new [repository secrets][github-repo-secret] with the values output above
+#### 3. Create three new [GitHub repository secrets][github-repo-secret] or [DevOps secret variables][devops-pipeline-secrets] with the values output above
 
 - `AZURE_CLIENT_ID` _(appId)_
 - `AZURE_CLIENT_SECRET` _(password)_
@@ -71,6 +71,8 @@ az bake sandbox create --name MySandbox --gallery MyGallery --principal 00000000
 az bake repo setup --sandbox MySandbox --gallery MyGallery
 ```
 
+This will generate a [GitHub workflow][github-workflows] or a [DevOps pipeline][devops-pipelines] yaml file in your repo that will build your images on commit.
+
 #### 7. Create an image definiiton in your repo
 
 ```sh
@@ -79,7 +81,7 @@ az bake image create --name MyImage
 
 #### 8. Commit and push your changes
 
-This will kick off a GitHub Actions workflow to build your custom images. Once the workflow is finished, you can continue to monitor the image builds:
+This will kick off a workflow/pipeline to build your custom images. Once it is is finished, you can continue to monitor the image builds:
 
 ```sh
 az bake image logs --sandbox MySandbox --name MyImage
@@ -1150,19 +1152,22 @@ Version (tag). Default: latest stable.
   Increase logging verbosity. Use --debug for full debug logs.
 </details>
 
-[install-az]:https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
-[azure-identities]:https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
-[azure-compute-gallery]:https://learn.microsoft.com/en-us/azure/virtual-machines/azure-compute-gallery
-[azure-keyvault]:https://learn.microsoft.com/en-us/azure/key-vault/general/overview
-[azure-storage-account]:https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview
-[azure-aci]:https://learn.microsoft.com/en-us/azure/container-instances/container-instances-overview
-[azure-aci-groups]:https://learn.microsoft.com/en-us/azure/container-instances/container-instances-container-groups
-[azure-vnet]:https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
-[azure-roles-contributor]:https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor
-[azure-assign-rbac]:https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current
-[github-repo-create]:https://docs.github.com/en/get-started/quickstart/create-a-repo
-[github-repo-clone]:https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository
-[github-repo-secret]:https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
-[github-repo-fork]:https://docs.github.com/en/get-started/quickstart/fork-a-repo
-[packer-arm]:https://www.packer.io/plugins/builders/azure/arm
-[packer-docs]:https://developer.hashicorp.com/packer/docs
+[install-az]: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
+[azure-identities]: https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
+[azure-compute-gallery]: https://learn.microsoft.com/en-us/azure/virtual-machines/azure-compute-gallery
+[azure-keyvault]: https://learn.microsoft.com/en-us/azure/key-vault/general/overview
+[azure-storage-account]: https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview
+[azure-aci]: https://learn.microsoft.com/en-us/azure/container-instances/container-instances-overview
+[azure-aci-groups]: https://learn.microsoft.com/en-us/azure/container-instances/container-instances-container-groups
+[azure-vnet]: https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+[azure-roles-contributor]: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor
+[azure-assign-rbac]: https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current
+[devops-pipelines]: https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/?view=azure-pipelines
+[devops-pipeline-secrets]: https://learn.microsoft.com/en-us/azure/devops/pipelines/process/set-secret-variables?view=azure-devops&tabs=yaml%2Cbash
+[github-repo-create]: https://docs.github.com/en/get-started/quickstart/create-a-repo
+[github-repo-clone]: https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository
+[github-repo-secret]: https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
+[github-repo-fork]: https://docs.github.com/en/get-started/quickstart/fork-a-repo
+[github-workflows]: https://docs.github.com/en/actions/using-workflows/about-workflows
+[packer-arm]: https://www.packer.io/plugins/builders/azure/arm
+[packer-docs]: https://developer.hashicorp.com/packer/docs
