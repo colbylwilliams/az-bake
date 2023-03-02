@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/image.schema.json
+name: VS2022Box
+description: Windows 11 Enterprise + M365 Apps + VS2022
+publisher: Contoso
+offer: DevBox
+sku: win11-vs2022
+version: 1.0.0
+os: Windows
+replicaLocations:
+  - eastus
+  - westeurope
+update: true
+base:
+  publisher: microsoftvisualstudio
+  offer: visualstudioplustools
+  sku: vs-2022-ent-general-win11-m365-gen2
+  version: latest
+install:
+  choco:
+    packages:
+      - googlechrome
+      - firefox
+      - gh

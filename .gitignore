@@ -135,5 +135,5 @@ dmypy.json
 
 bake.yml
 bake.yaml
-images/
-scripts/
+/images
+/scripts

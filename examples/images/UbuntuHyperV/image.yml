@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://github.com/colbylwilliams/az-bake/releases/latest/download/image.schema.json
+name: UbuntuHyperV
+description: Windows 11 Enterprise + Hyper-V - Nested Ubuntu
+publisher: Contoso
+offer: DevBox
+sku: win11-hv
+version: 1.0.0
+os: Windows
+replicaLocations:
+  - eastus
+  - westeurope
+update: true
+base:
+  publisher: microsoftwindowsdesktop
+  offer: windows-ent-cpc
+  sku: win11-22h2-ent-cpc-m365
+  version: latest
+install:
+  choco:
+    packages:
+      - googlechrome
+      - firefox
+      - git
+      - gh
+  scripts:
+    powershell:
+      - ../../scripts/Install-PsModules.ps1
+      - ../../scripts/Install-AzPsModule.ps1
+      - ../../scripts/Install-DotNet.ps1
+      - ../../scripts/Install-Python.ps1
+      - ../../scripts/Install-GitHubDesktop.ps1
+      - ../../scripts/Install-VSCode.ps1
+      - ../../scripts/Install-AzureCLI.ps1
+      - path: ../../scripts/Enable-Hyperv.ps1
+        restart: true
+      - ../../scripts/HyperV/Create-Ubuntu-VM.ps1
