@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.3.11
+++++++
+* Bug fixes and minor improvements
+
 0.3.10
 ++++++
 * Revert bug that could create log file
