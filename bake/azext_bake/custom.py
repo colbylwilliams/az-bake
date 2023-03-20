@@ -453,7 +453,7 @@ def bake_builder_build(cmd, sandbox: Sandbox = None, gallery: Gallery = None, im
                 inject_choco_user_script_provisioners(image.dir)
                 inject_choco_user_consent_provisioners(image.dir)
                 inject_choco_user_provisioners(image.dir, user_choco_packages)
-                
+
         # winget_config = get_install_winget(image)
         # if winget_config:
         #     inject_winget_provisioners(image.dir, winget_config)
