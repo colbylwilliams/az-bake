@@ -85,7 +85,7 @@
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Name of the Azure Compurt Gallery to publish to"
+                    "description": "Name of the Azure Compute Gallery to publish to"
                 },
                 "resourceGroup": {
                     "type": "string",
