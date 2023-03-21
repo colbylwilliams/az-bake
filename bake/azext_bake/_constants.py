@@ -134,7 +134,8 @@ PKR_PROVISIONER_CHOCO_INSTALL = f'''
 PKR_PROVISIONER_CHOCO_MACHINE_INSTALL_LOG = f'''
   # Injected by az bake
   provisioner "file" {{
-    source = "C:/ProgramData/chocolatey/logs/chocolatey.log"
+    source = "${{path.root}}/{CHOCO_PACKAGES_CONFIG_FILE}"
+    destination = "C:/Windows/Temp/{CHOCO_PACKAGES_CONFIG_FILE}"
   }}
   {BAKE_PLACEHOLDER}'''
 
