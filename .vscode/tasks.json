@@ -13,7 +13,7 @@
             "label": "azdev: linter",
             "command": "source .venv/bin/activate; azdev linter bake",
             "windows": {
-                "command": ".venv\\bin\\activate; azdev linter bake"
+                "command": ".venv${pathSeparator}scripts${pathSeparator}activate; azdev linter bake"
             },
             "icon": {
                 "id": "azure",
@@ -24,19 +24,19 @@
             "label": "azdev: style",
             "command": "source .venv/bin/activate; azdev style bake",
             "windows": {
-                "command": ".venv\\bin\\activate; azdev style bake"
+                "command": ".venv${pathSeparator}scripts${pathSeparator}activate; azdev style bake"
             },
             "icon": {
                 "id": "azure",
                 "color": "terminal.ansiCyan"
             }
-        },
+        },        
         {
             "label": "azdev: setup",
             "detail": "Setup the cli extension development environment",
             "command": "source .venv/bin/activate; azdev setup -r ${workspaceFolder} -e bake",
             "windows": {
-                "command": ".venv\\bin\\activate; azdev setup -r ${workspaceFolder} -e bake"
+                "command": ".venv${pathSeparator}scripts${pathSeparator}activate; azdev setup -r ${workspaceFolder} -e bake"
             },
             "dependsOrder": "sequence",
             "dependsOn": [
@@ -52,7 +52,7 @@
             "label": "azdev: install",
             "command": "source .venv/bin/activate; pip3 install azdev",
             "windows": {
-                "command": ".venv\\bin\\activate; pip3 install azdev"
+                "command": ".venv${pathSeparator}scripts${pathSeparator}activate; pip3 install azdev"
             },
             "icon": {
                 "id": "azure",
