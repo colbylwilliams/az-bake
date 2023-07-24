@@ -298,7 +298,11 @@
                             }
                         }
                     }
-                }
+                },
+                "reboot": {
+                "type": "boolean",
+                "description": "Whether or not to reboot the machine after installation.",
+                "default": false
             }
         }
     },
