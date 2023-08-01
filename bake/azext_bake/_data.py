@@ -101,6 +101,7 @@ class ChocoDefaults:
 
         self.source = obj.get('source', None)
         self.install_arguments = obj.get('installArguments', None)
+        self.restart = obj.get('restart', False)
 
 
 @dataclass
@@ -113,6 +114,7 @@ class ChocoPackage:
     install_arguments: Optional[str] = None
     package_parameters: Optional[str] = None
     user: bool = False
+    restart: bool = False
 
     def __init__(self, obj: dict, path: Path = None) -> None:
         _validate_data_object(ChocoPackage, obj, path=path, parent_key='install.choco')
@@ -123,6 +125,7 @@ class ChocoPackage:
         self.install_arguments = obj.get('installArguments', None)
         self.package_parameters = obj.get('packageParameters', None)
         self.user = obj.get('user', False)
+        self.restart = obj.get('restart', False)
 
     @property
     def id_only(self):
@@ -209,6 +212,16 @@ class ImageInstallWinget:
         self.defaults = WingetDefaults(obj['defaults'], path) if 'defaults' in obj else None
 
 
+@dataclass
+class ImageInstallActiveSetup:
+    # required
+    commands: List[str] = field(default_factory=list)
+
+    def __init__(self, obj: dict) -> None:
+        _validate_data_object(ImageInstallActiveSetup, obj, parent_key='install.activesetup')
+
+        self.commands = [str]
+
 # --------------------------------
 # Image > Install
 # --------------------------------
@@ -220,6 +233,7 @@ class ImageInstall:
     scripts: Optional[ImageInstallScripts] = None
     choco: Optional[ImageInstallChoco] = None
     winget: Optional[ImageInstallWinget] = None
+    activesetup: Optional[ImageInstallActiveSetup] = None
 
     def __init__(self, obj: dict, path: Path = None) -> None:
         _validate_data_object(ImageInstall, obj, path=path, parent_key='install')
@@ -227,6 +241,7 @@ class ImageInstall:
         self.scripts = ImageInstallScripts(obj['scripts'], path) if 'scripts' in obj else None
         self.choco = ImageInstallChoco(obj['choco'], path) if 'choco' in obj else None
         self.winget = ImageInstallWinget(obj['winget'], path) if 'winget' in obj else None
+        self.activesetup = ImageInstallActiveSetup(obj['activesetup']) if 'activesetup' in obj else None
 
 
 # --------------------------------

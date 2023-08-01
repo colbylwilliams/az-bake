@@ -188,6 +188,22 @@ def get_choco_package_config(packages: Sequence[ChocoPackage], indent=2) -> str:
     return xml_string
 
 
+def get_choco_package_setup(package: ChocoPackage) -> str:
+    '''Get the chocolatey package setup string'''
+    logger.info('Getting choco package setup contents from install dict')
+    pkg = get_dict(package)
+    if 'user' in pkg:
+        del pkg['user']
+    choco_setup_string = ''
+
+    for key in pkg:
+        if key not in ('id', 'restart'):
+            choco_setup_string += f" --{key} '{pkg[key]}'"
+
+    choco_setup_string += '--yes --no-progress'
+    return choco_setup_string
+
+
 def get_install_winget(image: Image):
     # TODO
     '''Get the dict for the install winget section supplemented by the index'''
@@ -251,6 +267,17 @@ def get_install_powershell_scripts(image: Image) -> List[PowershellScript]:
     return scripts
 
 
+def get_install_activesetup_commands(image: Image) -> List[str]:
+    logger.info('Getting activesetup commands dictionary from image.yaml')
+    if image.install is None or image.install.activesetup is None:
+        return None
+
+    if image.install.activesetup.commands is None:
+        raise ValidationError('Image install.activesetup must include a commands section')
+
+    return image.install.activesetup.commands
+
+
 def _validate_file_path(path, name=None) -> Path:
     file_path = (path if isinstance(path, Path) else Path(path)).resolve()
     not_exists = f'Could not find {name} file at {file_path}' if name else f'{file_path} is not a file or directory'
@@ -259,6 +286,7 @@ def _validate_file_path(path, name=None) -> Path:
     if not file_path.is_file():
         raise ValidationError(f'{file_path} is not a file')
     return file_path
+
 # def _get_current_user_object_id(graph_client):
 #     try:
 #         current_user = graph_client.signed_in_user.get()

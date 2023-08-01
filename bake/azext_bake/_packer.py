@@ -9,18 +9,20 @@ import os
 import shutil
 import subprocess
 import sys
+import uuid
 
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from azure.cli.core.azclierror import ValidationError
 
-from ._constants import (BAKE_PLACEHOLDER, CHOCO_PACKAGES_CONFIG_FILE, CHOCO_PACKAGES_USER_CONFIG_FILE,
-                         PKR_AUTO_VARS_FILE, PKR_BUILD_FILE, PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO,
-                         PKR_PROVISIONER_CHOCO_USER, PKR_PROVISIONER_RESTART, PKR_PROVISIONER_UPDATE,
-                         PKR_PROVISIONER_WINGET_INSTALL, PKR_VARS_FILE, WINGET_SETTINGS_FILE, WINGET_SETTINGS_JSON)
+from ._constants import (BAKE_PLACEHOLDER, PKR_PROVISIONER_CHOCO_MACHINE_INSTALL_LOG,
+                         PKR_AUTO_VARS_FILE, PKR_BUILD_FILE, PKR_DEFAULT_VARS, PKR_PROVISIONER_CHOCO_INSTALL,
+                         PKR_PROVISIONER_RESTART, PKR_PROVISIONER_UPDATE, LOCAL_USER_DIR,
+                         PKR_PROVISIONER_WINGET_INSTALL, PKR_VARS_FILE, WINGET_SETTINGS_FILE, WINGET_SETTINGS_JSON,
+                         PKR_PROVISIONER_CONSENTBEHAVIOR_LOWER, PKR_PROVISIONER_CHOCO_USER_INSTALL_SCRIPT)
 from ._data import Gallery, Image, PowershellScript, Sandbox, WingetPackage, get_dict
-from ._utils import get_logger, get_templates_path
+from ._utils import get_logger, get_templates_path, get_choco_package_setup
 
 logger = get_logger(__name__)
 
@@ -218,16 +220,99 @@ def inject_powershell_provisioner(image_dir: Path, powershell_scripts: Sequence[
             inject_powershell_provisioner(image_dir, powershell_scripts[current_index + 1:])
 
 
-def inject_choco_provisioners(image_dir: Path, config_xml, for_user=False):
-    '''Injects the chocolatey provisioners into the packer build file'''
-    # create the choco packages config file
-    file_name = CHOCO_PACKAGES_USER_CONFIG_FILE if for_user else CHOCO_PACKAGES_CONFIG_FILE
+def inject_choco_install_provisioners(image_dir: Path):
+    '''Injects the chocolatey install provisioner into the packer build file'''
+    _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO_INSTALL)
 
-    logger.info(f'Creating file: {image_dir / file_name}')
-    with open(image_dir / file_name, 'w', encoding='utf-8') as f:
-        f.write(config_xml)
 
-    _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO_USER if for_user else PKR_PROVISIONER_CHOCO)
+def inject_choco_user_script_provisioners(image_dir: Path):
+    '''Injects the chocolatey user script provisioner into the packer build file'''
+    _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO_USER_INSTALL_SCRIPT)
+
+
+def inject_choco_user_consent_provisioners(image_dir: Path):
+    '''Injects the chocolatey user script provisioner into the packer build file'''
+    _inject_provisioner(image_dir, PKR_PROVISIONER_CONSENTBEHAVIOR_LOWER)
+
+
+def inject_choco_machine_log_provisioners(image_dir: Path):
+    '''Injects the chocolatey install provisioner into the packer build file'''
+    _inject_provisioner(image_dir, PKR_PROVISIONER_CHOCO_MACHINE_INSTALL_LOG)
+
+
+def inject_choco_machine_provisioners(image_dir: Path, choco_packages):
+    '''Injects the chocolatey machine provisioner into the packer build file'''
+
+    current_index = 0
+    inject_restart = False
+
+    choco_system_provisioner = '''
+  # Injected by az bake
+  provisioner "powershell" {
+    elevated_user     = build.User
+    elevated_password = build.Password
+    inline = [
+'''
+    for i, choco_package in enumerate(choco_packages):
+        current_index = i
+        choco_system_provisioner += f'      "choco install {choco_package.id} {get_choco_package_setup(choco_package)}"'
+        
+        if choco_package.restart is True:
+            inject_restart = True
+            break
+        if i < len(choco_packages) - 1:
+            choco_system_provisioner += ',\n'
+
+    choco_system_provisioner += f'''
+    ]
+  }}
+  {BAKE_PLACEHOLDER}'''
+    _inject_provisioner(image_dir, choco_system_provisioner)
+
+    if inject_restart:
+        inject_restart_provisioner(image_dir)
+
+        if current_index < len(choco_packages) - 1:
+            inject_choco_machine_provisioners(image_dir, choco_packages[current_index + 1:])
+
+
+def inject_choco_user_provisioners(image_dir: Path, choco_packages):
+    '''Injects the chocolatey user provisioner into the packer build file'''
+
+    choco_user_provisioner = '''
+  # Injected by az bake
+  provisioner "powershell" {
+    elevated_user     = build.User
+    elevated_password = build.Password
+    inline = [
+      "Write-Host 'Setting up User installation via Active Setup'",
+'''
+
+    activesetup_id = uuid.uuid4()
+    base_reg_key = 'HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Active Setup\\\\Installed Components\\\\'
+
+    for i, choco_package in enumerate(choco_packages):
+        choco_str = get_choco_package_setup(choco_package)
+        key_name = f'{i}{activesetup_id}'
+        base_reg_key_newitem = f'      "New-Item \'{base_reg_key}\' -Name {key_name}'
+        base_reg_key_property = f'      "New-ItemProperty \'{base_reg_key}{key_name}\''
+        script_value = f'Powershell -File {LOCAL_USER_DIR}/Install-ChocoUser.ps1'
+        stubpath_value = f'{script_value} -PackageId {choco_package.id} -PackageArguments \\"{choco_str}\\"'
+        choco_user_provisioner += f'{base_reg_key_newitem} -Value \'AZ Bake {choco_package.id} Setup\'", \n'
+        choco_user_provisioner += f'{base_reg_key_property} -Name \'StubPath\' -Value \'{stubpath_value}\'", \n'
+
+    key_name = f'>9{activesetup_id}'
+    base_reg_key_newitem = f'      "New-Item \'{base_reg_key}\' -Name \'{key_name}\''
+    base_reg_key_property = f'      "New-ItemProperty \'{base_reg_key}{key_name}\''
+    script_value = f'Powershell -File {LOCAL_USER_DIR}/Reset-AdminConsentBehavior.ps1'
+    choco_user_provisioner += f'{base_reg_key_newitem} -Value \'AZ Bake Admin Behavior Setup\'", \n'
+    choco_user_provisioner += f'{base_reg_key_property} -Name \'StubPath\' -Value \'{script_value}\'"\n'
+
+    choco_user_provisioner += f'''
+    ]
+  }}
+  {BAKE_PLACEHOLDER}'''
+    _inject_provisioner(image_dir, choco_user_provisioner)
 
 
 def inject_winget_provisioners(image_dir: Path, winget_packages: Sequence[WingetPackage]):

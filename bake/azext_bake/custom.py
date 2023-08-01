@@ -24,11 +24,14 @@ from ._constants import (BAKE_YAML_SCHEMA, DEVOPS_PIPELINE_CONTENT, DEVOPS_PIPEL
                          IMAGE_DEFAULT_BASE_WINDOWS, IMAGE_YAML_SCHEMA, IN_BUILDER)
 from ._data import Gallery, Image, Sandbox, get_dict
 from ._github import get_github_latest_release_version, get_github_release, get_release_templates, get_template_url
-from ._packer import (copy_packer_files, inject_choco_provisioners, inject_powershell_provisioner,
+from ._packer import (copy_packer_files, inject_choco_install_provisioners,
+                      inject_choco_machine_provisioners, inject_choco_user_script_provisioners,
+                      inject_choco_user_provisioners, inject_choco_machine_log_provisioners,
+                      inject_powershell_provisioner, inject_choco_user_consent_provisioners,
                       inject_update_provisioner, packer_execute, save_packer_vars_file)
 from ._repos import Repo
 from ._sandbox import get_builder_subnet_id, get_sandbox_resource_names
-from ._utils import (copy_to_builder_output_dir, get_choco_package_config, get_install_choco_packages,
+from ._utils import (copy_to_builder_output_dir, get_install_choco_packages,
                      get_install_powershell_scripts, get_logger, get_templates_path)
 
 logger = get_logger(__name__)
@@ -294,7 +297,7 @@ def bake_image_bump(cmd, repository_path='./', image_names: Sequence[str] = None
         version_old = parse_version(version)
 
         if len(version_old.release) != 3:
-            raise CLIError(f'Version must be in the format major.minro.patch (found: {version})')
+            raise CLIError(f'Version must be in the format major.minor.patch (found: {version})')
 
         n_major = version_old.major + 1 if major else version_old.major
         n_minor = 0 if major else version_old.minor + 1 if minor else version_old.minor
@@ -436,15 +439,20 @@ def bake_builder_build(cmd, sandbox: Sandbox = None, gallery: Gallery = None, im
 
         choco_packages = get_install_choco_packages(image)
 
-        user_choco_packages = [package for package in choco_packages if package.user]
-        if user_choco_packages:
-            choco_user_config = get_choco_package_config(user_choco_packages)
-            inject_choco_provisioners(image.dir, choco_user_config, for_user=True)
+        # install choco packages if packages
+        if choco_packages:
+            inject_choco_install_provisioners(image.dir)
 
-        machine_choco_packages = [package for package in choco_packages if not package.user]
-        if machine_choco_packages:
-            machine_choco_config = get_choco_package_config(machine_choco_packages)
-            inject_choco_provisioners(image.dir, machine_choco_config, for_user=False)
+            machine_choco_packages = [package for package in choco_packages if not package.user]
+            if machine_choco_packages:
+                inject_choco_machine_provisioners(image.dir, machine_choco_packages)
+                inject_choco_machine_log_provisioners(image.dir)
+
+            user_choco_packages = [package for package in choco_packages if package.user]
+            if user_choco_packages:
+                inject_choco_user_script_provisioners(image.dir)
+                inject_choco_user_consent_provisioners(image.dir)
+                inject_choco_user_provisioners(image.dir, user_choco_packages)
 
         # winget_config = get_install_winget(image)
         # if winget_config:
